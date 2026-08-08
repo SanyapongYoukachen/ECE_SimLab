@@ -1,26 +1,128 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
+/*
+ * Design tokens. Plot colours carry fixed semantic meaning across all three
+ * modules — input / active / output / structure — and must never be
+ * redefined per-module. Light values live on bare :root; dark values are
+ * layered on top first by system preference, then by an explicit
+ * data-theme override so a manual toggle always wins.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f6f7f9;
+  --foreground: #14181f;
+  --surface: #ffffff;
+  --surface-2: #edeff3;
+  --border: #d9dce3;
+  --focus-ring: #3562c9;
+
+  --plot-background: transparent;
+  --plot-text: #14181f;
+  --plot-input: #4f6d95;
+  --plot-active: #c8791f;
+  --plot-output: #2f8f6d;
+  --plot-structure: #838c9b;
+  --plot-structure-faint: rgba(131, 140, 155, 0.28);
+  --plot-danger: #b5482f;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --background: #0d0f13;
+    --foreground: #e8eaef;
+    --surface: #14171d;
+    --surface-2: #1b1f27;
+    --border: #2a2f3a;
+    --focus-ring: #82a6f2;
+
+    --plot-text: #e8eaef;
+    --plot-input: #86a7d1;
+    --plot-active: #e3a34c;
+    --plot-output: #52c69d;
+    --plot-structure: #7a8290;
+    --plot-structure-faint: rgba(122, 130, 144, 0.32);
+    --plot-danger: #e0805f;
+  }
+}
+
+:root[data-theme='dark'] {
+  --background: #0d0f13;
+  --foreground: #e8eaef;
+  --surface: #14171d;
+  --surface-2: #1b1f27;
+  --border: #2a2f3a;
+  --focus-ring: #82a6f2;
+
+  --plot-text: #e8eaef;
+  --plot-input: #86a7d1;
+  --plot-active: #e3a34c;
+  --plot-output: #52c69d;
+  --plot-structure: #7a8290;
+  --plot-structure-faint: rgba(122, 130, 144, 0.32);
+  --plot-danger: #e0805f;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-plot-input: var(--plot-input);
+  --color-plot-active: var(--plot-active);
+  --color-plot-output: var(--plot-output);
+  --color-plot-structure: var(--plot-structure);
+  --color-plot-danger: var(--plot-danger);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  border-color: var(--border);
+}
+
+html {
+  color-scheme: light dark;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* All numerical readouts use tabular figures so values don't jitter as they update. */
+.font-mono,
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+/* Visible focus outline everywhere, including inside canvases via their wrapping element. */
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }

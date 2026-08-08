@@ -1,0 +1,19 @@
+import type { Metadata } from 'next';
+import { ModuleShell } from '@/components/ui';
+import FourierModule from '@/components/modules/fourier/FourierModuleClient';
+
+export const metadata: Metadata = {
+  title: 'Fourier transform explorer — Signals Lab',
+  description: 'See — and hear — how a signal built from sinusoids maps to its magnitude spectrum.',
+};
+
+export default function FourierPage(): React.JSX.Element {
+  return (
+    <ModuleShell
+      title="The Fourier transform: from waveform to spectrum"
+      tagline="Move the third component off a bin centre and watch its peak smear — that's leakage, not a bug."
+    >
+      <FourierModule />
+    </ModuleShell>
+  );
+}
