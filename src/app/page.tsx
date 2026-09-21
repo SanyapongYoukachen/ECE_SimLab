@@ -30,6 +30,13 @@ const MODULES: readonly ModuleCard[] = [
     description:
       'Two independent paths to the same answer, with a live operation count showing why one of them won.',
   },
+  {
+    href: '/circuits',
+    kicker: 'Module 4',
+    title: 'DC circuits',
+    description:
+      "Ohm's law, series and parallel resistors, and the voltage divider — drag V and R, watch the schematic and the numbers respond together.",
+  },
 ];
 
 export default function LandingPage(): React.JSX.Element {
@@ -41,10 +48,10 @@ export default function LandingPage(): React.JSX.Element {
             Signals Lab
           </p>
           <h1 className="mt-2 text-3xl font-semibold text-[var(--foreground)] sm:text-4xl">
-            Convolution and the Fourier transform, made visible
+            Signals and circuits, made visible
           </h1>
           <p className="mt-3 max-w-2xl text-[var(--foreground)]/70">
-            You can already do the algebra. These three linked instruments are for the part algebra
+            You can already do the algebra. These four linked instruments are for the part algebra
             doesn&apos;t teach: what the operation actually does. Manipulate either representation
             and watch the other respond in real time.
           </p>
@@ -81,8 +88,9 @@ export default function LandingPage(): React.JSX.Element {
 
       <footer className="mt-auto flex flex-col gap-2 border-t border-[var(--border)] pt-6 text-sm text-[var(--foreground)]/60">
         <p>
-          Every configuration — signal values, kernel, shift, window, amplitudes, frequencies —
-          lives in the URL. Set it up, copy the link, and it reproduces exactly.
+          Every configuration — signal values, kernel, shift, window, amplitudes, frequencies,
+          voltage, resistance — lives in the URL. Set it up, copy the link, and it reproduces
+          exactly.
         </p>
         <p>
           Running a live lecture? Append <code className="font-mono text-xs">?predict=off</code> to

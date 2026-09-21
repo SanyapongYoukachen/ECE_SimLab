@@ -1,8 +1,10 @@
 import {
+  CircuitStateSchema,
   ConvolutionStateSchema,
   FourierPresetSchema,
   PredictFlagSchema,
   TheoremStateSchema,
+  type CircuitState,
   type ConvolutionState,
   type FourierState,
   type TheoremState,
@@ -80,6 +82,28 @@ export function encodeTheoremState(state: TheoremState): URLSearchParams {
   const params = new URLSearchParams();
   params.set('length', String(state.length));
   params.set('preset', state.preset);
+  return params;
+}
+
+export function decodeCircuitState(params: URLSearchParams): CircuitState {
+  const raw = {
+    mode: params.get('mode') ?? undefined,
+    voltage: num(params, 'voltage'),
+    r1: num(params, 'r1'),
+    r2: num(params, 'r2'),
+    topology: params.get('topology') ?? undefined,
+  };
+  const result = CircuitStateSchema.safeParse(raw);
+  return result.success ? result.data : CircuitStateSchema.parse({});
+}
+
+export function encodeCircuitState(state: CircuitState): URLSearchParams {
+  const params = new URLSearchParams();
+  params.set('mode', state.mode);
+  params.set('voltage', state.voltage.toFixed(2));
+  params.set('r1', state.r1.toFixed(1));
+  params.set('r2', state.r2.toFixed(1));
+  params.set('topology', state.topology);
   return params;
 }
 
