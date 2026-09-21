@@ -12,24 +12,30 @@ import { useUrlSyncedState, useUrlFlag } from '@/lib/state/useUrlState';
 import { logEvent } from '@/lib/state/telemetry';
 import {
   PredictionCheck,
+  PredictionGate,
   Slider,
   SegmentedControl,
   PlayPauseButton,
   ExpressionReadout,
   LiveRegion,
   usePrefersReducedMotion,
+  usePracticeMode,
+  usePracticeQuestion,
   useThrottledValue,
 } from '@/components/ui';
 import { ConvolutionInputPanel } from './ConvolutionInputPanel';
 import { ConvolutionOutputPanel } from './ConvolutionOutputPanel';
 import { KERNEL_PRESETS, KERNEL_ORDER } from './kernels';
 import { formatConvExpression } from './expression';
+import { QUESTIONS } from './questions';
 
 const DEFAULT_STATE = ConvolutionStateSchema.parse({});
 const STEP_MS = 700;
 
 export function ConvolutionModule(): React.JSX.Element {
   const predictEnabled = useUrlFlag(decodePredictFlag, true);
+  const practiceMode = usePracticeMode();
+  const practiceQuestion = usePracticeQuestion(QUESTIONS);
   const [state, setState] = useUrlSyncedState(
     decodeConvolutionState,
     encodeConvolutionState,
@@ -102,7 +108,7 @@ export function ConvolutionModule(): React.JSX.Element {
     `Shift n=${n} of ${outLen - 1}. ${formatConvExpression(currentStep)}`
   );
 
-  return (
+  const content = (
     <div className="flex flex-col gap-4">
       <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
         <ConvolutionInputPanel
@@ -164,19 +170,25 @@ export function ConvolutionModule(): React.JSX.Element {
         ]
       </p>
 
-      <PredictionCheck
-        moduleId="convolution"
-        disabled={!predictEnabled}
-        question="x has 5 samples and h has 3 samples. How many samples will y = x * h have?"
-        options={[
-          { id: 'a', label: '5 — output matches the input length', correct: false },
-          { id: 'b', label: '8 — output is the sum of both lengths', correct: false },
-          { id: 'c', label: '7 — output is N + M − 1', correct: true },
-          { id: 'd', label: '3 — output matches the shorter kernel', correct: false },
-        ]}
-      />
+      {!practiceMode && (
+        <PredictionCheck moduleId="convolution" disabled={!predictEnabled} questions={QUESTIONS} />
+      )}
 
       <LiveRegion text={liveText} />
     </div>
+  );
+
+  if (!practiceMode) return content;
+
+  return (
+    <PredictionGate
+      moduleId="convolution"
+      disabled={!predictEnabled}
+      question={practiceQuestion.question}
+      options={practiceQuestion.options}
+      persist={false}
+    >
+      {content}
+    </PredictionGate>
   );
 }

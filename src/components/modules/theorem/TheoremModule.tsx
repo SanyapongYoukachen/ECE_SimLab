@@ -8,15 +8,19 @@ import { useUrlSyncedState, useUrlFlag } from '@/lib/state/useUrlState';
 import { logEvent } from '@/lib/state/telemetry';
 import {
   PredictionCheck,
+  PredictionGate,
   Slider,
   SegmentedControl,
   ExpressionReadout,
   LiveRegion,
+  usePracticeMode,
+  usePracticeQuestion,
   useThrottledValue,
 } from '@/components/ui';
 import { OverlayPanel } from './OverlayPanel';
 import { CostChart } from './CostChart';
 import { buildSignalPair } from './generators';
+import { QUESTIONS } from './questions';
 import { MIN_LENGTH, MAX_LENGTH, LENGTH_STEP } from './constants';
 
 const DEFAULT_STATE = TheoremStateSchema.parse({});
@@ -27,6 +31,8 @@ const PRESET_OPTIONS = TheoremPresetSchema.options.map((id) => ({
 
 export function TheoremModule(): React.JSX.Element {
   const predictEnabled = useUrlFlag(decodePredictFlag, true);
+  const practiceMode = usePracticeMode();
+  const practiceQuestion = usePracticeQuestion(QUESTIONS);
   const [state, setState] = useUrlSyncedState(
     decodeTheoremState,
     encodeTheoremState,
@@ -64,7 +70,7 @@ export function TheoremModule(): React.JSX.Element {
     setState((prev) => ({ ...prev, preset }));
   }
 
-  return (
+  const content = (
     <div className="flex flex-col gap-4">
       <OverlayPanel direct={direct} viaFft={viaFft} />
       <ExpressionReadout label="Agreement between the two paths">
@@ -98,24 +104,26 @@ export function TheoremModule(): React.JSX.Element {
         options={PRESET_OPTIONS}
       />
 
-      <PredictionCheck
-        moduleId="theorem"
-        disabled={!predictEnabled}
-        question="You double the signal length N. How does the operation count change for each method?"
-        options={[
-          { id: 'a', label: 'Both roughly double', correct: false },
-          {
-            id: 'b',
-            label: 'Direct roughly quadruples; FFT barely more than doubles',
-            correct: true,
-          },
-          { id: 'c', label: 'Direct doubles; FFT quadruples', correct: false },
-          { id: 'd', label: 'Neither changes', correct: false },
-        ]}
-      />
+      {!practiceMode && (
+        <PredictionCheck moduleId="theorem" disabled={!predictEnabled} questions={QUESTIONS} />
+      )}
 
       <LiveRegion text={liveText} />
     </div>
+  );
+
+  if (!practiceMode) return content;
+
+  return (
+    <PredictionGate
+      moduleId="theorem"
+      disabled={!predictEnabled}
+      question={practiceQuestion.question}
+      options={practiceQuestion.options}
+      persist={false}
+    >
+      {content}
+    </PredictionGate>
   );
 }
 

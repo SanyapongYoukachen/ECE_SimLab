@@ -8,16 +8,20 @@ import { useUrlSyncedState, useUrlFlag } from '@/lib/state/useUrlState';
 import { logEvent } from '@/lib/state/telemetry';
 import {
   PredictionCheck,
+  PredictionGate,
   Slider,
   SegmentedControl,
   ExpressionReadout,
   LiveRegion,
   PlayPauseButton,
+  usePracticeMode,
+  usePracticeQuestion,
   useThrottledValue,
 } from '@/components/ui';
 import { TimeDomainPanel } from './TimeDomainPanel';
 import { SpectrumPanel } from './SpectrumPanel';
 import { useAdditiveSynth } from './useAdditiveSynth';
+import { QUESTIONS } from './questions';
 import {
   SAMPLE_RATE,
   BIN_SPACING,
@@ -40,6 +44,8 @@ const DISPLAY_MAX_FREQ = FREQ2 + 400;
 
 export function FourierModule(): React.JSX.Element {
   const predictEnabled = useUrlFlag(decodePredictFlag, true);
+  const practiceMode = usePracticeMode();
+  const practiceQuestion = usePracticeQuestion(QUESTIONS);
   const [state, setState] = useUrlSyncedState(
     decodeFourierState,
     encodeFourierState,
@@ -82,7 +88,7 @@ export function FourierModule(): React.JSX.Element {
     `Component 3 at ${state.freq3.toFixed(1)} Hz, ${onBin ? 'on a bin centre' : 'between bins — leakage visible'}. Window: ${state.window}.`
   );
 
-  return (
+  const content = (
     <div className="flex flex-col gap-4">
       <TimeDomainPanel signal={signal} window={state.window} />
       <SpectrumPanel
@@ -177,20 +183,26 @@ export function FourierModule(): React.JSX.Element {
           : 'Tapering the signal toward zero at both edges before transforming reduces (but never fully removes) leakage.'}
       </p>
 
-      <PredictionCheck
-        moduleId="fourier"
-        disabled={!predictEnabled}
-        question="You slide component 3's frequency so it lands exactly between two FFT bins. What happens in the spectrum?"
-        options={[
-          { id: 'a', label: 'A single peak, just shifted to the nearest bin', correct: false },
-          { id: 'b', label: 'Energy spreads across several neighbouring bins', correct: true },
-          { id: 'c', label: 'The peak disappears entirely', correct: false },
-          { id: 'd', label: 'Nothing changes — bins are continuous', correct: false },
-        ]}
-      />
+      {!practiceMode && (
+        <PredictionCheck moduleId="fourier" disabled={!predictEnabled} questions={QUESTIONS} />
+      )}
 
       <LiveRegion text={liveText} />
     </div>
+  );
+
+  if (!practiceMode) return content;
+
+  return (
+    <PredictionGate
+      moduleId="fourier"
+      disabled={!predictEnabled}
+      question={practiceQuestion.question}
+      options={practiceQuestion.options}
+      persist={false}
+    >
+      {content}
+    </PredictionGate>
   );
 }
 

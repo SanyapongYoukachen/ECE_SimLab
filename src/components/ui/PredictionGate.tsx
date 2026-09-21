@@ -9,6 +9,12 @@ export interface PredictionOption {
   readonly correct: boolean;
 }
 
+export interface PredictionQuestion {
+  readonly id: string;
+  readonly question: string;
+  readonly options: readonly PredictionOption[];
+}
+
 interface PredictionGateProps {
   readonly moduleId: string;
   readonly question: string;
@@ -16,6 +22,13 @@ interface PredictionGateProps {
   /** Instructor lecture-mode flag (URL: ?predict=off). When true, the gate never blocks. */
   readonly disabled: boolean;
   readonly children: React.ReactNode;
+  /**
+   * Whether an answer permanently unlocks the module across visits (the
+   * default gating behaviour). Practice mode passes `false`: it re-gates
+   * every time so drilling a fresh random question actually repeats,
+   * instead of "answer once, unlocked forever."
+   */
+  readonly persist?: boolean;
 }
 
 // localStorage has no same-window change event, so `choose()` broadcasts its
@@ -42,19 +55,25 @@ export function PredictionGate({
   options,
   disabled,
   children,
+  persist = true,
 }: PredictionGateProps): React.JSX.Element {
   const storageKey = `signals-lab:predicted:${moduleId}`;
 
-  const selected = useSyncExternalStore(
+  const storedSelected = useSyncExternalStore(
     subscribeStorage,
     () => (typeof window !== 'undefined' ? window.localStorage.getItem(storageKey) : null),
     () => null
   );
+  const [localSelected, setLocalSelected] = useState<string | null>(null);
+  const selected = persist ? storedSelected : localSelected;
+
   // Captured once at mount: distinguishes "already answered on a prior visit"
   // (skip straight to unlocked) from "just answered this session" (still
-  // require the explicit Continue click below).
+  // require the explicit Continue click below). Practice mode (persist =
+  // false) never treats a prior answer as a standing unlock.
   const [hadStoredAnswerAtMount] = useState(
-    () => typeof window !== 'undefined' && window.localStorage.getItem(storageKey) !== null
+    () =>
+      persist && typeof window !== 'undefined' && window.localStorage.getItem(storageKey) !== null
   );
   const [continueClicked, setContinueClicked] = useState(false);
 
@@ -63,9 +82,17 @@ export function PredictionGate({
 
   function choose(opt: PredictionOption): void {
     if (revealed) return;
-    window.localStorage.setItem(storageKey, opt.id);
-    notifyStorageChange();
-    logEvent(moduleId, 'prediction_answered', { optionId: opt.id, correct: opt.correct });
+    if (persist) {
+      window.localStorage.setItem(storageKey, opt.id);
+      notifyStorageChange();
+    } else {
+      setLocalSelected(opt.id);
+    }
+    logEvent(moduleId, 'prediction_answered', {
+      optionId: opt.id,
+      correct: opt.correct,
+      practice: !persist,
+    });
   }
 
   const locked = !disabled && !unlocked;

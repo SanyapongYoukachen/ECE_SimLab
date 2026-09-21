@@ -137,26 +137,35 @@ browser's log as JSON. No backend in v1 — the event shape is deliberately
 generic so a real collector can be pointed at `logEvent()` later without a
 schema change.
 
-### Prediction: a gate for module 4, a check for modules 1-3
+### Prediction: a check by default, a gate as opt-in practice
 
-Two components share one `localStorage` answer namespace
-(`signals-lab:predicted:<moduleId>`) but apply it at opposite ends of the
-module:
+Every module ships a bank of 3-5 questions
+(`components/modules/<name>/questions.ts`, typed as
+`PredictionQuestion[]`) and two ways to ask them, chosen by a single
+cross-module preference:
 
-- `components/ui/PredictionGate.tsx` (circuits only) wraps the module's
-  interactive area, showing a multiple-choice question up front and marking
-  the wrapped content `inert` + `aria-hidden` until answered — a guess made
-  before anything is shown.
-- `components/ui/PredictionCheck.tsx` (convolution, Fourier, theorem) renders
-  inline at the _end_ of the module, after the content is already open and
-  interactive. It's the same question/options shape and the same
-  correct/incorrect feedback styling, just non-blocking — a check on whether
-  the demonstration landed, not a gate in front of it.
+- **Default — `components/ui/PredictionCheck.tsx`.** Renders the whole
+  question bank inline at the _end_ of the module, after the content is
+  already open and interactive. Each question persists its own answer
+  independently in `localStorage`
+  (`signals-lab:predicted:<moduleId>:<questionId>`) — a check on whether the
+  demonstration landed, not a gate in front of it.
+- **Opt-in "Predict first" practice mode — `components/ui/PredictionGate.tsx`
+  with `persist={false}`.** A `<PracticeModeToggle>` in every module's header
+  (`usePracticeMode` / `setPracticeMode`, backed by a single
+  `signals-lab:practice-mode` key) switches the _whole app_ into gated mode:
+  each module instead wraps its content behind **one** question, picked
+  at random from that module's bank (`usePracticeQuestion`), and blocks
+  (`inert` + `aria-hidden`) until answered. `persist={false}` means it never
+  remembers a past answer as a standing unlock — every visit re-gates with a
+  fresh random question, which is the point for a student drilling on
+  purpose.
 
 Both read the instructor's `?predict=off` flag the same way: the gate
 unlocks immediately instead of blocking, the check renders nothing at all.
-Both persist the chosen option in `localStorage`, keyed per module, so a
-returning student isn't re-asked.
+`PredictionGate`'s default (`persist={true}`, used automatically whenever
+practice mode is on) is what modules used before this preference existed —
+answer once, stay unlocked.
 
 ## Adding another module
 
@@ -167,13 +176,17 @@ exactly this recipe — see it for a worked example that isn't DSP.
    `lib/state/urlState.ts`.
 2. Add any new pure math to its own `lib/<topic>` directory (with tests —
    nothing else should start until they're green).
-3. Create `components/modules/<name>/` with panel components (each a
-   `draw(ctx, size, theme)` callback passed to `<PlotCanvas>`) and an
-   orchestrating `<NameModule>` component that wires state, a prediction
-   component, and a `<LiveRegion>` together — `<PredictionCheck>` (inline,
-   non-blocking, at the end of the module) unless the module specifically
-   needs to gate access up front, in which case use `<PredictionGate>`
-   instead. Reuse `Slider`, `SegmentedControl`, `ExpressionReadout` from
+3. Create `components/modules/<name>/questions.ts` — a `PredictionQuestion[]`
+   bank of 3-5 questions — and `components/modules/<name>/` with panel
+   components (each a `draw(ctx, size, theme)` callback passed to
+   `<PlotCanvas>`) and an orchestrating `<NameModule>` component. Wire state,
+   a `<LiveRegion>`, and both prediction paths off the same bank: render
+   `<PredictionCheck questions={QUESTIONS} .../>` inline at the end when
+   `!usePracticeMode()`, else wrap the whole module in `<PredictionGate
+question={practiceQuestion.question} options={practiceQuestion.options}
+persist={false}>` using `usePracticeQuestion(QUESTIONS)` — every existing
+   module follows this exact branch, so copy one rather than improvising a
+   new shape. Reuse `Slider`, `SegmentedControl`, `ExpressionReadout` from
    `components/ui` — avoid inventing new control chrome.
 4. Create `components/modules/<name>/<Name>ModuleClient.tsx`
    (`next/dynamic(..., { ssr: false })`) and `app/<name>/page.tsx` wrapping it
