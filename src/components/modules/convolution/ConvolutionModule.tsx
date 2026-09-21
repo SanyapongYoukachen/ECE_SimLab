@@ -11,7 +11,7 @@ import {
 import { useUrlSyncedState, useUrlFlag } from '@/lib/state/useUrlState';
 import { logEvent } from '@/lib/state/telemetry';
 import {
-  PredictionGate,
+  PredictionCheck,
   Slider,
   SegmentedControl,
   PlayPauseButton,
@@ -103,80 +103,80 @@ export function ConvolutionModule(): React.JSX.Element {
   );
 
   return (
-    <PredictionGate
-      moduleId="convolution"
-      disabled={!predictEnabled}
-      question="x has 5 samples and h has 3 samples. How many samples will y = x * h have?"
-      options={[
-        { id: 'a', label: '5 — output matches the input length', correct: false },
-        { id: 'b', label: '8 — output is the sum of both lengths', correct: false },
-        { id: 'c', label: '7 — output is N + M − 1', correct: true },
-        { id: 'd', label: '3 — output matches the shorter kernel', correct: false },
-      ]}
-    >
-      <div className="flex flex-col gap-4">
-        <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
-          <ConvolutionInputPanel
-            x={state.x}
-            kernelValues={kernelValues}
-            n={n}
-            step={currentStep}
-            onEditSample={editSample}
-            selectedIndex={selectedIndex}
-            onSelectIndex={setSelectedIndex}
-          />
-          <ConvolutionOutputPanel y={y} n={n} />
-        </div>
-
-        <ExpressionReadout label="Current shift">
-          {formatConvExpression(currentStep) || '—'}
-        </ExpressionReadout>
-
-        <div className="flex flex-wrap items-center gap-4 rounded-md border border-[var(--border)] bg-[var(--surface)] p-3">
-          {reducedMotion ? (
-            <button
-              type="button"
-              onClick={stepOnce}
-              disabled={n >= outLen - 1}
-              className="rounded-md bg-[var(--foreground)] px-4 py-2 text-sm font-medium text-[var(--background)] disabled:opacity-40"
-            >
-              Step →
-            </button>
-          ) : (
-            <PlayPauseButton playing={playing} onToggle={togglePlay} />
-          )}
-          <div className="min-w-[220px] flex-1">
-            <Slider
-              label="Shift n"
-              value={n}
-              min={0}
-              max={Math.max(0, outLen - 1)}
-              step={1}
-              onChange={setN}
-            />
-          </div>
-        </div>
-
-        <SegmentedControl
-          label="Kernel"
-          value={state.kernel}
-          onChange={setKernel}
-          options={KERNEL_ORDER.map((id) => ({ value: id, label: KERNEL_PRESETS[id].label }))}
+    <div className="flex flex-col gap-4">
+      <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
+        <ConvolutionInputPanel
+          x={state.x}
+          kernelValues={kernelValues}
+          n={n}
+          step={currentStep}
+          onEditSample={editSample}
+          selectedIndex={selectedIndex}
+          onSelectIndex={setSelectedIndex}
         />
-
-        <p className="text-sm text-[var(--foreground)]/70">{kernel.note}</p>
-
-        <p className="font-mono tabular-nums text-xs text-[var(--foreground)]/60">
-          h[k] = [{kernelValues.map((v) => v.toFixed(2)).join(', ')}] → flipped: h[−k] = [
-          {[...kernelValues]
-            .reverse()
-            .map((v) => v.toFixed(2))
-            .join(', ')}
-          ]
-        </p>
-
-        <LiveRegion text={liveText} />
+        <ConvolutionOutputPanel y={y} n={n} />
       </div>
-    </PredictionGate>
+
+      <ExpressionReadout label="Current shift">
+        {formatConvExpression(currentStep) || '—'}
+      </ExpressionReadout>
+
+      <div className="flex flex-wrap items-center gap-4 rounded-md border border-[var(--border)] bg-[var(--surface)] p-3">
+        {reducedMotion ? (
+          <button
+            type="button"
+            onClick={stepOnce}
+            disabled={n >= outLen - 1}
+            className="rounded-md bg-[var(--foreground)] px-4 py-2 text-sm font-medium text-[var(--background)] disabled:opacity-40"
+          >
+            Step →
+          </button>
+        ) : (
+          <PlayPauseButton playing={playing} onToggle={togglePlay} />
+        )}
+        <div className="min-w-[220px] flex-1">
+          <Slider
+            label="Shift n"
+            value={n}
+            min={0}
+            max={Math.max(0, outLen - 1)}
+            step={1}
+            onChange={setN}
+          />
+        </div>
+      </div>
+
+      <SegmentedControl
+        label="Kernel"
+        value={state.kernel}
+        onChange={setKernel}
+        options={KERNEL_ORDER.map((id) => ({ value: id, label: KERNEL_PRESETS[id].label }))}
+      />
+
+      <p className="text-sm text-[var(--foreground)]/70">{kernel.note}</p>
+
+      <p className="font-mono tabular-nums text-xs text-[var(--foreground)]/60">
+        h[k] = [{kernelValues.map((v) => v.toFixed(2)).join(', ')}] → flipped: h[−k] = [
+        {[...kernelValues]
+          .reverse()
+          .map((v) => v.toFixed(2))
+          .join(', ')}
+        ]
+      </p>
+
+      <PredictionCheck
+        moduleId="convolution"
+        disabled={!predictEnabled}
+        question="x has 5 samples and h has 3 samples. How many samples will y = x * h have?"
+        options={[
+          { id: 'a', label: '5 — output matches the input length', correct: false },
+          { id: 'b', label: '8 — output is the sum of both lengths', correct: false },
+          { id: 'c', label: '7 — output is N + M − 1', correct: true },
+          { id: 'd', label: '3 — output matches the shorter kernel', correct: false },
+        ]}
+      />
+
+      <LiveRegion text={liveText} />
+    </div>
   );
 }

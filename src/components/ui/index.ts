@@ -5,6 +5,7 @@ export * from './PlayPauseButton';
 export * from './LiveRegion';
 export * from './ExpressionReadout';
 export * from './PredictionGate';
+export * from './PredictionCheck';
 export * from './ModuleShell';
 export * from './ModuleLoadingFallback';
 export * from './TelemetryExportButton';

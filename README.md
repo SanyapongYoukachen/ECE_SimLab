@@ -12,8 +12,8 @@ resistors, the voltage divider — a schematic linked to a live I-V plot, power
 bars, or a voltage ladder).
 
 No backend, no database. Everything — including student answers to the
-prediction gates and the interaction log — lives in the browser (URL query
-string + `localStorage`).
+prediction gate/check and the interaction log — lives in the browser (URL
+query string + `localStorage`).
 
 ## Getting started
 
@@ -137,14 +137,26 @@ browser's log as JSON. No backend in v1 — the event shape is deliberately
 generic so a real collector can be pointed at `logEvent()` later without a
 schema change.
 
-### The prediction gate
+### Prediction: a gate for module 4, a check for modules 1-3
 
-`components/ui/PredictionGate.tsx` wraps a module's interactive area, showing
-a multiple-choice question and marking the wrapped content `inert` +
-`aria-hidden` until answered (so it's neither focusable nor announced while
-locked). An instructor can bypass it globally via `?predict=off` on any
-module URL. Answers persist in `localStorage`, keyed per module, so a
-returning student isn't re-gated.
+Two components share one `localStorage` answer namespace
+(`signals-lab:predicted:<moduleId>`) but apply it at opposite ends of the
+module:
+
+- `components/ui/PredictionGate.tsx` (circuits only) wraps the module's
+  interactive area, showing a multiple-choice question up front and marking
+  the wrapped content `inert` + `aria-hidden` until answered — a guess made
+  before anything is shown.
+- `components/ui/PredictionCheck.tsx` (convolution, Fourier, theorem) renders
+  inline at the _end_ of the module, after the content is already open and
+  interactive. It's the same question/options shape and the same
+  correct/incorrect feedback styling, just non-blocking — a check on whether
+  the demonstration landed, not a gate in front of it.
+
+Both read the instructor's `?predict=off` flag the same way: the gate
+unlocks immediately instead of blocking, the check renders nothing at all.
+Both persist the chosen option in `localStorage`, keyed per module, so a
+returning student isn't re-asked.
 
 ## Adding another module
 
@@ -157,10 +169,12 @@ exactly this recipe — see it for a worked example that isn't DSP.
    nothing else should start until they're green).
 3. Create `components/modules/<name>/` with panel components (each a
    `draw(ctx, size, theme)` callback passed to `<PlotCanvas>`) and an
-   orchestrating `<NameModule>` component that wires state, the prediction
-   gate, and a `<LiveRegion>` together. Reuse `Slider`, `SegmentedControl`,
-   `ExpressionReadout` from `components/ui` — avoid inventing new control
-   chrome.
+   orchestrating `<NameModule>` component that wires state, a prediction
+   component, and a `<LiveRegion>` together — `<PredictionCheck>` (inline,
+   non-blocking, at the end of the module) unless the module specifically
+   needs to gate access up front, in which case use `<PredictionGate>`
+   instead. Reuse `Slider`, `SegmentedControl`, `ExpressionReadout` from
+   `components/ui` — avoid inventing new control chrome.
 4. Create `components/modules/<name>/<Name>ModuleClient.tsx`
    (`next/dynamic(..., { ssr: false })`) and `app/<name>/page.tsx` wrapping it
    in `<ModuleShell>`.
@@ -197,8 +211,8 @@ exactly this recipe — see it for a worked example that isn't DSP.
 
 ## What I'd reconsider about the pedagogy
 
-- The prediction gate persists a single "answered" state per module per
-  browser. It doesn't currently distinguish "answered correctly" from
+- Both prediction components persist a single "answered" state per module per
+  browser. Neither currently distinguishes "answered correctly" from
   "answered incorrectly" in what it unlocks or in the exported telemetry
   summary — an instructor exporting logs across a class would have to reach
   into each event's `correct` field themselves rather than getting an
