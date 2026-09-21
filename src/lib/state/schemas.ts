@@ -36,6 +36,21 @@ export const TheoremStateSchema = z.object({
 });
 export type TheoremState = z.infer<typeof TheoremStateSchema>;
 
+export const CircuitModeSchema = z.enum(['ohm', 'network', 'divider']);
+export type CircuitMode = z.infer<typeof CircuitModeSchema>;
+
+export const TopologySchema = z.enum(['series', 'parallel']);
+export type Topology = z.infer<typeof TopologySchema>;
+
+export const CircuitStateSchema = z.object({
+  mode: CircuitModeSchema.default('ohm'),
+  voltage: z.number().min(0).max(24).default(9),
+  r1: z.number().min(1).max(10000).default(220),
+  r2: z.number().min(1).max(10000).default(470),
+  topology: TopologySchema.default('series'),
+});
+export type CircuitState = z.infer<typeof CircuitStateSchema>;
+
 /** Instructor lecture-mode flag: when true, prediction gates are skipped entirely. */
 export const PredictFlagSchema = z
   .enum(['on', 'off'])

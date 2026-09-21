@@ -1,14 +1,15 @@
 # Signals Lab
 
-An interactive teaching instrument for convolution and the discrete Fourier
-transform, built for undergraduate signals courses. Three linked modules show
-the same mathematical object in two representations at once — manipulate
-either one, watch the other respond.
+An interactive teaching instrument for signals and circuits, built for
+undergraduate ECE courses. Four linked modules show the same object in two
+representations at once — manipulate either one, watch the other respond.
 
 Live modules: **Convolution** (flip-and-slide, drag-to-edit) · **Fourier
 transform explorer** (time domain ↔ spectrum, spectral leakage, Web Audio
 playback) · **The convolution theorem** (direct vs. FFT-based convolution,
-live operation counts).
+live operation counts) · **DC circuits** (Ohm's law, series/parallel
+resistors, the voltage divider — a schematic linked to a live I-V plot, power
+bars, or a voltage ladder).
 
 No backend, no database. Everything — including student answers to the
 prediction gates and the interaction log — lives in the browser (URL query
@@ -22,8 +23,8 @@ npm run dev       # http://localhost:3000
 ```
 
 ```bash
-npm run test        # vitest — lib/dsp unit tests
-npm run test:e2e     # playwright — smoke suite across all three modules
+npm run test        # vitest — lib/dsp and lib/circuits unit tests
+npm run test:e2e     # playwright — smoke suite across all four modules
 npm run typecheck    # tsc --noEmit
 npm run lint         # eslint
 npm run build        # production build (static per-route prerender)
@@ -33,13 +34,15 @@ npm run build        # production build (static per-route prerender)
 
 ```
 src/
-  lib/dsp/       pure TypeScript, zero React/DOM imports, fully unit-tested
-  lib/plot/      canvas primitives: scales, axes, stems, lines, hit-testing, theme tokens
+  lib/dsp/       pure TypeScript DSP math, zero React/DOM imports, fully unit-tested
+  lib/circuits/  pure TypeScript circuit math (Ohm's law, series/parallel, divider), same style
+  lib/plot/      canvas primitives: scales, axes, stems, lines, hit-testing, theme tokens,
+                 plus a small hand-drawn schematic kit (resistor, battery, wires, current arrows)
   lib/state/     Zod schemas + URL <-> state codecs + localStorage telemetry
   components/
     ui/          shared controls: PlotCanvas, Slider, SegmentedControl,
                  PredictionGate, ThemeToggle, LiveRegion, ModuleShell, ...
-    modules/     one directory per module (convolution / fourier / theorem),
+    modules/     one directory per module (convolution / fourier / theorem / circuits),
                  each with its own panels, scales, and orchestrating
                  <XModule> component
   app/
@@ -47,10 +50,11 @@ src/
     convolution/page.tsx
     fourier/page.tsx
     theorem/page.tsx
+    circuits/page.tsx
 e2e/             Playwright smoke tests
 ```
 
-The three architectural rules that make adding a fourth module cheap:
+The three architectural rules that keep adding another module cheap:
 
 1. **`lib/dsp` never imports React or touches the DOM.** It's plain,
    deterministic TypeScript — importable from a Node script, testable in
@@ -142,12 +146,15 @@ locked). An instructor can bypass it globally via `?predict=off` on any
 module URL. Answers persist in `localStorage`, keyed per module, so a
 returning student isn't re-gated.
 
-## Adding a fourth module
+## Adding another module
+
+The circuits module (`lib/circuits`, `components/modules/circuits`) followed
+exactly this recipe — see it for a worked example that isn't DSP.
 
 1. Add a Zod schema + encode/decode pair in `lib/state/schemas.ts` and
    `lib/state/urlState.ts`.
-2. Add any new pure math to `lib/dsp` (with tests — nothing else should start
-   until they're green).
+2. Add any new pure math to its own `lib/<topic>` directory (with tests —
+   nothing else should start until they're green).
 3. Create `components/modules/<name>/` with panel components (each a
    `draw(ctx, size, theme)` callback passed to `<PlotCanvas>`) and an
    orchestrating `<NameModule>` component that wires state, the prediction
