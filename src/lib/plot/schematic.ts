@@ -173,3 +173,60 @@ export function drawNodeDot(
   ctx.fill();
   ctx.restore();
 }
+
+export interface FlowDotsOptions {
+  readonly color: string;
+  /** Elapsed seconds, monotonically increasing — drives dot position each frame. */
+  readonly phase: number;
+  /** Current (amps) at the top of the visual speed/opacity scale, shared across a schematic's segments so branches are comparable. */
+  readonly maxCurrent: number;
+  readonly dotSpacingPx?: number;
+  readonly dotRadius?: number;
+  readonly maxSpeedPxPerSec?: number;
+}
+
+/**
+ * Draws small moving dots along a wire segment — conventional current flow.
+ * Direction follows the sign of `current` (positive = from -> to); speed and
+ * opacity scale with |current| / maxCurrent, so a near-zero branch reads as
+ * faint and nearly still rather than just "a dimmer version of moving."
+ * Respect prefers-reduced-motion by not calling this at all (draw a static
+ * drawCurrentArrow instead) — this function itself has no reduced-motion
+ * awareness since it doesn't own the animation loop driving `phase`.
+ */
+export function drawCurrentFlowDots(
+  ctx: CanvasRenderingContext2D,
+  segment: { from: Point; to: Point; current: number },
+  opts: FlowDotsOptions
+): void {
+  const { from, to, current } = segment;
+  const {
+    color,
+    phase,
+    maxCurrent,
+    dotSpacingPx = 16,
+    dotRadius = 2.2,
+    maxSpeedPxPerSec = 70,
+  } = opts;
+
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const len = Math.hypot(dx, dy);
+  if (len < 1) return;
+
+  const magnitude = Math.min(1, Math.abs(current) / Math.max(maxCurrent, 1e-9));
+  const dir = current >= 0 ? 1 : -1;
+  const traveled = phase * magnitude * maxSpeedPxPerSec * dir;
+  const offset = ((traveled % dotSpacingPx) + dotSpacingPx) % dotSpacingPx;
+
+  ctx.save();
+  ctx.fillStyle = color;
+  ctx.globalAlpha = 0.22 + magnitude * 0.68;
+  for (let d = offset; d < len; d += dotSpacingPx) {
+    const t = d / len;
+    ctx.beginPath();
+    ctx.arc(from.x + dx * t, from.y + dy * t, dotRadius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}

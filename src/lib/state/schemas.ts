@@ -51,6 +51,24 @@ export const CircuitStateSchema = z.object({
 });
 export type CircuitState = z.infer<typeof CircuitStateSchema>;
 
+export const SimulatorTabSchema = z.enum(['wheatstone']);
+export type SimulatorTab = z.infer<typeof SimulatorTabSchema>;
+
+export const SimulatorStateSchema = z.object({
+  tab: SimulatorTabSchema.default('wheatstone'),
+});
+export type SimulatorState = z.infer<typeof SimulatorStateSchema>;
+
+export const WheatstoneStateSchema = z.object({
+  voltage: z.number().min(0).max(24).default(9),
+  r1: z.number().min(1).max(10000).default(100),
+  r2: z.number().min(1).max(10000).default(100),
+  r3: z.number().min(1).max(10000).default(100),
+  r4: z.number().min(1).max(10000).default(150),
+  rg: z.number().min(1).max(10000).default(100),
+});
+export type WheatstoneState = z.infer<typeof WheatstoneStateSchema>;
+
 /** Instructor lecture-mode flag: when true, prediction gates are skipped entirely. */
 export const PredictFlagSchema = z
   .enum(['on', 'off'])

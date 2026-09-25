@@ -3,11 +3,15 @@ import {
   ConvolutionStateSchema,
   FourierPresetSchema,
   PredictFlagSchema,
+  SimulatorStateSchema,
   TheoremStateSchema,
+  WheatstoneStateSchema,
   type CircuitState,
   type ConvolutionState,
   type FourierState,
+  type SimulatorState,
   type TheoremState,
+  type WheatstoneState,
 } from './schemas';
 
 function num(params: URLSearchParams, key: string): number | undefined {
@@ -104,6 +108,42 @@ export function encodeCircuitState(state: CircuitState): URLSearchParams {
   params.set('r1', state.r1.toFixed(1));
   params.set('r2', state.r2.toFixed(1));
   params.set('topology', state.topology);
+  return params;
+}
+
+export function decodeSimulatorState(params: URLSearchParams): SimulatorState {
+  const raw = { tab: params.get('tab') ?? undefined };
+  const result = SimulatorStateSchema.safeParse(raw);
+  return result.success ? result.data : SimulatorStateSchema.parse({});
+}
+
+export function encodeSimulatorState(state: SimulatorState): URLSearchParams {
+  const params = new URLSearchParams();
+  params.set('tab', state.tab);
+  return params;
+}
+
+export function decodeWheatstoneState(params: URLSearchParams): WheatstoneState {
+  const raw = {
+    voltage: num(params, 'voltage'),
+    r1: num(params, 'r1'),
+    r2: num(params, 'r2'),
+    r3: num(params, 'r3'),
+    r4: num(params, 'r4'),
+    rg: num(params, 'rg'),
+  };
+  const result = WheatstoneStateSchema.safeParse(raw);
+  return result.success ? result.data : WheatstoneStateSchema.parse({});
+}
+
+export function encodeWheatstoneState(state: WheatstoneState): URLSearchParams {
+  const params = new URLSearchParams();
+  params.set('voltage', state.voltage.toFixed(2));
+  params.set('r1', state.r1.toFixed(1));
+  params.set('r2', state.r2.toFixed(1));
+  params.set('r3', state.r3.toFixed(1));
+  params.set('r4', state.r4.toFixed(1));
+  params.set('rg', state.rg.toFixed(1));
   return params;
 }
 

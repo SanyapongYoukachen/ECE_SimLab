@@ -1,7 +1,7 @@
 # Signals Lab
 
 An interactive teaching instrument for signals and circuits, built for
-undergraduate ECE courses. Four linked modules show the same object in two
+undergraduate ECE courses. Five linked modules show the same object in two
 representations at once — manipulate either one, watch the other respond.
 
 Live modules: **Convolution** (flip-and-slide, drag-to-edit) · **Fourier
@@ -9,7 +9,9 @@ transform explorer** (time domain ↔ spectrum, spectral leakage, Web Audio
 playback) · **The convolution theorem** (direct vs. FFT-based convolution,
 live operation counts) · **DC circuits** (Ohm's law, series/parallel
 resistors, the voltage divider — a schematic linked to a live I-V plot, power
-bars, or a voltage ladder).
+bars, or a voltage ladder) · **Circuit simulator** (tabbed, one simulated
+circuit per tab — the Wheatstone bridge first — with animated current flow
+through every branch).
 
 No backend, no database. Everything — including student answers to the
 prediction gate/check and the interaction log — lives in the browser (URL
@@ -24,7 +26,7 @@ npm run dev       # http://localhost:3000
 
 ```bash
 npm run test        # vitest — lib/dsp and lib/circuits unit tests
-npm run test:e2e     # playwright — smoke suite across all four modules
+npm run test:e2e     # playwright — smoke suite across all five modules
 npm run typecheck    # tsc --noEmit
 npm run lint         # eslint
 npm run build        # production build (static per-route prerender)
@@ -35,22 +37,26 @@ npm run build        # production build (static per-route prerender)
 ```
 src/
   lib/dsp/       pure TypeScript DSP math, zero React/DOM imports, fully unit-tested
-  lib/circuits/  pure TypeScript circuit math (Ohm's law, series/parallel, divider), same style
+  lib/circuits/  pure TypeScript circuit math (Ohm's law, series/parallel, divider,
+                 Wheatstone bridge nodal analysis), same style
   lib/plot/      canvas primitives: scales, axes, stems, lines, hit-testing, theme tokens,
-                 plus a small hand-drawn schematic kit (resistor, battery, wires, current arrows)
+                 plus a hand-drawn schematic kit (resistor, battery, wires, current arrows,
+                 animated current-flow dots)
   lib/state/     Zod schemas + URL <-> state codecs + localStorage telemetry
   components/
-    ui/          shared controls: PlotCanvas, Slider, SegmentedControl,
-                 PredictionGate, ThemeToggle, LiveRegion, ModuleShell, ...
-    modules/     one directory per module (convolution / fourier / theorem / circuits),
-                 each with its own panels, scales, and orchestrating
-                 <XModule> component
+    ui/          shared controls: PlotCanvas, AnimatedCanvas, Slider, SegmentedControl,
+                 PredictionGate, PredictionCheck, ThemeToggle, LiveRegion, ModuleShell, ...
+    modules/     one directory per module (convolution / fourier / theorem / circuits /
+                 simulator), each with its own panels, scales, and orchestrating
+                 <XModule> component — simulator/ additionally nests one directory
+                 per simulated circuit (wheatstone/ so far)
   app/
     page.tsx                 landing page
     convolution/page.tsx
     fourier/page.tsx
     theorem/page.tsx
     circuits/page.tsx
+    simulator/page.tsx
 e2e/             Playwright smoke tests
 ```
 
@@ -166,6 +172,37 @@ unlocks immediately instead of blocking, the check renders nothing at all.
 `PredictionGate`'s default (`persist={true}`, used automatically whenever
 practice mode is on) is what modules used before this preference existed —
 answer once, stay unlocked.
+
+### Circuit simulator: tabs and animated current flow
+
+`app/simulator/page.tsx` renders `<SimulatorModule>`, which owns just one
+thing — a `<SegmentedControl>` reading/writing `?tab=` via its own tiny
+`SimulatorStateSchema` — and renders whichever tab's component is selected.
+Each tab is a fully independent module living in its own
+`components/modules/simulator/<circuit>/` directory, with its own state
+schema, URL params, math, and question bank; nothing here couples one
+circuit's shape to another's, so adding a second tab means adding a second
+directory and a line in `constants.ts`, not touching the Wheatstone bridge.
+
+The Wheatstone bridge (`lib/circuits/wheatstone.ts`) is solved by nodal
+analysis: two KCL equations at the bridge's midpoints reduce to a 2x2 linear
+system (solved directly via Cramer's rule) for the node voltages, from which
+every branch current — including the galvanometer's — falls out directly.
+The balance condition `R1·R4 = R2·R3` is a property of that solution, not a
+special case: it holds regardless of the galvanometer's own resistance,
+which is itself one of the module's prediction questions.
+
+Current flow is genuinely animated, not just a static arrow: `<AnimatedCanvas>`
+(`components/ui/AnimatedCanvas.tsx`) is `<PlotCanvas>`'s sibling for
+continuous motion — it drives its own `requestAnimationFrame` loop instead of
+redrawing only on `deps` changes, passing an elapsed-time `phase` into
+`onDraw`. `drawCurrentFlowDots` (`lib/plot/schematic.ts`) uses that phase to
+walk dots along a wire segment at a speed and opacity proportional to
+`|current|`, direction from its sign — so the galvanometer branch visibly
+slows to a near-standstill as the bridge approaches balance, which is the
+whole point of the demonstration. Respects `prefers-reduced-motion`: falls
+back to static, magnitude-sized arrows (reusing `drawCurrentArrow`) instead
+of animating.
 
 ## Adding another module
 

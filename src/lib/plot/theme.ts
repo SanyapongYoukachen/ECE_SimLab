@@ -11,6 +11,8 @@ export interface PlotTheme {
   readonly structure: string;
   readonly structureFaint: string;
   readonly background: string;
+  /** The app's opaque card/page surface (`--surface`) — for painting over wires behind a schematic symbol, unlike `background` which is transparent. */
+  readonly surface: string;
   readonly text: string;
   readonly danger: string;
 }
@@ -22,6 +24,7 @@ const FALLBACK: PlotTheme = {
   structure: '#8a93a3',
   structureFaint: '#8a93a333',
   background: '#ffffff',
+  surface: '#ffffff',
   text: '#1b1f27',
   danger: '#c0553f',
 };
@@ -42,6 +45,7 @@ export function readPlotTheme(): PlotTheme {
     structure: cssVar(styles, '--plot-structure', FALLBACK.structure),
     structureFaint: cssVar(styles, '--plot-structure-faint', FALLBACK.structureFaint),
     background: cssVar(styles, '--plot-background', FALLBACK.background),
+    surface: cssVar(styles, '--surface', FALLBACK.surface),
     text: cssVar(styles, '--plot-text', FALLBACK.text),
     danger: cssVar(styles, '--plot-danger', FALLBACK.danger),
   };

@@ -1,4 +1,5 @@
 export * from './PlotCanvas';
+export * from './AnimatedCanvas';
 export * from './Slider';
 export * from './SegmentedControl';
 export * from './PlayPauseButton';
