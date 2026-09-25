@@ -371,8 +371,8 @@ export const en = {
       needleRest: 'rests at centre zero',
       needleDeflects: (right: boolean) => `deflects ${right ? 'right' : 'left'}`,
       needlePinned: (right: boolean) => `is pinned hard ${right ? 'right' : 'left'}`,
-      schematicAria: (ig: string, balanced: boolean, needle: string) =>
-        `Wheatstone bridge schematic. Galvanometer current ${ig}, bridge is ${
+      schematicAria: (vo: string, ig: string, balanced: boolean, needle: string) =>
+        `Wheatstone bridge schematic. Output voltage Vo = VB − VC = ${vo}. Galvanometer current ${ig}, bridge is ${
           balanced ? 'balanced' : 'unbalanced'
         }. Current flow is animated through every branch, direction and speed reflecting each branch's current. The galvanometer needle ${needle}.`,
 
