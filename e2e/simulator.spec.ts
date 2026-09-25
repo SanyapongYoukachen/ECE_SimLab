@@ -30,6 +30,26 @@ test.describe('circuit simulator', () => {
     await expect(page.getByText('Balanced?').locator('..').getByText('Yes')).toBeVisible();
   });
 
+  test('balancing a non-round ratio survives a reload', async ({ page }) => {
+    await page.goto('/simulator?predict=off&r1=300&r2=100&r3=100&r4=150');
+
+    await page.getByRole('button', { name: 'Balance the bridge (solve R4)' }).click();
+    await expect(page.getByText('Balanced?').locator('..').getByText('Yes')).toBeVisible();
+
+    await page.reload();
+    await expect(page.getByText('Balanced?').locator('..').getByText('Yes')).toBeVisible();
+  });
+
+  test('the balance button is disabled, with a reason, when the balance point is off the R4 scale', async ({
+    page,
+  }) => {
+    await page.goto('/simulator?predict=off&r1=10&r2=2000&r3=2000');
+
+    const button = page.getByRole('button', { name: 'Balance the bridge (solve R4)' });
+    await expect(button).toBeDisabled();
+    await expect(page.getByText(/Balance needs R4 = 400\.00 kΩ/)).toBeVisible();
+  });
+
   test('moving a resistor slider updates the live balance expression', async ({ page }) => {
     await page.goto('/simulator?predict=off');
 

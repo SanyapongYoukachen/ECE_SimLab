@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import {
   drawWire,
   drawResistor,
@@ -12,7 +12,7 @@ import {
   type Point,
 } from '@/lib/plot';
 import { AnimatedCanvas, usePrefersReducedMotion } from '@/components/ui';
-import type { WheatstoneResult } from '@/lib/circuits/wheatstone';
+import { galvanometerDeflection, type WheatstoneResult } from '@/lib/circuits/wheatstone';
 
 const HEIGHT = 300;
 const PAD_TOP = 44;
@@ -20,7 +20,14 @@ const PAD_BOTTOM = 44;
 const BATTERY_X = 30;
 const DIAMOND_LEFT = 118;
 const DIAMOND_RIGHT_INSET = 78;
-const GALVO_RADIUS = 13;
+const GALVO_RADIUS = 18;
+/** Max diamond half-width as a multiple of its full height. */
+const DIAMOND_MAX_ASPECT = 1.1;
+/** Needle swing at full deflection, either side of the centre zero. */
+const NEEDLE_MAX_RAD = (55 * Math.PI) / 180;
+// Underdamped on purpose: a real moving-coil needle overshoots and settles.
+const NEEDLE_OMEGA = 14;
+const NEEDLE_ZETA = 0.35;
 
 function compactR(ohms: number): string {
   return ohms >= 1000 ? `${(ohms / 1000).toFixed(1)}k` : `${Math.round(ohms)}`;
@@ -31,10 +38,42 @@ function compactI(amps: number): string {
   return `${mA.toFixed(Math.abs(mA) < 10 ? 2 : 1)} mA`;
 }
 
+function needleDescription(ig: number): string {
+  const d = galvanometerDeflection(ig);
+  if (Math.abs(d) < 0.02) return 'rests at centre zero';
+  const side = d > 0 ? 'right' : 'left';
+  return Math.abs(d) > 0.95 ? `is pinned hard ${side}` : `deflects ${side}`;
+}
+
 interface FlowSegment {
   readonly from: Point;
   readonly to: Point;
   readonly current: number;
+}
+
+interface NeedleState {
+  position: number;
+  velocity: number;
+  lastPhase: number;
+}
+
+/** Advances the needle's spring one frame toward `target`; snaps under reduced motion. */
+function stepNeedle(needle: NeedleState, target: number, phase: number, animate: boolean): void {
+  if (!animate) {
+    needle.position = target;
+    needle.velocity = 0;
+    return;
+  }
+  // AnimatedCanvas restarts phase at 0 whenever the circuit changes, so a
+  // backwards step means "new loop", not negative time.
+  const raw = phase >= needle.lastPhase ? phase - needle.lastPhase : phase;
+  needle.lastPhase = phase;
+  const dt = Math.min(raw, 1 / 30);
+  const accel =
+    NEEDLE_OMEGA * NEEDLE_OMEGA * (target - needle.position) -
+    2 * NEEDLE_ZETA * NEEDLE_OMEGA * needle.velocity;
+  needle.velocity += accel * dt;
+  needle.position += needle.velocity * dt;
 }
 
 interface Props {
@@ -50,6 +89,7 @@ interface Props {
  */
 export function WheatstoneSchematic({ result }: Props): React.JSX.Element {
   const reducedMotion = usePrefersReducedMotion();
+  const needleRef = useRef<NeedleState>({ position: 0, velocity: 0, lastPhase: 0 });
 
   const handleDraw = useCallback(
     (
@@ -64,9 +104,15 @@ export function WheatstoneSchematic({ result }: Props): React.JSX.Element {
       const bottom = size.height - PAD_BOTTOM;
       // Margins shrink on narrow (mobile) canvases so the diamond keeps a
       // usable width instead of collapsing toward a sliver.
-      const left = Math.max(64, Math.min(DIAMOND_LEFT, size.width * 0.24));
-      const right = size.width - Math.max(48, Math.min(DIAMOND_RIGHT_INSET, size.width * 0.16));
-      const centerX = (left + right) / 2;
+      const availLeft = Math.max(64, Math.min(DIAMOND_LEFT, size.width * 0.24));
+      const availRight =
+        size.width - Math.max(48, Math.min(DIAMOND_RIGHT_INSET, size.width * 0.16));
+      // Cap the aspect ratio so a wide desktop canvas keeps a diamond rather
+      // than stretching it into a flat lens; extra width goes to the source wires.
+      const halfWidth = Math.min((availRight - availLeft) / 2, (bottom - top) * DIAMOND_MAX_ASPECT);
+      const centerX = (availLeft + availRight) / 2;
+      const left = centerX - halfWidth;
+      const right = centerX + halfWidth;
       const midY = (top + bottom) / 2;
 
       const A: Point = { x: centerX, y: top };
@@ -124,7 +170,12 @@ export function WheatstoneSchematic({ result }: Props): React.JSX.Element {
         }
       }
 
-      // Galvanometer symbol, painted over the B-C wire and its flow dots.
+      // Galvanometer: a centre-zero meter face painted over the B-C wire and
+      // its flow dots, needle deflecting right for current B -> C.
+      const needle = needleRef.current;
+      stepNeedle(needle, galvanometerDeflection(result.ig), phase, !reducedMotion);
+      const pivot: Point = { x: galvo.x, y: galvo.y + 8 };
+      const scaleR = 14;
       ctx.save();
       ctx.fillStyle = theme.surface;
       ctx.strokeStyle = theme.active;
@@ -133,11 +184,38 @@ export function WheatstoneSchematic({ result }: Props): React.JSX.Element {
       ctx.arc(galvo.x, galvo.y, GALVO_RADIUS, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
+
+      ctx.lineCap = 'round';
+      for (const t of [-1, -0.5, 0, 0.5, 1]) {
+        const a = t * NEEDLE_MAX_RAD;
+        const inner = t === 0 ? scaleR - 5 : scaleR - 3;
+        ctx.strokeStyle = t === 0 && result.balanced ? theme.output : theme.structure;
+        ctx.lineWidth = t === 0 ? 1.5 : 1;
+        ctx.beginPath();
+        ctx.moveTo(pivot.x + inner * Math.sin(a), pivot.y - inner * Math.cos(a));
+        ctx.lineTo(pivot.x + scaleR * Math.sin(a), pivot.y - scaleR * Math.cos(a));
+        ctx.stroke();
+      }
+
+      const clamped = Math.max(-1.1, Math.min(1.1, needle.position));
+      const needleAngle = clamped * NEEDLE_MAX_RAD;
+      ctx.strokeStyle = theme.text;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(pivot.x, pivot.y);
+      ctx.lineTo(
+        pivot.x + (scaleR - 1) * Math.sin(needleAngle),
+        pivot.y - (scaleR - 1) * Math.cos(needleAngle)
+      );
+      ctx.stroke();
       ctx.fillStyle = theme.active;
-      ctx.font = 'bold 11px var(--font-mono, monospace)';
+      ctx.beginPath();
+      ctx.arc(pivot.x, pivot.y, 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.font = 'bold 7px var(--font-mono, monospace)';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('G', galvo.x, galvo.y + 0.5);
+      ctx.fillText('G', galvo.x, pivot.y + 5.5);
       ctx.restore();
 
       ctx.font = '11px var(--font-mono, monospace)';
@@ -150,35 +228,38 @@ export function WheatstoneSchematic({ result }: Props): React.JSX.Element {
         ctx.restore();
       }
 
-      // Anchored 62% of the way toward each arm's outer vertex (B or C)
-      // rather than dead-center, so the R1/R3 pair (sharing vertex A) and
-      // the R2/R4 pair (sharing vertex D) don't collide on narrow canvases.
-      const nearOuter = 0.62;
-      label(`V=${result.voltage.toFixed(1)}V`, { x: BATTERY_X - 8, y: midY }, theme.input, 'right');
+      // Each arm's label sits just off its midpoint on the side away from the
+      // diamond's centre, and grows outward from there (right-aligned on the
+      // left arms, left-aligned on the right), so it never crosses the zigzag
+      // whatever the arm's slope.
+      function armLabel(text: string, from: Point, to: Point): void {
+        const mid = { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 };
+        const len = Math.hypot(to.x - from.x, to.y - from.y) || 1;
+        let nx = -(to.y - from.y) / len;
+        let ny = (to.x - from.x) / len;
+        if (nx * (mid.x - centerX) + ny * (mid.y - midY) < 0) {
+          nx = -nx;
+          ny = -ny;
+        }
+        const gap = 14;
+        label(
+          text,
+          { x: mid.x + nx * gap, y: mid.y + ny * gap },
+          theme.active,
+          mid.x < centerX ? 'right' : 'left'
+        );
+      }
+
       label(
-        `R1=${compactR(result.r1)}Ω`,
-        { x: A.x + (B.x - A.x) * nearOuter, y: A.y + (B.y - A.y) * nearOuter - 12 },
-        theme.active,
-        'center'
+        `V=${result.voltage.toFixed(1)}V`,
+        { x: BATTERY_X + 10, y: midY - 20 },
+        theme.input,
+        'left'
       );
-      label(
-        `R2=${compactR(result.r2)}Ω`,
-        { x: D.x + (B.x - D.x) * nearOuter, y: D.y + (B.y - D.y) * nearOuter + 12 },
-        theme.active,
-        'center'
-      );
-      label(
-        `R3=${compactR(result.r3)}Ω`,
-        { x: A.x + (C.x - A.x) * nearOuter, y: A.y + (C.y - A.y) * nearOuter - 12 },
-        theme.active,
-        'center'
-      );
-      label(
-        `R4=${compactR(result.r4)}Ω`,
-        { x: D.x + (C.x - D.x) * nearOuter, y: D.y + (C.y - D.y) * nearOuter + 12 },
-        theme.active,
-        'center'
-      );
+      armLabel(`R1=${compactR(result.r1)}Ω`, A, B);
+      armLabel(`R2=${compactR(result.r2)}Ω`, B, D);
+      armLabel(`R3=${compactR(result.r3)}Ω`, A, C);
+      armLabel(`R4=${compactR(result.r4)}Ω`, C, D);
       label(
         `Ig=${compactI(result.ig)}`,
         { x: galvo.x, y: galvo.y + GALVO_RADIUS + 14 },
@@ -191,7 +272,7 @@ export function WheatstoneSchematic({ result }: Props): React.JSX.Element {
 
   const ariaLabel = `Wheatstone bridge schematic. Galvanometer current ${compactI(result.ig)}, bridge is ${
     result.balanced ? 'balanced' : 'unbalanced'
-  }. Current flow is animated through every branch, direction and speed reflecting each branch's current.`;
+  }. Current flow is animated through every branch, direction and speed reflecting each branch's current. The galvanometer needle ${needleDescription(result.ig)}.`;
 
   return (
     <AnimatedCanvas height={HEIGHT} ariaLabel={ariaLabel} onDraw={handleDraw} deps={[result]} />

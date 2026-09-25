@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { solveWheatstoneBridge } from '@/lib/circuits/wheatstone';
+import { balancingR4, solveWheatstoneBridge } from '@/lib/circuits/wheatstone';
 import { WheatstoneStateSchema } from '@/lib/state/schemas';
 import {
   decodeWheatstoneState,
@@ -49,10 +49,13 @@ export function WheatstoneBridge(): React.JSX.Element {
     setState((prev) => ({ ...prev, [field]: value }));
   }
 
+  const targetR4 = balancingR4(state.r1, state.r2, state.r3);
+  const balanceReachable = targetR4 >= MIN_R && targetR4 <= MAX_R;
+
   function balanceBridge(): void {
-    const solvedR4 = Math.min(MAX_R, Math.max(MIN_R, (state.r2 * state.r3) / state.r1));
-    logEvent('simulator-wheatstone', 'balance_clicked', { r4: solvedR4 });
-    setState((prev) => ({ ...prev, r4: solvedR4 }));
+    if (!balanceReachable) return;
+    logEvent('simulator-wheatstone', 'balance_clicked', { r4: targetR4 });
+    setState((prev) => ({ ...prev, r4: targetR4 }));
   }
 
   const expression = `R1·R4 = ${formatResistance(result.r1 * result.r4)}  ${
@@ -68,10 +71,12 @@ export function WheatstoneBridge(): React.JSX.Element {
 
       <ExpressionReadout label="Balance condition: R1·R4 = R2·R3">{expression}</ExpressionReadout>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <Stat label="Galvanometer current" value={formatCurrent(result.ig)} />
         <Stat label="Node B voltage" value={formatVoltage(result.vb)} />
         <Stat label="Node C voltage" value={formatVoltage(result.vc)} />
+        <Stat label="Bridge voltage VB − VC" value={formatVoltage(result.vb - result.vc)} />
+        <Stat label="R4 for balance (R2·R3/R1)" value={formatResistance(targetR4)} />
         <Stat label="Balanced?" value={result.balanced ? 'Yes' : 'No'} />
       </div>
 
@@ -130,14 +135,23 @@ export function WheatstoneBridge(): React.JSX.Element {
           formatValue={formatResistance}
           onChange={(v) => setResistor('rg', v)}
         />
-        <div>
+        <div className="flex flex-wrap items-center gap-3">
           <button
             type="button"
             onClick={balanceBridge}
-            className="rounded-md border border-[var(--border)] px-3 py-1.5 text-sm hover:bg-[var(--surface-2)]"
+            disabled={!balanceReachable}
+            aria-describedby={balanceReachable ? undefined : 'wheatstone-balance-hint'}
+            className="rounded-md border border-[var(--border)] px-3 py-1.5 text-sm hover:bg-[var(--surface-2)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent"
           >
             Balance the bridge (solve R4)
           </button>
+          {!balanceReachable && (
+            <p id="wheatstone-balance-hint" className="text-xs text-[var(--foreground)]/70">
+              Balance needs R4 = {formatResistance(targetR4)}, outside the R4 slider&apos;s{' '}
+              {formatResistance(MIN_R)}–{formatResistance(MAX_R)} range. Change the ratio arms R1–R3
+              first.
+            </p>
+          )}
         </div>
       </div>
 

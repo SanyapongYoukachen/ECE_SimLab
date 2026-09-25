@@ -204,6 +204,13 @@ whole point of the demonstration. Respects `prefers-reduced-motion`: falls
 back to static, magnitude-sized arrows (reusing `drawCurrentArrow`) instead
 of animating.
 
+Because those dots crawl almost imperceptibly near balance, the galvanometer
+also has a centre-zero needle. Its deflection is `tanh(Ig / 2 mA)`
+(`galvanometerDeflection` in `lib/circuits/wheatstone.ts`), so it stays on
+scale far from balance but still moves visibly for a single slider step near
+it. It rides an underdamped spring, overshooting and settling the way a
+moving-coil meter does, and snaps straight to position under reduced motion.
+
 ## Adding another module
 
 The circuits module (`lib/circuits`, `components/modules/circuits`) followed
