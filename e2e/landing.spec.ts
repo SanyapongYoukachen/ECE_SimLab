@@ -6,7 +6,7 @@ test.describe('landing page', () => {
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Convolution', exact: true })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Fourier transform explorer' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'The convolution theorem' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'AC circuits' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'DC circuits' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Circuit simulator' })).toBeVisible();
   });

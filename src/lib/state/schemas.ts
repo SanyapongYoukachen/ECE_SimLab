@@ -28,13 +28,25 @@ export const FourierPresetSchema = z.object({
 });
 export type FourierState = z.infer<typeof FourierPresetSchema>;
 
-export const TheoremPresetSchema = z.enum(['smooth', 'noisy', 'pulse']);
-
-export const TheoremStateSchema = z.object({
-  length: z.number().int().min(4).max(2048).default(64),
-  preset: TheoremPresetSchema.default('smooth'),
+/** Module 3, AC circuits. Defaults are Thai mains: 220 V rms (311 V peak), 50 Hz. */
+export const AcStateSchema = z.object({
+  mode: z.enum(['sine', 'load']).default('sine'),
+  // Sine-wave section
+  shape: z.enum(['sine', 'square', 'triangle']).default('sine'),
+  peak: z.number().min(1).max(400).default(311),
+  phase: z.number().min(-180).max(180).default(0),
+  // Shared by both sections
+  freq: z.number().min(1).max(200).default(50),
+  // Load section (series R / L / C across a sinusoidal source)
+  load: z.enum(['r', 'l', 'c', 'rl', 'rc', 'rlc']).default('rl'),
+  vrms: z.number().min(1).max(240).default(220),
+  r: z.number().min(1).max(200).default(10),
+  /** Inductance in mH. */
+  l: z.number().min(1).max(500).default(50),
+  /** Capacitance in µF. */
+  c: z.number().min(1).max(1000).default(100),
 });
-export type TheoremState = z.infer<typeof TheoremStateSchema>;
+export type AcState = z.infer<typeof AcStateSchema>;
 
 export const CircuitModeSchema = z.enum(['ohm', 'network', 'divider']);
 export type CircuitMode = z.infer<typeof CircuitModeSchema>;

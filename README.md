@@ -6,8 +6,9 @@ representations at once — manipulate either one, watch the other respond.
 
 Live modules: **Convolution** (flip-and-slide, drag-to-edit) · **Fourier
 transform explorer** (time domain ↔ spectrum, spectral leakage, Web Audio
-playback) · **The convolution theorem** (direct vs. FFT-based convolution,
-live operation counts) · **DC circuits** (Ohm's law, series/parallel
+playback) · **AC circuits** (sine waves, RMS and phasors; R/L/C loads with
+leading and lagging current, the power triangle, power factor and resonance)
+· **DC circuits** (Ohm's law, series/parallel
 resistors, the voltage divider — a schematic linked to a live I-V plot, power
 bars, or a voltage ladder) · **Circuit simulator** (tabbed, one simulated
 circuit per tab — the Wheatstone bridge first — with animated current flow
@@ -46,7 +47,7 @@ src/
   components/
     ui/          shared controls: PlotCanvas, AnimatedCanvas, Slider, SegmentedControl,
                  PredictionGate, PredictionCheck, ThemeToggle, LiveRegion, ModuleShell, ...
-    modules/     one directory per module (convolution / fourier / theorem / circuits /
+    modules/     one directory per module (convolution / fourier / ac / circuits /
                  simulator), each with its own panels, scales, and orchestrating
                  <XModule> component — simulator/ additionally nests one directory
                  per simulated circuit (wheatstone/ so far)
@@ -54,7 +55,7 @@ src/
     page.tsx                 landing page
     convolution/page.tsx
     fourier/page.tsx
-    theorem/page.tsx
+    ac/page.tsx               (/theorem redirects here — see next.config.ts)
     circuits/page.tsx
     simulator/page.tsx
 e2e/             Playwright smoke tests
@@ -79,8 +80,7 @@ The three architectural rules that keep adding another module cheap:
    server content — and server-rendering them risks a subtle hydration
    mismatch, since transcendental math (`Math.exp`, `Math.sin`, ...) is not
    guaranteed bit-identical between Node's V8 and the browser's when a
-   module displays that output at full floating-point precision (Module 3's
-   `max|error|` readout is exactly this case).
+   module displays that output at full floating-point precision.
 
 ### The `lib/dsp` API
 
@@ -327,16 +327,21 @@ persist={false}>` using `usePracticeQuestion(QUESTIONS)` — every existing
 - **Audio is live additive synthesis** (three oscillators + gain nodes,
   retuned in place via `setTargetAtTime` as sliders move), not a rendered
   buffer — parameters stay audibly live while dragging.
-- **Module 3's length slider drives both `x` and `h`** (same length `N`),
-  making direct cost exactly `O(N^2)` — the cleanest version of the
-  quadratic-vs-`N log N` story. `useDeferredValue` keeps the slider itself
-  responsive while the (still sub-20ms up to `N = 2048`) convolution recomputes.
-- **No wall-clock timing readout.** An earlier draft measured
-  `performance.now()` around the direct/FFT calls, but that's an impure call
-  made during render, isn't guaranteed stable across re-renders, and isn't
-  what the brief actually asked for — it asked for the operation _count_,
-  which is a pure, deterministic function of `N`. Dropped in favour of the
-  cost chart plus the exact `directConvOps` / `fftConvOps` numbers.
+- **Module 3 is AC circuits** (it replaced the convolution theorem module;
+  `/theorem` redirects to `/ac`). `lib/circuits/ac.ts` holds the math: RMS
+  and crest factors for sine, square and triangle waves (verified against
+  direct numerical integration), and steady-state series R/L/C analysis by
+  complex impedance: θ = arg Z, power factor cos θ labelled lagging or
+  leading, P/Q/S, component voltages, and series resonance. Defaults are Thai
+  mains: 220 V rms (311 V peak), 50 Hz.
+- **v, i and p are stacked small multiples on one time axis** (`TimeStack`),
+  never two units on one y-axis. Dotted guides through every panel mark the
+  voltage's and current's zero crossings, with a Δt = θ/ω bracket between them.
+- **One animation clock.** Each `AnimatedCanvas` runs its own loop, so the
+  AC canvases read the shared `performance.now()` (`clock.ts`) rather than
+  each loop's `phase`. That keeps the rotating phasor and the time plots'
+  cursor in step. The animation turns once every 2 s regardless of f, and
+  says so.
 
 ## What I'd reconsider about the pedagogy
 

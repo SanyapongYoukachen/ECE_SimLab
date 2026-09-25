@@ -4,7 +4,7 @@ import {
   FourierPresetSchema,
   PredictFlagSchema,
   SimulatorStateSchema,
-  TheoremStateSchema,
+  AcStateSchema,
   WheatstoneStateSchema,
   ModuleViewStateSchema,
   type ModuleViewState,
@@ -12,7 +12,7 @@ import {
   type ConvolutionState,
   type FourierState,
   type SimulatorState,
-  type TheoremState,
+  type AcState,
   type WheatstoneState,
 } from './schemas';
 
@@ -75,19 +75,35 @@ export function encodeFourierState(state: FourierState): URLSearchParams {
   return params;
 }
 
-export function decodeTheoremState(params: URLSearchParams): TheoremState {
+export function decodeAcState(params: URLSearchParams): AcState {
   const raw = {
-    length: num(params, 'length'),
-    preset: params.get('preset') ?? undefined,
+    mode: params.get('mode') ?? undefined,
+    shape: params.get('shape') ?? undefined,
+    peak: num(params, 'peak'),
+    phase: num(params, 'phase'),
+    freq: num(params, 'freq'),
+    load: params.get('load') ?? undefined,
+    vrms: num(params, 'vrms'),
+    r: num(params, 'r'),
+    l: num(params, 'l'),
+    c: num(params, 'c'),
   };
-  const result = TheoremStateSchema.safeParse(raw);
-  return result.success ? result.data : TheoremStateSchema.parse({});
+  const result = AcStateSchema.safeParse(raw);
+  return result.success ? result.data : AcStateSchema.parse({});
 }
 
-export function encodeTheoremState(state: TheoremState): URLSearchParams {
+export function encodeAcState(state: AcState): URLSearchParams {
   const params = new URLSearchParams();
-  params.set('length', String(state.length));
-  params.set('preset', state.preset);
+  params.set('mode', state.mode);
+  params.set('shape', state.shape);
+  params.set('peak', String(state.peak));
+  params.set('phase', String(state.phase));
+  params.set('freq', String(state.freq));
+  params.set('load', state.load);
+  params.set('vrms', String(state.vrms));
+  params.set('r', String(state.r));
+  params.set('l', String(state.l));
+  params.set('c', String(state.c));
   return params;
 }
 
