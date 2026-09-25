@@ -136,14 +136,23 @@ export function decodeWheatstoneState(params: URLSearchParams): WheatstoneState 
   return result.success ? result.data : WheatstoneStateSchema.parse({});
 }
 
+/**
+ * Up to 6 decimals, trailing zeros trimmed. A fixed 1-decimal encoding would
+ * round a solved balance point (e.g. R4 = 100·100/300 = 33.33 Ω) far enough
+ * off R1·R4 = R2·R3 that the bridge reads unbalanced after one URL round trip.
+ */
+function precise(n: number): string {
+  return String(Number(n.toFixed(6)));
+}
+
 export function encodeWheatstoneState(state: WheatstoneState): URLSearchParams {
   const params = new URLSearchParams();
-  params.set('voltage', state.voltage.toFixed(2));
-  params.set('r1', state.r1.toFixed(1));
-  params.set('r2', state.r2.toFixed(1));
-  params.set('r3', state.r3.toFixed(1));
-  params.set('r4', state.r4.toFixed(1));
-  params.set('rg', state.rg.toFixed(1));
+  params.set('voltage', precise(state.voltage));
+  params.set('r1', precise(state.r1));
+  params.set('r2', precise(state.r2));
+  params.set('r3', precise(state.r3));
+  params.set('r4', precise(state.r4));
+  params.set('rg', precise(state.rg));
   return params;
 }
 

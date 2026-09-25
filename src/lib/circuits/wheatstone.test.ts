@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { solveWheatstoneBridge } from './wheatstone';
+import { balancingR4, galvanometerDeflection, solveWheatstoneBridge } from './wheatstone';
 
 describe('solveWheatstoneBridge', () => {
   it('is balanced (zero galvanometer current) whenever R1*R4 = R2*R3', () => {
@@ -40,5 +40,28 @@ describe('solveWheatstoneBridge', () => {
     const above = solveWheatstoneBridge(9, 100, 100, 100, 110, 50);
     expect(below.ig).toBeGreaterThan(0);
     expect(above.ig).toBeLessThan(0);
+  });
+});
+
+describe('balancingR4', () => {
+  it('returns the R4 that satisfies R1*R4 = R2*R3', () => {
+    const r4 = balancingR4(300, 100, 100);
+    expect(r4).toBeCloseTo(33.3333333, 6);
+    expect(solveWheatstoneBridge(9, 300, 100, 100, r4, 50).balanced).toBe(true);
+  });
+});
+
+describe('galvanometerDeflection', () => {
+  it('is zero at balance, signed with ig, and saturates toward +/-1', () => {
+    expect(galvanometerDeflection(0)).toBe(0);
+    expect(galvanometerDeflection(1e-4)).toBeGreaterThan(0);
+    expect(galvanometerDeflection(-1e-4)).toBeLessThan(0);
+    expect(galvanometerDeflection(1)).toBeCloseTo(1, 9);
+    expect(galvanometerDeflection(-1)).toBeCloseTo(-1, 9);
+  });
+
+  it('moves visibly for a single 10-ohm slider step off balance', () => {
+    const r = solveWheatstoneBridge(9, 100, 100, 100, 110, 100);
+    expect(Math.abs(galvanometerDeflection(r.ig))).toBeGreaterThan(0.2);
   });
 });
