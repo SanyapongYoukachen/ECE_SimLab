@@ -1,7 +1,7 @@
 # Signals Lab
 
 An interactive teaching instrument for signals and circuits, built for
-undergraduate ECE courses. Four linked modules show the same object in two
+undergraduate ECE courses. Five linked modules show the same object in two
 representations at once — manipulate either one, watch the other respond.
 
 Live modules: **Convolution** (flip-and-slide, drag-to-edit) · **Fourier
@@ -9,11 +9,13 @@ transform explorer** (time domain ↔ spectrum, spectral leakage, Web Audio
 playback) · **The convolution theorem** (direct vs. FFT-based convolution,
 live operation counts) · **DC circuits** (Ohm's law, series/parallel
 resistors, the voltage divider — a schematic linked to a live I-V plot, power
-bars, or a voltage ladder).
+bars, or a voltage ladder) · **Circuit simulator** (tabbed, one simulated
+circuit per tab — the Wheatstone bridge first — with animated current flow
+through every branch).
 
 No backend, no database. Everything — including student answers to the
-prediction gates and the interaction log — lives in the browser (URL query
-string + `localStorage`).
+prediction gate/check and the interaction log — lives in the browser (URL
+query string + `localStorage`).
 
 ## Getting started
 
@@ -24,7 +26,7 @@ npm run dev       # http://localhost:3000
 
 ```bash
 npm run test        # vitest — lib/dsp and lib/circuits unit tests
-npm run test:e2e     # playwright — smoke suite across all four modules
+npm run test:e2e     # playwright — smoke suite across all five modules
 npm run typecheck    # tsc --noEmit
 npm run lint         # eslint
 npm run build        # production build (static per-route prerender)
@@ -35,22 +37,26 @@ npm run build        # production build (static per-route prerender)
 ```
 src/
   lib/dsp/       pure TypeScript DSP math, zero React/DOM imports, fully unit-tested
-  lib/circuits/  pure TypeScript circuit math (Ohm's law, series/parallel, divider), same style
+  lib/circuits/  pure TypeScript circuit math (Ohm's law, series/parallel, divider,
+                 Wheatstone bridge nodal analysis), same style
   lib/plot/      canvas primitives: scales, axes, stems, lines, hit-testing, theme tokens,
-                 plus a small hand-drawn schematic kit (resistor, battery, wires, current arrows)
+                 plus a hand-drawn schematic kit (resistor, battery, wires, current arrows,
+                 animated current-flow dots)
   lib/state/     Zod schemas + URL <-> state codecs + localStorage telemetry
   components/
-    ui/          shared controls: PlotCanvas, Slider, SegmentedControl,
-                 PredictionGate, ThemeToggle, LiveRegion, ModuleShell, ...
-    modules/     one directory per module (convolution / fourier / theorem / circuits),
-                 each with its own panels, scales, and orchestrating
-                 <XModule> component
+    ui/          shared controls: PlotCanvas, AnimatedCanvas, Slider, SegmentedControl,
+                 PredictionGate, PredictionCheck, ThemeToggle, LiveRegion, ModuleShell, ...
+    modules/     one directory per module (convolution / fourier / theorem / circuits /
+                 simulator), each with its own panels, scales, and orchestrating
+                 <XModule> component — simulator/ additionally nests one directory
+                 per simulated circuit (wheatstone/ so far)
   app/
     page.tsx                 landing page
     convolution/page.tsx
     fourier/page.tsx
     theorem/page.tsx
     circuits/page.tsx
+    simulator/page.tsx
 e2e/             Playwright smoke tests
 ```
 
@@ -137,14 +143,66 @@ browser's log as JSON. No backend in v1 — the event shape is deliberately
 generic so a real collector can be pointed at `logEvent()` later without a
 schema change.
 
-### The prediction gate
+### Prediction: a check by default, a gate as opt-in practice
 
-`components/ui/PredictionGate.tsx` wraps a module's interactive area, showing
-a multiple-choice question and marking the wrapped content `inert` +
-`aria-hidden` until answered (so it's neither focusable nor announced while
-locked). An instructor can bypass it globally via `?predict=off` on any
-module URL. Answers persist in `localStorage`, keyed per module, so a
-returning student isn't re-gated.
+Every module ships a bank of 3-5 questions
+(`components/modules/<name>/questions.ts`, typed as
+`PredictionQuestion[]`) and two ways to ask them, chosen by a single
+cross-module preference:
+
+- **Default — `components/ui/PredictionCheck.tsx`.** Renders the whole
+  question bank inline at the _end_ of the module, after the content is
+  already open and interactive. Each question persists its own answer
+  independently in `localStorage`
+  (`signals-lab:predicted:<moduleId>:<questionId>`) — a check on whether the
+  demonstration landed, not a gate in front of it.
+- **Opt-in "Predict first" practice mode — `components/ui/PredictionGate.tsx`
+  with `persist={false}`.** A `<PracticeModeToggle>` in every module's header
+  (`usePracticeMode` / `setPracticeMode`, backed by a single
+  `signals-lab:practice-mode` key) switches the _whole app_ into gated mode:
+  each module instead wraps its content behind **one** question, picked
+  at random from that module's bank (`usePracticeQuestion`), and blocks
+  (`inert` + `aria-hidden`) until answered. `persist={false}` means it never
+  remembers a past answer as a standing unlock — every visit re-gates with a
+  fresh random question, which is the point for a student drilling on
+  purpose.
+
+Both read the instructor's `?predict=off` flag the same way: the gate
+unlocks immediately instead of blocking, the check renders nothing at all.
+`PredictionGate`'s default (`persist={true}`, used automatically whenever
+practice mode is on) is what modules used before this preference existed —
+answer once, stay unlocked.
+
+### Circuit simulator: tabs and animated current flow
+
+`app/simulator/page.tsx` renders `<SimulatorModule>`, which owns just one
+thing — a `<SegmentedControl>` reading/writing `?tab=` via its own tiny
+`SimulatorStateSchema` — and renders whichever tab's component is selected.
+Each tab is a fully independent module living in its own
+`components/modules/simulator/<circuit>/` directory, with its own state
+schema, URL params, math, and question bank; nothing here couples one
+circuit's shape to another's, so adding a second tab means adding a second
+directory and a line in `constants.ts`, not touching the Wheatstone bridge.
+
+The Wheatstone bridge (`lib/circuits/wheatstone.ts`) is solved by nodal
+analysis: two KCL equations at the bridge's midpoints reduce to a 2x2 linear
+system (solved directly via Cramer's rule) for the node voltages, from which
+every branch current — including the galvanometer's — falls out directly.
+The balance condition `R1·R4 = R2·R3` is a property of that solution, not a
+special case: it holds regardless of the galvanometer's own resistance,
+which is itself one of the module's prediction questions.
+
+Current flow is genuinely animated, not just a static arrow: `<AnimatedCanvas>`
+(`components/ui/AnimatedCanvas.tsx`) is `<PlotCanvas>`'s sibling for
+continuous motion — it drives its own `requestAnimationFrame` loop instead of
+redrawing only on `deps` changes, passing an elapsed-time `phase` into
+`onDraw`. `drawCurrentFlowDots` (`lib/plot/schematic.ts`) uses that phase to
+walk dots along a wire segment at a speed and opacity proportional to
+`|current|`, direction from its sign — so the galvanometer branch visibly
+slows to a near-standstill as the bridge approaches balance, which is the
+whole point of the demonstration. Respects `prefers-reduced-motion`: falls
+back to static, magnitude-sized arrows (reusing `drawCurrentArrow`) instead
+of animating.
 
 ## Adding another module
 
@@ -155,12 +213,18 @@ exactly this recipe — see it for a worked example that isn't DSP.
    `lib/state/urlState.ts`.
 2. Add any new pure math to its own `lib/<topic>` directory (with tests —
    nothing else should start until they're green).
-3. Create `components/modules/<name>/` with panel components (each a
-   `draw(ctx, size, theme)` callback passed to `<PlotCanvas>`) and an
-   orchestrating `<NameModule>` component that wires state, the prediction
-   gate, and a `<LiveRegion>` together. Reuse `Slider`, `SegmentedControl`,
-   `ExpressionReadout` from `components/ui` — avoid inventing new control
-   chrome.
+3. Create `components/modules/<name>/questions.ts` — a `PredictionQuestion[]`
+   bank of 3-5 questions — and `components/modules/<name>/` with panel
+   components (each a `draw(ctx, size, theme)` callback passed to
+   `<PlotCanvas>`) and an orchestrating `<NameModule>` component. Wire state,
+   a `<LiveRegion>`, and both prediction paths off the same bank: render
+   `<PredictionCheck questions={QUESTIONS} .../>` inline at the end when
+   `!usePracticeMode()`, else wrap the whole module in `<PredictionGate
+question={practiceQuestion.question} options={practiceQuestion.options}
+persist={false}>` using `usePracticeQuestion(QUESTIONS)` — every existing
+   module follows this exact branch, so copy one rather than improvising a
+   new shape. Reuse `Slider`, `SegmentedControl`, `ExpressionReadout` from
+   `components/ui` — avoid inventing new control chrome.
 4. Create `components/modules/<name>/<Name>ModuleClient.tsx`
    (`next/dynamic(..., { ssr: false })`) and `app/<name>/page.tsx` wrapping it
    in `<ModuleShell>`.
@@ -197,8 +261,8 @@ exactly this recipe — see it for a worked example that isn't DSP.
 
 ## What I'd reconsider about the pedagogy
 
-- The prediction gate persists a single "answered" state per module per
-  browser. It doesn't currently distinguish "answered correctly" from
+- Both prediction components persist a single "answered" state per module per
+  browser. Neither currently distinguishes "answered correctly" from
   "answered incorrectly" in what it unlocks or in the exported telemetry
   summary — an instructor exporting logs across a class would have to reach
   into each event's `correct` field themselves rather than getting an

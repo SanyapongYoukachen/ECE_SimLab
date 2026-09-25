@@ -37,6 +37,13 @@ const MODULES: readonly ModuleCard[] = [
     description:
       "Ohm's law, series and parallel resistors, and the voltage divider — drag V and R, watch the schematic and the numbers respond together.",
   },
+  {
+    href: '/simulator',
+    kicker: 'Module 5',
+    title: 'Circuit simulator',
+    description:
+      'Animated current flow through a real circuit — starting with the Wheatstone bridge. More circuits land here in tabs as they’re added.',
+  },
 ];
 
 export default function LandingPage(): React.JSX.Element {
@@ -51,7 +58,7 @@ export default function LandingPage(): React.JSX.Element {
             Signals and circuits, made visible
           </h1>
           <p className="mt-3 max-w-2xl text-[var(--foreground)]/70">
-            You can already do the algebra. These four linked instruments are for the part algebra
+            You can already do the algebra. These five linked instruments are for the part algebra
             doesn&apos;t teach: what the operation actually does. Manipulate either representation
             and watch the other respond in real time.
           </p>
@@ -93,8 +100,11 @@ export default function LandingPage(): React.JSX.Element {
           exactly.
         </p>
         <p>
-          Running a live lecture? Append <code className="font-mono text-xs">?predict=off</code> to
-          any module URL to skip the prediction gate and unlock the controls immediately.
+          Every module opens unlocked, with a check-your-understanding prompt at the end — turn on{' '}
+          <strong>Predict first</strong> in a module&apos;s header to switch to a stricter
+          guess-before-you-see gate for extra practice. Running a live lecture? Append{' '}
+          <code className="font-mono text-xs">?predict=off</code> to any module URL to hide that
+          prompt entirely.
         </p>
       </footer>
     </div>

@@ -50,4 +50,23 @@ test.describe('URL state', () => {
     );
     await expect(page.getByText(/^I = V \/ R = 9\.00 V/).first()).toBeVisible();
   });
+
+  test('a configured Wheatstone bridge link reproduces its resistor values', async ({ page }) => {
+    await page.goto('/simulator?predict=off&r1=200&r2=200&r3=200&r4=200');
+    await expect(
+      page.getByText(/^R1·R4 = 40\.00 kΩ\s+=\s+R2·R3 = 40\.00 kΩ/).first()
+    ).toBeVisible();
+    await expect(page.getByText('Balanced?').locator('..').getByText('Yes')).toBeVisible();
+  });
+
+  test('malformed simulator URL state falls back to defaults instead of breaking', async ({
+    page,
+  }) => {
+    await page.goto('/simulator?predict=off&tab=not-a-real-tab&r1=-999');
+    await expect(page.getByRole('radio', { name: 'Wheatstone bridge' })).toHaveAttribute(
+      'aria-checked',
+      'true'
+    );
+    await expect(page.getByRole('img', { name: /Wheatstone bridge schematic/ })).toBeVisible();
+  });
 });

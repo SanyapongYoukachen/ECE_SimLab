@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ThemeToggle } from './ThemeToggle';
 import { TelemetryExportButton } from './TelemetryExportButton';
+import { PracticeModeToggle } from './PracticeModeToggle';
 
 interface ModuleShellProps {
   readonly title: string;
@@ -23,6 +24,7 @@ export function ModuleShell({ title, tagline, children }: ModuleShellProps): Rea
           <p className="mt-1 max-w-2xl text-sm text-[var(--foreground)]/70">{tagline}</p>
         </div>
         <div className="flex items-center gap-2">
+          <PracticeModeToggle />
           <TelemetryExportButton />
           <ThemeToggle />
         </div>

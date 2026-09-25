@@ -7,16 +7,20 @@ import { decodeTheoremState, encodeTheoremState, decodePredictFlag } from '@/lib
 import { useUrlSyncedState, useUrlFlag } from '@/lib/state/useUrlState';
 import { logEvent } from '@/lib/state/telemetry';
 import {
+  PredictionCheck,
   PredictionGate,
   Slider,
   SegmentedControl,
   ExpressionReadout,
   LiveRegion,
+  usePracticeMode,
+  usePracticeQuestion,
   useThrottledValue,
 } from '@/components/ui';
 import { OverlayPanel } from './OverlayPanel';
 import { CostChart } from './CostChart';
 import { buildSignalPair } from './generators';
+import { QUESTIONS } from './questions';
 import { MIN_LENGTH, MAX_LENGTH, LENGTH_STEP } from './constants';
 
 const DEFAULT_STATE = TheoremStateSchema.parse({});
@@ -27,6 +31,8 @@ const PRESET_OPTIONS = TheoremPresetSchema.options.map((id) => ({
 
 export function TheoremModule(): React.JSX.Element {
   const predictEnabled = useUrlFlag(decodePredictFlag, true);
+  const practiceMode = usePracticeMode();
+  const practiceQuestion = usePracticeQuestion(QUESTIONS);
   const [state, setState] = useUrlSyncedState(
     decodeTheoremState,
     encodeTheoremState,
@@ -64,57 +70,59 @@ export function TheoremModule(): React.JSX.Element {
     setState((prev) => ({ ...prev, preset }));
   }
 
+  const content = (
+    <div className="flex flex-col gap-4">
+      <OverlayPanel direct={direct} viaFft={viaFft} />
+      <ExpressionReadout label="Agreement between the two paths">
+        max |direct − IFFT(FFT(x)·FFT(h))| = {maxError.toExponential(3)}
+      </ExpressionReadout>
+
+      <CostChart n={deferredLength} />
+
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Stat label="Direct operations" value={directOps.toLocaleString()} />
+        <Stat label="FFT operations" value={Math.round(fftOps).toLocaleString()} />
+        <Stat label="Operation ratio" value={`${speedup.toFixed(1)}×`} />
+        <Stat label="Output length" value={`N + M − 1 = ${direct.length.toLocaleString()}`} />
+      </div>
+
+      <div className="flex flex-col gap-3 rounded-md border border-[var(--border)] bg-[var(--surface)] p-3">
+        <Slider
+          label="Signal length N (x and h are both this long)"
+          value={state.length}
+          min={MIN_LENGTH}
+          max={MAX_LENGTH}
+          step={LENGTH_STEP}
+          onChange={(v) => setState((prev) => ({ ...prev, length: v }))}
+        />
+      </div>
+
+      <SegmentedControl
+        label="Signal shape"
+        value={state.preset}
+        onChange={setPreset}
+        options={PRESET_OPTIONS}
+      />
+
+      {!practiceMode && (
+        <PredictionCheck moduleId="theorem" disabled={!predictEnabled} questions={QUESTIONS} />
+      )}
+
+      <LiveRegion text={liveText} />
+    </div>
+  );
+
+  if (!practiceMode) return content;
+
   return (
     <PredictionGate
       moduleId="theorem"
       disabled={!predictEnabled}
-      question="You double the signal length N. How does the operation count change for each method?"
-      options={[
-        { id: 'a', label: 'Both roughly double', correct: false },
-        {
-          id: 'b',
-          label: 'Direct roughly quadruples; FFT barely more than doubles',
-          correct: true,
-        },
-        { id: 'c', label: 'Direct doubles; FFT quadruples', correct: false },
-        { id: 'd', label: 'Neither changes', correct: false },
-      ]}
+      question={practiceQuestion.question}
+      options={practiceQuestion.options}
+      persist={false}
     >
-      <div className="flex flex-col gap-4">
-        <OverlayPanel direct={direct} viaFft={viaFft} />
-        <ExpressionReadout label="Agreement between the two paths">
-          max |direct − IFFT(FFT(x)·FFT(h))| = {maxError.toExponential(3)}
-        </ExpressionReadout>
-
-        <CostChart n={deferredLength} />
-
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Stat label="Direct operations" value={directOps.toLocaleString()} />
-          <Stat label="FFT operations" value={Math.round(fftOps).toLocaleString()} />
-          <Stat label="Operation ratio" value={`${speedup.toFixed(1)}×`} />
-          <Stat label="Output length" value={`N + M − 1 = ${direct.length.toLocaleString()}`} />
-        </div>
-
-        <div className="flex flex-col gap-3 rounded-md border border-[var(--border)] bg-[var(--surface)] p-3">
-          <Slider
-            label="Signal length N (x and h are both this long)"
-            value={state.length}
-            min={MIN_LENGTH}
-            max={MAX_LENGTH}
-            step={LENGTH_STEP}
-            onChange={(v) => setState((prev) => ({ ...prev, length: v }))}
-          />
-        </div>
-
-        <SegmentedControl
-          label="Signal shape"
-          value={state.preset}
-          onChange={setPreset}
-          options={PRESET_OPTIONS}
-        />
-
-        <LiveRegion text={liveText} />
-      </div>
+      {content}
     </PredictionGate>
   );
 }

@@ -9,17 +9,21 @@ import { decodeCircuitState, encodeCircuitState, decodePredictFlag } from '@/lib
 import { useUrlSyncedState, useUrlFlag } from '@/lib/state/useUrlState';
 import { logEvent } from '@/lib/state/telemetry';
 import {
+  PredictionCheck,
   PredictionGate,
   Slider,
   SegmentedControl,
   ExpressionReadout,
   LiveRegion,
+  usePracticeMode,
+  usePracticeQuestion,
   useThrottledValue,
 } from '@/components/ui';
 import { SchematicPanel } from './SchematicPanel';
 import { ReadoutPanel } from './ReadoutPanel';
 import { formatCircuitExpression } from './expression';
 import { formatCurrent, formatPower, formatResistance, formatVoltage } from './format';
+import { QUESTIONS } from './questions';
 import {
   MODE_OPTIONS,
   TOPOLOGY_OPTIONS,
@@ -33,6 +37,8 @@ const DEFAULT_STATE = CircuitStateSchema.parse({});
 
 export function CircuitsModule(): React.JSX.Element {
   const predictEnabled = useUrlFlag(decodePredictFlag, true);
+  const practiceMode = usePracticeMode();
+  const practiceQuestion = usePracticeQuestion(QUESTIONS);
   const [state, setState] = useUrlSyncedState(
     decodeCircuitState,
     encodeCircuitState,
@@ -62,84 +68,90 @@ export function CircuitsModule(): React.JSX.Element {
   const expression = formatCircuitExpression(state.mode, state.topology, ohm, network, divider);
   const liveText = useThrottledValue(expression);
 
-  return (
-    <PredictionGate
-      moduleId="circuits"
-      disabled={!predictEnabled}
-      question="A resistor sits across a fixed voltage V. You double R without changing V. What happens to the current I = V/R?"
-      options={[
-        { id: 'a', label: 'It doubles', correct: false },
-        { id: 'b', label: 'It stays the same', correct: false },
-        { id: 'c', label: "It's cut in half", correct: true },
-        { id: 'd', label: 'It quadruples', correct: false },
-      ]}
-    >
-      <div className="flex flex-col gap-4">
-        <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
-          <SchematicPanel
-            mode={state.mode}
-            topology={state.topology}
-            voltage={state.voltage}
-            r1={state.r1}
-            r2={state.r2}
-          />
-          <ReadoutPanel mode={state.mode} ohm={ohm} network={network} divider={divider} />
-        </div>
+  const content = (
+    <div className="flex flex-col gap-4">
+      <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
+        <SchematicPanel
+          mode={state.mode}
+          topology={state.topology}
+          voltage={state.voltage}
+          r1={state.r1}
+          r2={state.r2}
+        />
+        <ReadoutPanel mode={state.mode} ohm={ohm} network={network} divider={divider} />
+      </div>
 
-        <ExpressionReadout label="Governing equation">{expression}</ExpressionReadout>
+      <ExpressionReadout label="Governing equation">{expression}</ExpressionReadout>
 
-        <StatGrid mode={state.mode} ohm={ohm} network={network} divider={divider} />
+      <StatGrid mode={state.mode} ohm={ohm} network={network} divider={divider} />
 
-        <div className="flex flex-col gap-3 rounded-md border border-[var(--border)] bg-[var(--surface)] p-3">
+      <div className="flex flex-col gap-3 rounded-md border border-[var(--border)] bg-[var(--surface)] p-3">
+        <Slider
+          label="Source voltage V"
+          value={state.voltage}
+          min={MIN_VOLTAGE}
+          max={MAX_VOLTAGE}
+          step={0.5}
+          formatValue={(v) => `${v.toFixed(1)} V`}
+          onChange={(voltage) => setState((prev) => ({ ...prev, voltage }))}
+        />
+        <Slider
+          label={state.mode === 'ohm' ? 'Resistance R' : 'Resistance R1'}
+          value={state.r1}
+          min={MIN_RESISTANCE}
+          max={MAX_RESISTANCE}
+          step={10}
+          formatValue={(v) => formatResistance(v)}
+          onChange={(r1) => setState((prev) => ({ ...prev, r1 }))}
+        />
+        {state.mode !== 'ohm' && (
           <Slider
-            label="Source voltage V"
-            value={state.voltage}
-            min={MIN_VOLTAGE}
-            max={MAX_VOLTAGE}
-            step={0.5}
-            formatValue={(v) => `${v.toFixed(1)} V`}
-            onChange={(voltage) => setState((prev) => ({ ...prev, voltage }))}
-          />
-          <Slider
-            label={state.mode === 'ohm' ? 'Resistance R' : 'Resistance R1'}
-            value={state.r1}
+            label="Resistance R2"
+            value={state.r2}
             min={MIN_RESISTANCE}
             max={MAX_RESISTANCE}
             step={10}
             formatValue={(v) => formatResistance(v)}
-            onChange={(r1) => setState((prev) => ({ ...prev, r1 }))}
-          />
-          {state.mode !== 'ohm' && (
-            <Slider
-              label="Resistance R2"
-              value={state.r2}
-              min={MIN_RESISTANCE}
-              max={MAX_RESISTANCE}
-              step={10}
-              formatValue={(v) => formatResistance(v)}
-              onChange={(r2) => setState((prev) => ({ ...prev, r2 }))}
-            />
-          )}
-        </div>
-
-        <SegmentedControl
-          label="Circuit"
-          value={state.mode}
-          onChange={setMode}
-          options={MODE_OPTIONS}
-        />
-
-        {state.mode === 'network' && (
-          <SegmentedControl
-            label="Topology"
-            value={state.topology}
-            onChange={setTopology}
-            options={TOPOLOGY_OPTIONS}
+            onChange={(r2) => setState((prev) => ({ ...prev, r2 }))}
           />
         )}
-
-        <LiveRegion text={liveText} />
       </div>
+
+      <SegmentedControl
+        label="Circuit"
+        value={state.mode}
+        onChange={setMode}
+        options={MODE_OPTIONS}
+      />
+
+      {state.mode === 'network' && (
+        <SegmentedControl
+          label="Topology"
+          value={state.topology}
+          onChange={setTopology}
+          options={TOPOLOGY_OPTIONS}
+        />
+      )}
+
+      {!practiceMode && (
+        <PredictionCheck moduleId="circuits" disabled={!predictEnabled} questions={QUESTIONS} />
+      )}
+
+      <LiveRegion text={liveText} />
+    </div>
+  );
+
+  if (!practiceMode) return content;
+
+  return (
+    <PredictionGate
+      moduleId="circuits"
+      disabled={!predictEnabled}
+      question={practiceQuestion.question}
+      options={practiceQuestion.options}
+      persist={false}
+    >
+      {content}
     </PredictionGate>
   );
 }
