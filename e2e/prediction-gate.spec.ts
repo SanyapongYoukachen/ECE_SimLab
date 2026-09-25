@@ -36,15 +36,15 @@ test.describe('default: non-blocking check-your-understanding (all modules)', ()
   });
 
   test('?predict=off hides the check-your-understanding prompt', async ({ page }) => {
-    await page.goto('/theorem?predict=off');
+    await page.goto('/ac?predict=off');
     await expect(page.getByRole('tab', { name: /Check your understanding/ })).toHaveCount(0);
   });
 
   test('an answered check persists across reload', async ({ page }) => {
-    await page.goto('/theorem');
+    await page.goto('/ac');
     await page.getByRole('tab', { name: /Check your understanding/ }).click();
     const checkGroup = page.getByRole('radiogroup', {
-      name: /You double the signal length N/,
+      name: /Thai household mains/,
     });
     await checkGroup.getByRole('radio').first().click();
     await expect(page.getByText(/— correct|— not quite/)).toBeVisible();

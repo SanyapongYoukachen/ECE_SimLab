@@ -7,7 +7,7 @@ type ModuleKey = keyof Messages['landing']['modules'];
 const MODULES: readonly { readonly href: string; readonly key: ModuleKey }[] = [
   { href: '/convolution', key: 'convolution' },
   { href: '/fourier', key: 'fourier' },
-  { href: '/theorem', key: 'theorem' },
+  { href: '/ac', key: 'ac' },
   { href: '/circuits', key: 'circuits' },
   { href: '/simulator', key: 'simulator' },
 ];

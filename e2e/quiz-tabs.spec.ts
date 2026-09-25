@@ -56,7 +56,7 @@ test.describe('module tabs: Explore, then Check your understanding', () => {
   });
 
   test('arrow keys move between the tabs', async ({ page }) => {
-    await page.goto('/theorem');
+    await page.goto('/ac');
     await page.getByRole('tab', { name: 'Explore' }).focus();
     await page.keyboard.press('ArrowRight');
 
@@ -66,7 +66,7 @@ test.describe('module tabs: Explore, then Check your understanding', () => {
   });
 
   test('every module gets the tabs', async ({ page }) => {
-    for (const path of ['/convolution', '/fourier', '/theorem', '/circuits', '/simulator']) {
+    for (const path of ['/convolution', '/fourier', '/ac', '/circuits', '/simulator']) {
       await page.goto(path);
       await expect(page.getByRole('tab', { name: quizTab })).toBeVisible();
     }

@@ -82,11 +82,11 @@ export const en = {
         description:
           'Move a frequency off a bin centre and watch — and hear — its peak smear across the spectrum.',
       },
-      theorem: {
+      ac: {
         kicker: 'Module 3',
-        title: 'The convolution theorem',
+        title: 'AC circuits',
         description:
-          'Two independent paths to the same answer, with a live operation count showing why one of them won.',
+          'Sine waves, RMS and phasors, then R, L and C loads: watch current lead or lag the voltage, and see where the power factor comes from.',
       },
       circuits: {
         kicker: 'Module 4',
@@ -122,10 +122,10 @@ export const en = {
       tagline:
         "Move the third component off a bin centre and watch its peak smear — that's leakage, not a bug.",
     },
-    theorem: {
-      title: 'The convolution theorem: two paths, one answer',
+    ac: {
+      title: 'AC circuits: sine waves, RMS and power factor',
       tagline:
-        "Drag the length slider up and watch the direct method's cost curve pull away from the FFT's.",
+        'Start with one sine wave and what "220 V" really means, then connect R, L and C loads and watch current lead or lag.',
     },
     circuits: {
       title: "DC circuits: Ohm's law and the voltage divider",
@@ -214,29 +214,94 @@ export const en = {
       `Time-domain signal, ${n} samples, built from three sinusoidal components.`,
   },
 
-  theorem: {
-    presets: {
-      smooth: 'Smooth',
-      noisy: 'Noisy',
-      pulse: 'Pulse',
+  ac: {
+    modeLabel: 'Section',
+    modes: {
+      sine: 'Sine wave & RMS',
+      load: 'RLC load & power factor',
     },
-    liveText: (len: number, direct: string, fft: string, err: string) =>
-      `Length ${len}. Direct: ${direct} operations. FFT: ${fft} operations. Maximum error between the two paths: ${err}.`,
-    agreement: 'Agreement between the two paths',
-    directOps: 'Direct operations',
-    fftOps: 'FFT operations',
-    ratio: 'Operation ratio',
-    outputLength: 'Output length',
-    lengthSlider: 'Signal length N (x and h are both this long)',
-    signalShape: 'Signal shape',
-    legendDirect: 'x * h, computed directly',
-    legendFft: 'IFFT(FFT(x) · FFT(h)) — dashed, should trace the same curve',
-    overlayAria:
-      'Direct convolution and FFT-based convolution results overlaid — they should be visually indistinguishable.',
-    costDirect: 'direct: O(N·M) operations',
-    costFft: 'FFT-based: O(N log N) operations',
-    costAria: (maxN: number, n: number) =>
-      `Operation count versus signal length, up to N=${maxN}. Direct convolution grows quadratically; the FFT path grows almost flat by comparison. Current length: ${n}.`,
+    // Sine-wave section
+    shapeLabel: 'Waveform',
+    shapes: { sine: 'Sine', square: 'Square', triangle: 'Triangle' },
+    peak: 'Peak voltage Vp',
+    frequency: 'Frequency f',
+    phase: 'Phase φ',
+    statPeak: 'Peak Vp',
+    statPeakToPeak: 'Peak-to-peak Vpp',
+    statRms: 'RMS Vrms',
+    statRectified: 'Average of |v|',
+    statCrest: 'Crest factor Vp/Vrms',
+    statPeriod: 'Period T = 1/f',
+    statOmega: 'Angular frequency ω = 2πf',
+    statRule: 'Vp/√2',
+    ruleHolds: 'equals Vrms: true for a sine',
+    ruleFails: 'not Vrms: the √2 rule is sine-only',
+    panelV: 'v(t)',
+    panelV2: 'v²(t): its average is Vrms²',
+    rmsLine: '±Vrms',
+    meanSquare: 'mean of v²',
+    rmsExplain:
+      'RMS means root of the mean of the square: square the waveform (every part becomes positive), average it over one period, take the square root. For a sine the average of v² is exactly half of Vp², so Vrms = Vp/√2. A resistor fed Vrms of DC heats up exactly as much as it does on this AC.',
+    phasorTitle: 'Phasor: a rotating arrow whose height is v(t)',
+    phasorNote:
+      'Animation slowed to about one turn every 2 s; the real wave turns f times per second.',
+    notSine:
+      'Phasors only describe pure sine waves. A square or triangle wave is a sum of many sines (see the Fourier module), so it has no single rotating arrow.',
+    sineAria: (shape: string, peak: string, rms: string, f: string) =>
+      `${shape} wave, peak ${peak}, RMS ${rms}, frequency ${f}. Upper plot v(t) with ±RMS lines; lower plot v squared with its mean.`,
+    phasorAria: (angle: string) =>
+      `Phasor diagram: an arrow rotating anticlockwise, its vertical projection tracing the sine wave. Phase ${angle}.`,
+    // Load section
+    loadLabel: 'Load (series)',
+    loads: { r: 'R', l: 'L', c: 'C', rl: 'RL', rc: 'RC', rlc: 'RLC' },
+    sourceRms: 'Source voltage Vrms',
+    resistance: 'Resistance R',
+    inductance: 'Inductance L',
+    capacitance: 'Capacitance C',
+    tuneResonance: (f0: string) => `Tune to resonance (${f0})`,
+    statZ: 'Impedance Z = R + jX',
+    statZMag: '|Z|',
+    statTheta: 'Phase angle θ',
+    statI: 'Current Irms',
+    statPf: 'Power factor cos θ',
+    statP: 'Real power P',
+    statQ: 'Reactive power Q',
+    statS: 'Apparent power S',
+    statXl: 'X_L = ωL',
+    statXc: 'X_C = 1/(ωC)',
+    statVr: 'V_R',
+    statVl: 'V_L',
+    statVc: 'V_C',
+    statF0: 'Resonance f₀',
+    lagging: 'lagging',
+    leading: 'leading',
+    unity: 'unity',
+    panelI: 'i(t)',
+    panelP: 'p(t) = v·i',
+    averageP: 'P (average)',
+    returned: 'negative: energy flowing back to the source',
+    lagText: (deg: string) => `current lags voltage by ${deg}`,
+    leadText: (deg: string) => `current leads voltage by ${deg}`,
+    inPhaseText: 'current in phase with voltage',
+    phasorLoadTitle: 'Phasors: V and I',
+    phasorScale: 'V and I drawn to separate scales; the angle between them is what matters.',
+    triangleTitle: 'Power triangle',
+    loadHow: {
+      r: 'A resistor turns every joule into heat. Current rises and falls with the voltage, in phase (θ = 0), so p(t) never goes negative and the power factor is 1.',
+      l: 'An inductor opposes changes in current, so the current peaks a quarter cycle after the voltage: it lags by 90°. Energy is stored in the magnetic field and handed back every half cycle, so the average power is zero; it is all reactive (Q > 0).',
+      c: 'A capacitor has to charge before its voltage can rise, so the current peaks a quarter cycle before the voltage: it leads by 90°. Energy is stored in the electric field and returned, so the average power is zero; Q < 0.',
+      rl: 'Motors, transformers and fluorescent ballasts look like R plus L: the current lags by θ between 0° and 90°. Only the in-phase part of the current does work (P); the rest sloshes back and forth (Q). That is a lagging power factor.',
+      rc: 'An RC load draws a leading current: θ between 0° and −90°. Capacitors are added across inductive loads on purpose to cancel their lagging Q; that is power-factor correction.',
+      rlc: 'In series RLC, X_L and X_C pull in opposite directions. Below resonance the capacitor wins (leading); above it, the inductor wins (lagging). At f₀ they cancel exactly: Z = R, the current is largest, the power factor is 1, and V_L and V_C can each be far larger than the source voltage.',
+    },
+    loadAria: (load: string, theta: string, pf: string) =>
+      `${load} load. Voltage, current and instantaneous power over two cycles. Phase angle ${theta}, power factor ${pf}.`,
+    phasorLoadAria: (relation: string) => `Phasor diagram of V and I: ${relation}.`,
+    triangleAria: (p: string, q: string, s: string) =>
+      `Power triangle: real power ${p} along the bottom, reactive power ${q} upright, apparent power ${s} along the hypotenuse.`,
+    liveSine: (rms: string, peak: string) => `RMS ${rms}, peak ${peak}.`,
+    liveLoad: (i: string, relation: string, pf: string) =>
+      `Current ${i}, ${relation}, power factor ${pf}.`,
   },
 
   circuits: {
