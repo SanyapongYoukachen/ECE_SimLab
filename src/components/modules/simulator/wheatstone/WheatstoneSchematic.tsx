@@ -17,12 +17,12 @@ import { galvanometerDeflection, type WheatstoneResult } from '@/lib/circuits/wh
 const HEIGHT = 300;
 const PAD_TOP = 44;
 const PAD_BOTTOM = 44;
-const BATTERY_X = 30;
-const DIAMOND_LEFT = 118;
-const DIAMOND_RIGHT_INSET = 78;
+const MARGIN_LEFT = 24;
+/** Wider than the left margin: R3/R4 labels grow rightward past vertex C. */
+const MARGIN_RIGHT = 40;
+/** Horizontal run from the source to the diamond's left vertex B. */
+const SOURCE_GAP = 80;
 const GALVO_RADIUS = 18;
-/** Max diamond half-width as a multiple of its full height. */
-const DIAMOND_MAX_ASPECT = 1.1;
 /** Needle swing at full deflection, either side of the centre zero. */
 const NEEDLE_MAX_RAD = (55 * Math.PI) / 180;
 // Underdamped on purpose: a real moving-coil needle overshoots and settles.
@@ -104,23 +104,26 @@ export function WheatstoneSchematic({ result }: Props): React.JSX.Element {
       const bottom = size.height - PAD_BOTTOM;
       // Margins shrink on narrow (mobile) canvases so the diamond keeps a
       // usable width instead of collapsing toward a sliver.
-      const availLeft = Math.max(64, Math.min(DIAMOND_LEFT, size.width * 0.24));
-      const availRight =
-        size.width - Math.max(48, Math.min(DIAMOND_RIGHT_INSET, size.width * 0.16));
-      // Cap the aspect ratio so a wide desktop canvas keeps a diamond rather
-      // than stretching it into a flat lens; extra width goes to the source wires.
-      const halfWidth = Math.min((availRight - availLeft) / 2, (bottom - top) * DIAMOND_MAX_ASPECT);
-      const centerX = (availLeft + availRight) / 2;
-      const left = centerX - halfWidth;
-      const right = centerX + halfWidth;
-      const midY = (top + bottom) / 2;
+      // A true 45° diamond (half-width = half-height) whenever the canvas is
+      // wide enough, narrowing only on very small screens. Source plus diamond
+      // are centred as one group, so extra width becomes margin, not
+      // stretched arms or long source wires.
+      const halfHeight = (bottom - top) / 2;
+      const usable = size.width - MARGIN_LEFT - MARGIN_RIGHT;
+      const halfWidth = Math.max(40, Math.min(halfHeight, (usable - SOURCE_GAP) / 2));
+      const groupLeft = MARGIN_LEFT + Math.max(0, (usable - SOURCE_GAP - 2 * halfWidth) / 2);
+      const batteryX = groupLeft;
+      const left = groupLeft + SOURCE_GAP;
+      const right = left + 2 * halfWidth;
+      const centerX = left + halfWidth;
+      const midY = top + halfHeight;
 
       const A: Point = { x: centerX, y: top };
       const B: Point = { x: left, y: midY };
       const C: Point = { x: right, y: midY };
       const D: Point = { x: centerX, y: bottom };
-      const batteryTop: Point = { x: BATTERY_X, y: top };
-      const batteryBottom: Point = { x: BATTERY_X, y: bottom };
+      const batteryTop: Point = { x: batteryX, y: top };
+      const batteryBottom: Point = { x: batteryX, y: bottom };
       const galvo: Point = { x: (B.x + C.x) / 2, y: (B.y + C.y) / 2 };
 
       drawWire(ctx, [batteryTop, A], theme.structure);
@@ -252,7 +255,7 @@ export function WheatstoneSchematic({ result }: Props): React.JSX.Element {
 
       label(
         `V=${result.voltage.toFixed(1)}V`,
-        { x: BATTERY_X + 10, y: midY - 20 },
+        { x: batteryX + 10, y: midY - 20 },
         theme.input,
         'left'
       );
