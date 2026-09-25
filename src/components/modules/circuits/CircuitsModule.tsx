@@ -15,6 +15,7 @@ import {
   Slider,
   SegmentedControl,
   ExpressionReadout,
+  Field,
   LiveRegion,
   usePracticeMode,
   usePracticeQuestion,
@@ -73,6 +74,27 @@ export function CircuitsModule(): React.JSX.Element {
 
   const content = (
     <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start">
+        <Field label={t.circuit}>
+          <SegmentedControl
+            label={t.circuit}
+            value={state.mode}
+            onChange={setMode}
+            options={MODE_ORDER.map((value) => ({ value, label: t.modes[value] }))}
+          />
+        </Field>
+        {state.mode === 'network' && (
+          <Field label={t.topology}>
+            <SegmentedControl
+              label={t.topology}
+              value={state.topology}
+              onChange={setTopology}
+              options={TOPOLOGY_ORDER.map((value) => ({ value, label: t.topologies[value] }))}
+            />
+          </Field>
+        )}
+      </div>
+
       <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
         <SchematicPanel
           mode={state.mode}
@@ -119,22 +141,6 @@ export function CircuitsModule(): React.JSX.Element {
           />
         )}
       </div>
-
-      <SegmentedControl
-        label={t.circuit}
-        value={state.mode}
-        onChange={setMode}
-        options={MODE_ORDER.map((value) => ({ value, label: t.modes[value] }))}
-      />
-
-      {state.mode === 'network' && (
-        <SegmentedControl
-          label={t.topology}
-          value={state.topology}
-          onChange={setTopology}
-          options={TOPOLOGY_ORDER.map((value) => ({ value, label: t.topologies[value] }))}
-        />
-      )}
 
       <LiveRegion text={liveText} />
     </div>

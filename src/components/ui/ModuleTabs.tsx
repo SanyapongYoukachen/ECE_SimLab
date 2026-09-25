@@ -123,7 +123,7 @@ export function ModuleTabs({
               className={
                 '-mb-px inline-flex items-center gap-2 border-b-2 px-3 py-2 text-sm transition-colors ' +
                 (selected
-                  ? 'border-[var(--plot-active)] font-medium text-[var(--foreground)]'
+                  ? 'border-[var(--accent)] font-medium text-[var(--foreground)]'
                   : 'border-transparent text-[var(--foreground)]/65 hover:text-[var(--foreground)]')
               }
             >

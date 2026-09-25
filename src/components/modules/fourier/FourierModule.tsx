@@ -13,6 +13,7 @@ import {
   Slider,
   SegmentedControl,
   ExpressionReadout,
+  Field,
   LiveRegion,
   PlayPauseButton,
   usePracticeMode,
@@ -94,6 +95,23 @@ export function FourierModule(): React.JSX.Element {
 
   const content = (
     <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-2">
+        <Field label={tf.windowFunction}>
+          <SegmentedControl
+            label={tf.windowFunction}
+            value={state.window}
+            onChange={(v) => {
+              logEvent('fourier', 'window_changed', { window: v });
+              set('window', v);
+            }}
+            options={windowOptions}
+          />
+        </Field>
+        <p className="text-sm text-[var(--foreground)]/70">
+          {state.window === 'rect' ? tf.rectNote : tf.taperNote}
+        </p>
+      </div>
+
       <TimeDomainPanel signal={signal} window={state.window} />
       <SpectrumPanel
         spectrum={spectrum}
@@ -171,19 +189,6 @@ export function FourierModule(): React.JSX.Element {
           <span className="text-xs text-[var(--foreground)]/60">{tf.hear}</span>
         </div>
       </div>
-
-      <SegmentedControl
-        label={tf.windowFunction}
-        value={state.window}
-        onChange={(v) => {
-          logEvent('fourier', 'window_changed', { window: v });
-          set('window', v);
-        }}
-        options={windowOptions}
-      />
-      <p className="text-sm text-[var(--foreground)]/70">
-        {state.window === 'rect' ? tf.rectNote : tf.taperNote}
-      </p>
 
       <LiveRegion text={liveText} />
     </div>

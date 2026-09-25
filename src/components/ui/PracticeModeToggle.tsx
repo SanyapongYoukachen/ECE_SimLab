@@ -22,7 +22,7 @@ export function PracticeModeToggle(): React.JSX.Element {
       className={
         'rounded-md border px-3 py-1.5 text-sm transition-colors ' +
         (practiceMode
-          ? 'border-[var(--plot-active)] bg-[var(--plot-active)]/10 text-[var(--foreground)]'
+          ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--foreground)]'
           : 'border-[var(--border)] text-[var(--foreground)] hover:bg-[var(--surface-2)]')
       }
     >

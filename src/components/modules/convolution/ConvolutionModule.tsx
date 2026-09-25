@@ -18,6 +18,7 @@ import {
   SegmentedControl,
   PlayPauseButton,
   ExpressionReadout,
+  Field,
   LiveRegion,
   usePrefersReducedMotion,
   usePracticeMode,
@@ -111,6 +112,32 @@ export function ConvolutionModule(): React.JSX.Element {
 
   const content = (
     <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-2">
+        <Field label={t.convolution.kernel}>
+          <SegmentedControl
+            label={t.convolution.kernel}
+            value={state.kernel}
+            onChange={setKernel}
+            options={KERNEL_ORDER.map((id) => ({
+              value: id,
+              label: t.convolution.kernels[id].label,
+            }))}
+          />
+        </Field>
+        <p className="text-sm text-[var(--foreground)]/70">
+          {t.convolution.kernels[state.kernel].note}
+        </p>
+        <p className="font-mono tabular-nums text-xs text-[var(--foreground)]/60">
+          h[k] = [{kernelValues.map((v) => v.toFixed(2)).join(', ')}] → {t.convolution.flipped}:
+          h[−k] = [
+          {[...kernelValues]
+            .reverse()
+            .map((v) => v.toFixed(2))
+            .join(', ')}
+          ]
+        </p>
+      </div>
+
       <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
         <ConvolutionInputPanel
           x={state.x}
@@ -150,27 +177,6 @@ export function ConvolutionModule(): React.JSX.Element {
           />
         </div>
       </div>
-
-      <SegmentedControl
-        label={t.convolution.kernel}
-        value={state.kernel}
-        onChange={setKernel}
-        options={KERNEL_ORDER.map((id) => ({ value: id, label: t.convolution.kernels[id].label }))}
-      />
-
-      <p className="text-sm text-[var(--foreground)]/70">
-        {t.convolution.kernels[state.kernel].note}
-      </p>
-
-      <p className="font-mono tabular-nums text-xs text-[var(--foreground)]/60">
-        h[k] = [{kernelValues.map((v) => v.toFixed(2)).join(', ')}] → {t.convolution.flipped}: h[−k]
-        = [
-        {[...kernelValues]
-          .reverse()
-          .map((v) => v.toFixed(2))
-          .join(', ')}
-        ]
-      </p>
 
       <LiveRegion text={liveText} />
     </div>

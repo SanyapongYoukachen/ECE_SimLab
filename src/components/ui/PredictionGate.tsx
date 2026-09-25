@@ -135,7 +135,7 @@ export function PredictionGate({
         >
           <div className="flex w-full max-w-md flex-col gap-4">
             <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-[var(--plot-active)]">
+              <p className="text-xs font-medium uppercase tracking-wide text-[var(--accent)]">
                 {t.gateKicker}
               </p>
               <p className="mt-1 text-base text-[var(--foreground)]">{question}</p>

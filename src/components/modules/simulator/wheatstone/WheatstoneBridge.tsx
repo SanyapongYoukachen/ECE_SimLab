@@ -32,6 +32,7 @@ import {
   SegmentedControl,
   Slider,
   ExpressionReadout,
+  Field,
   LiveRegion,
   usePracticeMode,
   usePracticeQuestion,
@@ -450,23 +451,6 @@ export function WheatstoneBridge(): React.JSX.Element {
     >
       {content}
     </PredictionGate>
-  );
-}
-
-function Field({
-  label,
-  children,
-}: {
-  readonly label: string;
-  readonly children: React.ReactNode;
-}): React.JSX.Element {
-  return (
-    <div className="flex flex-col gap-1">
-      <span className="text-xs text-[var(--foreground)]/60" aria-hidden="true">
-        {label}
-      </span>
-      {children}
-    </div>
   );
 }
 

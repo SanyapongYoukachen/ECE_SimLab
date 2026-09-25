@@ -13,6 +13,7 @@ import {
   Slider,
   SegmentedControl,
   ExpressionReadout,
+  Field,
   LiveRegion,
   usePracticeMode,
   usePracticeQuestion,
@@ -78,6 +79,15 @@ export function TheoremModule(): React.JSX.Element {
 
   const content = (
     <div className="flex flex-col gap-4">
+      <Field label={t.signalShape}>
+        <SegmentedControl
+          label={t.signalShape}
+          value={state.preset}
+          onChange={setPreset}
+          options={presetOptions}
+        />
+      </Field>
+
       <OverlayPanel direct={direct} viaFft={viaFft} />
       <ExpressionReadout label={t.agreement}>
         max |direct − IFFT(FFT(x)·FFT(h))| = {maxError.toExponential(3)}
@@ -102,13 +112,6 @@ export function TheoremModule(): React.JSX.Element {
           onChange={(v) => setState((prev) => ({ ...prev, length: v }))}
         />
       </div>
-
-      <SegmentedControl
-        label={t.signalShape}
-        value={state.preset}
-        onChange={setPreset}
-        options={presetOptions}
-      />
 
       <LiveRegion text={liveText} />
     </div>
