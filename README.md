@@ -234,7 +234,26 @@ resistance and bridge output across the whole range. `bridgeSweep()`
 computes those curves and also auto-ranges the galvanometer, so a strain
 gauge's microamps swing the needle as visibly as an LDR's milliamps.
 Moving the sensor between the R1/R4 and R2/R3 positions flips the output's
-sign. Both effects are covered by unit tests.
+sign.
+
+**Quarter, half and full bridges.** A configuration switch sets how many
+arms are sensors (`armRoles()` / `bridgeArms()`):
+
+| Configuration | Active arms (sensor in R4)                 | Ideal output                      |
+| ------------- | ------------------------------------------ | --------------------------------- |
+| Quarter       | R4                                         | ≈ V/4 · ΔR/R, slightly non-linear |
+| Half          | R4 (+Δ), R3 (−Δ) — same divider, push-pull | ≈ V/2 · ΔR/R, linear              |
+| Full          | R1, R4 (+Δ); R2, R3 (−Δ)                   | ≈ V · ΔR/R, linear                |
+
+The "−Δ" arms see the reading mirrored about the reference (−ε,
+2·T_ref − T, or E_ref²/E for light), like the gauges on the compressed
+face of a bending beam. The output plot overlays all three configurations,
+and the meter is ranged by the full bridge, so the 1 : 2 : 4 sensitivity is
+visible on the needle as well. Readouts show the loaded output next to the
+open-circuit output and the textbook estimate k·V·ΔR/R. That separates the
+galvanometer's loading from the quarter bridge's non-linearity. Unit tests
+pin the 1 : 2 : 4 ratio, the textbook outputs, and the exact linearity of
+half and full bridges.
 
 ### Language: English and Thai
 

@@ -328,12 +328,39 @@ export const en = {
         },
       },
       sensorR: 'Sensor resistance',
-      fixedR: 'Each fixed arm',
       bridgeOut: 'Bridge output VB − VC',
       meterRange: 'Meter full scale (auto)',
       referenceNote: (reference: string, r: string) =>
-        `The three fixed arms equal the sensor's resistance at ${reference} (${r}), so the bridge reads zero there. Any change in the physical quantity unbalances it.`,
+        `Every arm, fixed or sensing, equals the sensor's resistance at ${reference} (${r}), so the bridge reads zero there. Any change in the physical quantity unbalances it.`,
       armNote: 'A sensor in R1 or R4 swings the output one way; in R2 or R3, the other.',
+      configLabel: 'Bridge configuration',
+      configs: {
+        quarter: 'Quarter (1 active arm)',
+        half: 'Half (2 active arms)',
+        full: 'Full (4 active arms)',
+      },
+      configShort: {
+        quarter: 'quarter',
+        half: 'half',
+        full: 'full',
+      },
+      configHow: {
+        quarter:
+          'Quarter bridge: one active sensor, three fixed completion resistors. Output ≈ V/4 · ΔR/R, and not quite linear, because only one divider moves and its own resistance change shifts its current.',
+        half: 'Half bridge: two sensors in the same divider, changing in opposite directions (+Δ and −Δ), like a gauge on top of a bending beam in tension and one underneath in compression. Output ≈ V/2 · ΔR/R: twice the quarter bridge, and linear for a linear sensor. A change both sensors share (a temperature drift, say) cancels out.',
+        full: 'Full bridge: all four arms are sensors. Opposite arms change together (+Δ), adjacent arms oppositely (−Δ). Output ≈ V · ΔR/R: four times the quarter bridge, linear for a linear sensor, and compensated for anything common to all four. This is how load cells and pressure sensors are built.',
+      },
+      activeArms: 'Active arms',
+      armReading: (arm: string, sign: string, reading: string, r: string) =>
+        `${arm} (${sign}): ${reading} → ${r}`,
+      sensitivity: 'Sensitivity vs quarter bridge',
+      openCircuit: 'Open-circuit output (no meter)',
+      estimate: (k: string) => `Textbook estimate ${k}·V·ΔR/R`,
+      loadNote:
+        'The galvanometer (Rg) draws current and loads the bridge, so the real VB − VC is smaller than the open-circuit output the textbook formulas describe. Raise Rg and watch the two converge. The gap between the open-circuit output and the textbook estimate is the non-linearity.',
+      compareLegend: 'all three configurations, the selected one bold',
+      meterNote:
+        "The meter's range is set by the full bridge, so the needle swings further as you add active arms.",
       resetReference: (reference: string) => `Back to reference (${reference})`,
       responseR: 'Sensor resistance',
       responseV: 'Bridge output VB − VC',

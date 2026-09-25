@@ -13,7 +13,7 @@ import {
 } from '@/lib/plot';
 import { AnimatedCanvas, usePrefersReducedMotion } from '@/components/ui';
 import { galvanometerDeflection, type WheatstoneResult } from '@/lib/circuits/wheatstone';
-import type { BridgeArm, SensorId } from '@/lib/circuits/sensors';
+import type { ArmRole, BridgeArm, SensorId } from '@/lib/circuits/sensors';
 import { useMessages, type Messages } from '@/lib/i18n';
 import { formatCurrent } from './format';
 
@@ -82,8 +82,11 @@ function stepNeedle(needle: NeedleState, target: number, phase: number, animate:
 
 interface Props {
   readonly result: WheatstoneResult;
-  /** Sensing mode: which arm holds the sensor, and what kind (drawn with its circuit symbol). */
-  readonly sensing?: { readonly arm: BridgeArm; readonly sensor: SensorId };
+  /** Sensing mode: each arm's role and the sensor kind (active arms get its circuit symbol). */
+  readonly sensing?: {
+    readonly roles: Readonly<Record<BridgeArm, ArmRole>>;
+    readonly sensor: SensorId;
+  };
   /** Needle current scale (see galvanometerDeflection); sensing mode auto-ranges it per sensor. */
   readonly needleSensitivity?: number;
 }
@@ -226,10 +229,13 @@ export function WheatstoneSchematic({
         r3: { from: A, to: C },
         r4: { from: C, to: D },
       };
-      // In sensing mode the three fixed arms recede to wiring grey; only the
-      // sensor keeps the "under your control" colour.
-      const armColor = (arm: BridgeArm): string =>
-        !sensing || sensing.arm === arm ? theme.active : theme.structure;
+      // In sensing mode fixed arms recede to wiring grey; only sensor arms
+      // keep the "under your control" colour.
+      const isActive = (arm: BridgeArm): boolean => !sensing || sensing.roles[arm] !== 'fixed';
+      const armColor = (arm: BridgeArm): string => (isActive(arm) ? theme.active : theme.structure);
+      // With more than one active arm, tag each with the direction it changes in.
+      const pushPull =
+        !!sensing && Object.values(sensing.roles).filter((role) => role !== 'fixed').length > 1;
       for (const arm of ['r1', 'r2', 'r3', 'r4'] as const) {
         drawResistor(ctx, { ...arms[arm], color: armColor(arm) });
       }
@@ -351,14 +357,16 @@ export function WheatstoneSchematic({
           nx = -nx;
           ny = -ny;
         }
-        const isSensor = sensing?.arm === arm;
+        const isSensor = !!sensing && isActive(arm);
         if (sensing && isSensor) {
           drawSensorMark(ctx, sensing.sensor, mid, u, { x: nx, y: ny }, theme.active);
         }
         // The sensor's label steps further out, clear of its symbol.
         const gap = isSensor ? 36 : 14;
+        const tag =
+          pushPull && sensing && isSensor ? (sensing.roles[arm] === 'plus' ? ' +Δ' : ' −Δ') : '';
         label(
-          text,
+          text + tag,
           { x: mid.x + nx * gap, y: mid.y + ny * gap },
           armColor(arm),
           mid.x < centerX ? 'right' : 'left'
@@ -396,7 +404,7 @@ export function WheatstoneSchematic({
       height={HEIGHT}
       ariaLabel={ariaLabel}
       onDraw={handleDraw}
-      deps={[result, sensing?.arm, sensing?.sensor, needleSensitivity]}
+      deps={[result, sensing?.roles, sensing?.sensor, needleSensitivity]}
     />
   );
 }

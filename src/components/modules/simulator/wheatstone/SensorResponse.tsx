@@ -12,7 +12,13 @@ import {
   type PlotTheme,
 } from '@/lib/plot';
 import { PlotCanvas } from '@/components/ui';
-import { SENSORS, type BridgeSweep, type SensorId } from '@/lib/circuits/sensors';
+import {
+  BRIDGE_CONFIGS,
+  SENSORS,
+  type BridgeConfig,
+  type BridgeSweep,
+  type SensorId,
+} from '@/lib/circuits/sensors';
 import { useMessages } from '@/lib/i18n';
 import { formatBridgeVoltage, formatQuantity, formatSensorResistance } from './format';
 
@@ -27,7 +33,17 @@ interface Props {
   readonly quantity: number;
   readonly resistance: number;
   readonly output: number;
-  readonly sweep: BridgeSweep;
+  readonly config: BridgeConfig;
+  /** One sweep per configuration: the output plot compares all three. */
+  readonly sweeps: Readonly<Record<BridgeConfig, BridgeSweep>>;
+}
+
+interface Curve {
+  readonly ys: number[];
+  readonly color: string;
+  readonly width: number;
+  readonly opacity: number;
+  readonly label?: string;
 }
 
 function compactOhms(ohms: number): string {
@@ -52,10 +68,12 @@ export function SensorResponse({
   quantity,
   resistance,
   output,
-  sweep,
+  config,
+  sweeps,
 }: Props): React.JSX.Element {
   const t = useMessages().simulator.wheatstone;
   const model = SENSORS[sensor];
+  const sweep = sweeps[config];
 
   // Light spans four decades, so it (and exponential resistances) plot on log10 axes.
   const qx = useCallback((q: number) => (model.logQuantity ? Math.log10(q) : q), [model]);
@@ -68,8 +86,9 @@ export function SensorResponse({
           : `${Math.round(v)}`,
     [sensor]
   );
-  // mV unless the swing reaches volts, so a strain gauge's output isn't a flat line at "0.00".
-  const outputScale = Math.max(...sweep.outputs.map(Math.abs)) >= 1 ? 1 : 1000;
+  // mV unless the swing reaches volts, so a strain gauge's output isn't a flat
+  // line at "0.00". Scaled by the full bridge, the largest of the three.
+  const outputScale = Math.max(...sweeps.full.outputs.map(Math.abs)) >= 1 ? 1 : 1000;
   const outputUnit = outputScale === 1 ? 'V' : 'mV';
 
   const drawCurve = useCallback(
@@ -77,16 +96,17 @@ export function SensorResponse({
       ctx: CanvasRenderingContext2D,
       size: { width: number; height: number },
       theme: PlotTheme,
-      ys: number[],
+      curves: readonly Curve[],
       current: number,
       yTick: (v: number) => string,
-      color: string,
-      withZero: boolean
+      withZero: boolean,
+      padRight = PAD_RIGHT
     ) => {
       ctx.clearRect(0, 0, size.width, size.height);
       const xs = sweep.quantities.map(qx);
-      const xScale = linearScale([xs[0], xs[xs.length - 1]], [PAD_LEFT, size.width - PAD_RIGHT]);
-      const yDomain = withZero ? autoscaleWithZero(ys, 0.12) : autoscale(ys, 0.12);
+      const xScale = linearScale([xs[0], xs[xs.length - 1]], [PAD_LEFT, size.width - padRight]);
+      const all = curves.flatMap((c) => c.ys);
+      const yDomain = withZero ? autoscaleWithZero(all, 0.12) : autoscale(all, 0.12);
       const yScale = linearScale(yDomain, [size.height - PAD_BOTTOM, PAD_TOP]);
       const area = { width: size.width, height: size.height, xScale, yScale };
 
@@ -98,7 +118,38 @@ export function SensorResponse({
         yTickFormat: yTick,
       });
       drawVerticalLine(ctx, { ...area, x: qx(model.reference), color: theme.structure });
-      drawLine(ctx, { ...area, xs, ys, color, lineWidth: 2 });
+      for (const c of curves) {
+        drawLine(ctx, {
+          ...area,
+          xs,
+          ys: c.ys,
+          color: c.color,
+          lineWidth: c.width,
+          opacity: c.opacity,
+        });
+      }
+
+      // Name each curve at its right-hand end, nudged apart where curves end
+      // close together (quarter and half often do) so labels never overlap.
+      const labelled = curves
+        .filter((c) => c.label)
+        .map((c) => ({ c, y: yScale.toPixel(c.ys[c.ys.length - 1]) }))
+        .sort((a, b) => a.y - b.y);
+      const minGap = 13;
+      for (let i = 1; i < labelled.length; i++) {
+        labelled[i].y = Math.max(labelled[i].y, labelled[i - 1].y + minGap);
+      }
+      const overflow = labelled.length ? labelled[labelled.length - 1].y - (size.height - 6) : 0;
+      if (overflow > 0) for (const l of labelled) l.y -= overflow;
+      ctx.save();
+      ctx.font = '10px var(--font-mono, monospace)';
+      ctx.textBaseline = 'middle';
+      for (const { c, y } of labelled) {
+        ctx.globalAlpha = Math.max(c.opacity, 0.6);
+        ctx.fillStyle = c.color;
+        ctx.fillText(c.label ?? '', size.width - padRight + 4, y);
+      }
+      ctx.restore();
       drawMarker(ctx, { ...area, x: qx(quantity), y: current, color: theme.text, radius: 4.5 });
     },
     [sweep, qx, xTick, model, quantity]
@@ -115,29 +166,41 @@ export function SensorResponse({
         ctx,
         size,
         theme,
-        rValues,
+        [{ ys: rValues, color: theme.active, width: 2, opacity: 1 }],
         rCurrent,
         (v) => compactOhms(model.logResistance ? Math.pow(10, v) : v),
-        theme.active,
         false
       ),
     [drawCurve, rValues, rCurrent, model]
   );
 
-  const vValues = useMemo(() => sweep.outputs.map((v) => v * outputScale), [sweep, outputScale]);
+  const vValues = useMemo(
+    () =>
+      Object.fromEntries(
+        BRIDGE_CONFIGS.map((c) => [c, sweeps[c].outputs.map((v) => v * outputScale)])
+      ) as Record<BridgeConfig, number[]>,
+    [sweeps, outputScale]
+  );
   const drawOutput = useCallback(
     (ctx: CanvasRenderingContext2D, size: { width: number; height: number }, theme: PlotTheme) =>
       drawCurve(
         ctx,
         size,
         theme,
-        vValues,
+        // The selected configuration bold, the other two faint, for comparison.
+        BRIDGE_CONFIGS.map((c) => ({
+          ys: vValues[c],
+          color: theme.output,
+          width: c === config ? 2.5 : 1.25,
+          opacity: c === config ? 1 : 0.35,
+          label: t.configShort[c],
+        })),
         output * outputScale,
         (v) => `${Number(v.toFixed(Math.abs(v) < 10 ? 1 : 0))}`,
-        theme.output,
-        true
+        true,
+        58
       ),
-    [drawCurve, vValues, output, outputScale]
+    [drawCurve, vValues, config, output, outputScale, t]
   );
 
   const reading = formatQuantity(sensor, quantity);
@@ -161,7 +224,7 @@ export function SensorResponse({
         onDraw={drawResistance}
         deps={[drawResistance]}
       />
-      <PanelTitle title={`${t.responseV} (${outputUnit})`} />
+      <PanelTitle title={`${t.responseV} (${outputUnit})`} note={t.compareLegend} />
       <PlotCanvas
         height={HEIGHT}
         ariaLabel={`${t.responseV}: ${formatBridgeVoltage(output)} @ ${reading}`}

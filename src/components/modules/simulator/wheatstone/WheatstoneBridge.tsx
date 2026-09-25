@@ -4,12 +4,17 @@ import { useMemo } from 'react';
 import { balancingR4, solveWheatstoneBridge } from '@/lib/circuits/wheatstone';
 import {
   BRIDGE_ARMS,
+  BRIDGE_CONFIGS,
   SENSORS,
   SENSOR_IDS,
+  armRoles,
+  bridgeArms,
   bridgeSweep,
-  quarterBridgeArms,
+  mirroredQuantity,
   referenceResistance,
+  relativeSensitivity,
   type BridgeArm,
+  type BridgeConfig,
   type SensorId,
 } from '@/lib/circuits/sensors';
 import { WheatstoneStateSchema, type WheatstoneState } from '@/lib/state/schemas';
@@ -80,14 +85,15 @@ export function WheatstoneBridge(): React.JSX.Element {
   const sensor = SENSORS[state.sensor];
   const quantity = state[QUANTITY_FIELD[state.sensor]];
 
-  // Sensing mode is a quarter bridge: the chosen arm follows the sensor, the
-  // other three are pinned to its reference resistance. Free mode uses the sliders.
+  // Sensing mode: active arms follow the sensor (reading or mirrored
+  // reading), fixed arms sit at its reference resistance. Free mode uses the sliders.
+  const roles = useMemo(() => armRoles(state.config, state.arm), [state.config, state.arm]);
   const arms = useMemo(
     () =>
       sensing
-        ? quarterBridgeArms(sensor, state.arm, quantity)
+        ? bridgeArms(sensor, state.config, state.arm, quantity)
         : { r1: state.r1, r2: state.r2, r3: state.r3, r4: state.r4 },
-    [sensing, sensor, state.arm, quantity, state.r1, state.r2, state.r3, state.r4]
+    [sensing, sensor, state.config, state.arm, quantity, state.r1, state.r2, state.r3, state.r4]
   );
 
   const result = useMemo(
@@ -95,14 +101,37 @@ export function WheatstoneBridge(): React.JSX.Element {
     [state.voltage, arms, state.rg]
   );
 
-  const sweep = useMemo(
-    () => (sensing ? bridgeSweep(sensor, state.arm, state.voltage, state.rg) : null),
+  // All three configurations, so the response plot can compare them.
+  const sweeps = useMemo(
+    () =>
+      sensing
+        ? (Object.fromEntries(
+            BRIDGE_CONFIGS.map((c) => [
+              c,
+              bridgeSweep(sensor, c, state.arm, state.voltage, state.rg),
+            ])
+          ) as Record<BridgeConfig, ReturnType<typeof bridgeSweep>>)
+        : null,
     [sensing, sensor, state.arm, state.voltage, state.rg]
   );
-  // Auto-ranged meter: the needle nearly pins at the sensor's range extremes,
-  // so a strain gauge's microamps swing it as visibly as an LDR's milliamps.
-  const needleSensitivity =
-    sweep && sweep.maxCurrent > 0 ? sweep.maxCurrent / 2.5 : FREE_NEEDLE_SENSITIVITY;
+  const sweep = sweeps ? sweeps[state.config] : null;
+  // Auto-ranged meter, sized by the FULL bridge's largest current: a strain
+  // gauge's microamps still swing the needle visibly, and the needle swings
+  // further as the configuration adds active arms instead of looking the same.
+  const meterFullScale = sweeps ? sweeps.full.maxCurrent : 0;
+  const needleSensitivity = meterFullScale > 0 ? meterFullScale / 2.5 : FREE_NEEDLE_SENSITIVITY;
+  // The textbook view: open-circuit output (an ideal voltmeter instead of the
+  // galvanometer) against the small-signal estimate k·V·ΔR/R, k = ¼, ½, 1.
+  const openCircuit = arms.r2 / (arms.r1 + arms.r2) - arms.r4 / (arms.r3 + arms.r4);
+  const deltaRatio =
+    (sensor.resistance(quantity) - referenceResistance(sensor)) / referenceResistance(sensor);
+  const K = { quarter: 0.25, half: 0.5, full: 1 } as const;
+  // R2/R3 raise the output when they rise; R1/R4 lower it.
+  const armSign = state.arm === 'r2' || state.arm === 'r3' ? 1 : -1;
+  const estimate = armSign * K[state.config] * state.voltage * deltaRatio;
+  const sensitivity = sensing
+    ? relativeSensitivity(sensor, state.config, state.arm, state.voltage, state.rg)
+    : 1;
 
   function setResistor(field: ResistorField, value: number): void {
     setState((prev) => ({ ...prev, [field]: value }));
@@ -121,6 +150,11 @@ export function WheatstoneBridge(): React.JSX.Element {
   function setArm(arm: BridgeArm): void {
     logEvent('simulator-wheatstone', 'sensor_arm_changed', { arm });
     setState((prev) => ({ ...prev, arm }));
+  }
+
+  function setConfig(config: BridgeConfig): void {
+    logEvent('simulator-wheatstone', 'config_changed', { config });
+    setState((prev) => ({ ...prev, config }));
   }
 
   function setQuantity(value: number): void {
@@ -173,6 +207,14 @@ export function WheatstoneBridge(): React.JSX.Element {
               options={SENSOR_IDS.map((id) => ({ value: id, label: t.sensors[id].name }))}
             />
           </Field>
+          <Field label={t.configLabel}>
+            <SegmentedControl
+              label={t.configLabel}
+              value={state.config}
+              onChange={setConfig}
+              options={BRIDGE_CONFIGS.map((c) => ({ value: c, label: t.configs[c] }))}
+            />
+          </Field>
           <Field label={t.armLabel}>
             <SegmentedControl
               label={t.armLabel}
@@ -186,14 +228,18 @@ export function WheatstoneBridge(): React.JSX.Element {
 
       <WheatstoneSchematic
         result={result}
-        sensing={sensing ? { arm: state.arm, sensor: state.sensor } : undefined}
+        sensing={sensing ? { roles, sensor: state.sensor } : undefined}
         needleSensitivity={needleSensitivity}
       />
 
-      {sensing && sweep && (
+      {sensing && (
+        <p className="text-sm text-[var(--foreground)]/70">{t.configHow[state.config]}</p>
+      )}
+
+      {sensing && sweeps && (
         <div className="grid gap-4 lg:grid-cols-2">
           <div className="flex flex-col gap-3">
-            <SensorIllustration sensor={state.sensor} quantity={quantity} />
+            <SensorIllustration sensor={state.sensor} quantity={quantity} config={state.config} />
             <div className="flex flex-col gap-3 rounded-md border border-[var(--border)] bg-[var(--surface)] p-3">
               {sensor.logQuantity ? (
                 <Slider
@@ -228,6 +274,24 @@ export function WheatstoneBridge(): React.JSX.Element {
                   {t.resetReference(reference)}
                 </button>
               </div>
+              <div className="text-xs text-[var(--foreground)]/70">
+                <div className="mb-1 text-[var(--foreground)]/60">{t.activeArms}</div>
+                <ul className="flex flex-col gap-0.5 font-mono tabular-nums">
+                  {BRIDGE_ARMS.filter((a) => roles[a] !== 'fixed').map((a) => {
+                    const q = roles[a] === 'plus' ? quantity : mirroredQuantity(sensor, quantity);
+                    return (
+                      <li key={a}>
+                        {t.armReading(
+                          a.toUpperCase(),
+                          roles[a] === 'plus' ? '+Δ' : '−Δ',
+                          formatQuantity(state.sensor, q),
+                          formatSensorResistance(sensor.resistance(q))
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
             </div>
           </div>
           <SensorResponse
@@ -235,7 +299,8 @@ export function WheatstoneBridge(): React.JSX.Element {
             quantity={quantity}
             resistance={sensor.resistance(quantity)}
             output={result.vb - result.vc}
-            sweep={sweep}
+            config={state.config}
+            sweeps={sweeps}
           />
         </div>
       )}
@@ -245,13 +310,18 @@ export function WheatstoneBridge(): React.JSX.Element {
       </ExpressionReadout>
 
       {sensing && sweep ? (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <Stat label={t.sensorR} value={formatSensorResistance(sensor.resistance(quantity))} />
-          <Stat label={t.fixedR} value={formatSensorResistance(referenceResistance(sensor))} />
+          <Stat label={t.sensitivity} value={`×${sensitivity.toFixed(2)}`} />
           <Stat label={t.bridgeOut} value={formatBridgeVoltage(result.vb - result.vc)} />
           <Stat label={t.ig} value={formatCurrent(result.ig)} />
-          <Stat label={t.meterRange} value={`±${formatCurrent(sweep.maxCurrent)}`} />
+          <Stat label={t.meterRange} value={`±${formatCurrent(meterFullScale)}`} />
           <Stat label={t.balancedQ} value={result.balanced ? common.yes : common.no} />
+          <Stat label={t.openCircuit} value={formatBridgeVoltage(state.voltage * openCircuit)} />
+          <Stat
+            label={t.estimate({ quarter: '¼', half: '½', full: '1' }[state.config])}
+            value={formatBridgeVoltage(estimate)}
+          />
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -327,6 +397,8 @@ export function WheatstoneBridge(): React.JSX.Element {
           <div className="flex flex-col gap-1 text-xs text-[var(--foreground)]/70">
             <p>{t.referenceNote(reference, formatSensorResistance(referenceResistance(sensor)))}</p>
             <p>{t.armNote}</p>
+            <p>{t.meterNote}</p>
+            <p>{t.loadNote}</p>
           </div>
         ) : (
           <div className="flex flex-wrap items-center gap-3">

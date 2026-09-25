@@ -3,7 +3,12 @@
 import { useCallback } from 'react';
 import type { PlotTheme } from '@/lib/plot';
 import { AnimatedCanvas, usePrefersReducedMotion } from '@/components/ui';
-import { SENSORS, referenceResistance, type SensorId } from '@/lib/circuits/sensors';
+import {
+  SENSORS,
+  referenceResistance,
+  type BridgeConfig,
+  type SensorId,
+} from '@/lib/circuits/sensors';
 import { useMessages } from '@/lib/i18n';
 import { formatQuantity, formatSensorResistance } from './format';
 
@@ -14,6 +19,7 @@ const HOT = [217, 83, 79] as const;
 interface Props {
   readonly sensor: SensorId;
   readonly quantity: number;
+  readonly config: BridgeConfig;
 }
 
 function clamp01(v: number): number {
@@ -115,7 +121,7 @@ function drawLeads(
  * does inside the element to change its resistance. Particles are drawn
  * deterministically from `phase`, so reduced motion gets a sensible still.
  */
-export function SensorIllustration({ sensor, quantity }: Props): React.JSX.Element {
+export function SensorIllustration({ sensor, quantity, config }: Props): React.JSX.Element {
   const t = useMessages().simulator.wheatstone;
   const reducedMotion = usePrefersReducedMotion();
   const model = SENSORS[sensor];
@@ -130,6 +136,12 @@ export function SensorIllustration({ sensor, quantity }: Props): React.JSX.Eleme
     ) => {
       const { width: w, height: h } = size;
       ctx.clearRect(0, 0, w, h);
+      // Half/full bridges pair each sensor with mirrored partners; the strain
+      // beam draws them, the other sensors show the count.
+      if (config !== 'quarter' && sensor !== 'strain') {
+        const n = config === 'half' ? 1 : 2;
+        drawText(ctx, `+Δ ×${n}   −Δ ×${n}`, w - 8, 14, theme.active, 'right');
+      }
       const rText = `R = ${formatSensorResistance(resistance)}`;
 
       if (sensor === 'ldr') {
@@ -333,26 +345,37 @@ export function SensorIllustration({ sensor, quantity }: Props): React.JSX.Eleme
         ctx.fill();
         ctx.stroke();
 
-        // The gauge's zig-zag foil on the top surface near the root, stretched or squeezed.
-        const stretch = 1 + (quantity / 2000) * 0.25;
-        const gs = 0.12;
-        const gauge = 0.22 * stretch;
+        // Zig-zag foil gauges near the root. Top-surface gauges stretch under
+        // positive strain; bottom-surface gauges (the half/full bridge's −Δ
+        // arms) squeeze by the same amount.
         const loops = 7;
-        ctx.strokeStyle = theme.active;
-        ctx.lineWidth = 1.8;
-        ctx.beginPath();
-        for (let k = 0; k <= loops; k++) {
-          const s = gs + (gauge * k) / loops;
-          const x = wallX + s * L;
-          const base = y0 + deflect(s) - thick / 2;
-          const ang = Math.atan(slope(s));
-          const hx = Math.sin(ang) * 9;
-          const hy = -Math.cos(ang) * 9;
-          if (k === 0) ctx.moveTo(x, base - 1);
-          ctx.lineTo(x + (k % 2 ? hx : 0), base - 1 + (k % 2 ? hy : 0));
-          ctx.lineTo(x + (k % 2 ? 0 : hx), base - 1 + (k % 2 ? 0 : hy));
+        const drawGauge = (gs: number, surface: 1 | -1): number => {
+          const stretch = 1 + surface * (quantity / 2000) * 0.25;
+          const gauge = 0.16 * stretch;
+          ctx.strokeStyle = theme.active;
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          for (let k = 0; k <= loops; k++) {
+            const s = gs + (gauge * k) / loops;
+            const x = wallX + s * L;
+            const base = y0 + deflect(s) - (surface * thick) / 2 - surface;
+            const ang = Math.atan(slope(s));
+            const hx = surface * Math.sin(ang) * 9;
+            const hy = -surface * Math.cos(ang) * 9;
+            if (k === 0) ctx.moveTo(x, base);
+            ctx.lineTo(x + (k % 2 ? hx : 0), base + (k % 2 ? hy : 0));
+            ctx.lineTo(x + (k % 2 ? 0 : hx), base + (k % 2 ? 0 : hy));
+          }
+          ctx.stroke();
+          return gs + gauge / 2;
+        };
+        const perSurface = config === 'full' ? 2 : 1;
+        const topMids: number[] = [];
+        const bottomMids: number[] = [];
+        for (let i = 0; i < perSurface; i++) {
+          topMids.push(drawGauge(0.08 + i * 0.24, 1));
+          if (config !== 'quarter') bottomMids.push(drawGauge(0.08 + i * 0.24, -1));
         }
-        ctx.stroke();
 
         // Load at the tip.
         if (Math.abs(quantity) > 1) {
@@ -378,15 +401,27 @@ export function SensorIllustration({ sensor, quantity }: Props): React.JSX.Eleme
         }
         ctx.restore();
 
-        const gaugeMid = wallX + (gs + gauge / 2) * L;
         if (Math.abs(quantity) > 1) {
+          const stretchText = `← ${t.tension} →`;
+          const squeezeText = `→ ${t.compression} ←`;
+          const topMid = topMids.reduce((a, b) => a + b, 0) / topMids.length;
           drawText(
             ctx,
-            quantity > 0 ? `← ${t.tension} →` : `→ ${t.compression} ←`,
-            gaugeMid,
-            y0 + deflect(gs + gauge / 2) - thick / 2 - 22,
+            `${quantity > 0 ? stretchText : squeezeText}  +Δ`,
+            wallX + topMid * L,
+            y0 + deflect(topMid) - thick / 2 - 22,
             theme.active
           );
+          if (bottomMids.length > 0) {
+            const bottomMid = bottomMids.reduce((a, b) => a + b, 0) / bottomMids.length;
+            drawText(
+              ctx,
+              `${quantity > 0 ? squeezeText : stretchText}  −Δ`,
+              wallX + bottomMid * L,
+              y0 + deflect(bottomMid) + thick / 2 + 22,
+              theme.active
+            );
+          }
         }
         drawText(ctx, formatQuantity('strain', quantity), wallX + L * 0.62, 18, theme.text);
         drawText(ctx, rText, w * 0.5, h - 30, theme.active);
@@ -435,7 +470,7 @@ export function SensorIllustration({ sensor, quantity }: Props): React.JSX.Eleme
       ctx.restore();
       drawText(ctx, rText, knob.x, h - 22, theme.active);
     },
-    [sensor, quantity, resistance, model, t]
+    [sensor, quantity, resistance, model, t, config]
   );
 
   return (
@@ -450,7 +485,7 @@ export function SensorIllustration({ sensor, quantity }: Props): React.JSX.Eleme
       // The loop reads the latest draw function every frame, so dragging the
       // slider needn't restart it (and reset every particle). Only the single
       // still frame of reduced motion needs a redraw per reading.
-      deps={[sensor, reducedMotion ? quantity : null]}
+      deps={[sensor, config, reducedMotion ? quantity : null]}
     />
   );
 }

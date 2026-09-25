@@ -22,7 +22,13 @@ test.describe('Wheatstone bridge: sensing mode', () => {
       'aria-checked',
       'true'
     );
-    await expect(stat(page, 'Each fixed arm').getByText('10.000 kΩ')).toBeVisible();
+    await expect(page.getByRole('radio', { name: 'Quarter (1 active arm)' })).toHaveAttribute(
+      'aria-checked',
+      'true'
+    );
+    await expect(
+      page.getByText(/equals the sensor's resistance at 25 °C \(10\.000 kΩ\)/)
+    ).toBeVisible();
     await expect(stat(page, 'Balanced?').getByText('Yes')).toBeVisible();
     await expect(page).toHaveURL(/mode=sensing/);
   });
@@ -90,5 +96,44 @@ test.describe('Wheatstone bridge: sensing mode', () => {
       ).toBeVisible();
       await expect(page.getByRole('group', { name: /Response curves/ })).toBeVisible();
     }
+  });
+
+  test('half and full bridges multiply the output by about 2 and 4, and stay balanced at reference', async ({
+    page,
+  }) => {
+    await page.goto('/simulator?predict=off&mode=sensing&sensor=strain&arm=r4&strain=1000&rg=2200');
+    const output = stat(page, 'Bridge output VB − VC').locator('div').nth(1);
+    const mv = async (): Promise<number> =>
+      Math.abs(parseFloat((await output.textContent()) ?? '0'));
+
+    const quarter = await mv();
+    await page.getByRole('radio', { name: 'Half (2 active arms)' }).click();
+    await expect(
+      stat(page, 'Sensitivity vs quarter bridge').getByText(/^×1\.9\d|^×2\.0\d/)
+    ).toBeVisible();
+    const half = await mv();
+    await page.getByRole('radio', { name: 'Full (4 active arms)' }).click();
+    await expect(
+      stat(page, 'Sensitivity vs quarter bridge').getByText(/^×3\.\d\d|^×4\.0\d/)
+    ).toBeVisible();
+    const full = await mv();
+
+    expect(half / quarter).toBeGreaterThan(1.8);
+    expect(half / quarter).toBeLessThan(2.2);
+    expect(full / quarter).toBeGreaterThan(3.4);
+    expect(full / quarter).toBeLessThan(4.4);
+
+    // A full bridge of linear gauges is exactly linear: open-circuit output
+    // equals the textbook V·ΔR/R. Here 9 V × (2.0 × 1000e-6) = 18 mV.
+    await expect(stat(page, 'Open-circuit output (no meter)').getByText('-18.00 mV')).toBeVisible();
+    await expect(stat(page, 'Textbook estimate 1·V·ΔR/R').getByText('-18.00 mV')).toBeVisible();
+
+    // Full bridge with R4 primary: R1 is +Δ too, R2 and R3 are −Δ.
+    await expect(page.getByText('R1 (+Δ): +1000 µε → 350.70 Ω')).toBeVisible();
+    await expect(page.getByText('R2 (−Δ): -1000 µε → 349.30 Ω')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Back to reference (0 µε)' }).click();
+    await expect(stat(page, 'Balanced?').getByText('Yes')).toBeVisible();
+    await expect(page).toHaveURL(/config=full/);
   });
 });
