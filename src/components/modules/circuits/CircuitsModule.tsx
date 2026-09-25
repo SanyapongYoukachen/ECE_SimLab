@@ -8,6 +8,7 @@ import { CircuitStateSchema, type CircuitMode, type Topology } from '@/lib/state
 import { decodeCircuitState, encodeCircuitState, decodePredictFlag } from '@/lib/state/urlState';
 import { useUrlSyncedState, useUrlFlag } from '@/lib/state/useUrlState';
 import { logEvent } from '@/lib/state/telemetry';
+import { useLocalizedQuestions, useMessages, type Messages } from '@/lib/i18n';
 import {
   PredictionCheck,
   PredictionGate,
@@ -25,8 +26,8 @@ import { formatCircuitExpression } from './expression';
 import { formatCurrent, formatPower, formatResistance, formatVoltage } from './format';
 import { QUESTIONS } from './questions';
 import {
-  MODE_OPTIONS,
-  TOPOLOGY_OPTIONS,
+  MODE_ORDER,
+  TOPOLOGY_ORDER,
   MIN_VOLTAGE,
   MAX_VOLTAGE,
   MIN_RESISTANCE,
@@ -38,7 +39,9 @@ const DEFAULT_STATE = CircuitStateSchema.parse({});
 export function CircuitsModule(): React.JSX.Element {
   const predictEnabled = useUrlFlag(decodePredictFlag, true);
   const practiceMode = usePracticeMode();
-  const practiceQuestion = usePracticeQuestion(QUESTIONS);
+  const t = useMessages().circuits;
+  const questions = useLocalizedQuestions(QUESTIONS);
+  const practiceQuestion = usePracticeQuestion(questions);
   const [state, setState] = useUrlSyncedState(
     decodeCircuitState,
     encodeCircuitState,
@@ -81,13 +84,13 @@ export function CircuitsModule(): React.JSX.Element {
         <ReadoutPanel mode={state.mode} ohm={ohm} network={network} divider={divider} />
       </div>
 
-      <ExpressionReadout label="Governing equation">{expression}</ExpressionReadout>
+      <ExpressionReadout label={t.governingEquation}>{expression}</ExpressionReadout>
 
-      <StatGrid mode={state.mode} ohm={ohm} network={network} divider={divider} />
+      <StatGrid mode={state.mode} ohm={ohm} network={network} divider={divider} t={t} />
 
       <div className="flex flex-col gap-3 rounded-md border border-[var(--border)] bg-[var(--surface)] p-3">
         <Slider
-          label="Source voltage V"
+          label={t.sourceVoltage}
           value={state.voltage}
           min={MIN_VOLTAGE}
           max={MAX_VOLTAGE}
@@ -96,7 +99,7 @@ export function CircuitsModule(): React.JSX.Element {
           onChange={(voltage) => setState((prev) => ({ ...prev, voltage }))}
         />
         <Slider
-          label={state.mode === 'ohm' ? 'Resistance R' : 'Resistance R1'}
+          label={state.mode === 'ohm' ? t.resistanceR : t.resistanceR1}
           value={state.r1}
           min={MIN_RESISTANCE}
           max={MAX_RESISTANCE}
@@ -106,7 +109,7 @@ export function CircuitsModule(): React.JSX.Element {
         />
         {state.mode !== 'ohm' && (
           <Slider
-            label="Resistance R2"
+            label={t.resistanceR2}
             value={state.r2}
             min={MIN_RESISTANCE}
             max={MAX_RESISTANCE}
@@ -118,23 +121,23 @@ export function CircuitsModule(): React.JSX.Element {
       </div>
 
       <SegmentedControl
-        label="Circuit"
+        label={t.circuit}
         value={state.mode}
         onChange={setMode}
-        options={MODE_OPTIONS}
+        options={MODE_ORDER.map((value) => ({ value, label: t.modes[value] }))}
       />
 
       {state.mode === 'network' && (
         <SegmentedControl
-          label="Topology"
+          label={t.topology}
           value={state.topology}
           onChange={setTopology}
-          options={TOPOLOGY_OPTIONS}
+          options={TOPOLOGY_ORDER.map((value) => ({ value, label: t.topologies[value] }))}
         />
       )}
 
       {!practiceMode && (
-        <PredictionCheck moduleId="circuits" disabled={!predictEnabled} questions={QUESTIONS} />
+        <PredictionCheck moduleId="circuits" disabled={!predictEnabled} questions={questions} />
       )}
 
       <LiveRegion text={liveText} />
@@ -161,19 +164,21 @@ function StatGrid({
   ohm,
   network,
   divider,
+  t,
 }: {
   readonly mode: CircuitMode;
   readonly ohm: ReturnType<typeof solveOhm>;
   readonly network: ReturnType<typeof solveNetwork>;
   readonly divider: ReturnType<typeof solveDivider>;
+  readonly t: Messages['circuits'];
 }): React.JSX.Element {
   if (mode === 'ohm') {
     return (
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat label="Current I" value={formatCurrent(ohm.current)} />
-        <Stat label="Power P = VI" value={formatPower(ohm.power)} />
-        <Stat label="Voltage V" value={formatVoltage(ohm.voltage)} />
-        <Stat label="Resistance R" value={formatResistance(ohm.resistance)} />
+        <Stat label={t.currentI} value={formatCurrent(ohm.current)} />
+        <Stat label={t.powerP} value={formatPower(ohm.power)} />
+        <Stat label={t.voltageV} value={formatVoltage(ohm.voltage)} />
+        <Stat label={t.resistanceR} value={formatResistance(ohm.resistance)} />
       </div>
     );
   }
@@ -181,16 +186,16 @@ function StatGrid({
   if (mode === 'network') {
     const third =
       network.topology === 'series'
-        ? { label: 'Voltage across R1', value: formatVoltage(network.v1) }
-        : { label: 'Current through R1', value: formatCurrent(network.i1) };
+        ? { label: t.vAcrossR1, value: formatVoltage(network.v1) }
+        : { label: t.iThroughR1, value: formatCurrent(network.i1) };
     const fourth =
       network.topology === 'series'
-        ? { label: 'Voltage across R2', value: formatVoltage(network.v2) }
-        : { label: 'Current through R2', value: formatCurrent(network.i2) };
+        ? { label: t.vAcrossR2, value: formatVoltage(network.v2) }
+        : { label: t.iThroughR2, value: formatCurrent(network.i2) };
     return (
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat label="Equivalent resistance" value={formatResistance(network.equivalent)} />
-        <Stat label="Total current" value={formatCurrent(network.totalCurrent)} />
+        <Stat label={t.equivalent} value={formatResistance(network.equivalent)} />
+        <Stat label={t.totalCurrent} value={formatCurrent(network.totalCurrent)} />
         <Stat label={third.label} value={third.value} />
         <Stat label={fourth.label} value={fourth.value} />
       </div>
@@ -199,10 +204,10 @@ function StatGrid({
 
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-      <Stat label="Vout (across R2)" value={formatVoltage(divider.vOut)} />
-      <Stat label="Current" value={formatCurrent(divider.current)} />
-      <Stat label="Voltage across R1" value={formatVoltage(divider.vR1)} />
-      <Stat label="Divider ratio R2/(R1+R2)" value={`${(divider.ratio * 100).toFixed(1)}%`} />
+      <Stat label={t.vout} value={formatVoltage(divider.vOut)} />
+      <Stat label={t.current} value={formatCurrent(divider.current)} />
+      <Stat label={t.vAcrossR1} value={formatVoltage(divider.vR1)} />
+      <Stat label={t.dividerRatio} value={`${(divider.ratio * 100).toFixed(1)}%`} />
     </div>
   );
 }

@@ -10,6 +10,7 @@ import {
 } from '@/lib/state/urlState';
 import { useUrlSyncedState, useUrlFlag } from '@/lib/state/useUrlState';
 import { logEvent } from '@/lib/state/telemetry';
+import { useLocalizedQuestions, useMessages } from '@/lib/i18n';
 import {
   PredictionCheck,
   PredictionGate,
@@ -33,7 +34,10 @@ type ResistorField = 'r1' | 'r2' | 'r3' | 'r4' | 'rg';
 export function WheatstoneBridge(): React.JSX.Element {
   const predictEnabled = useUrlFlag(decodePredictFlag, true);
   const practiceMode = usePracticeMode();
-  const practiceQuestion = usePracticeQuestion(QUESTIONS);
+  const common = useMessages().common;
+  const t = useMessages().simulator.wheatstone;
+  const questions = useLocalizedQuestions(QUESTIONS);
+  const practiceQuestion = usePracticeQuestion(questions);
   const [state, setState] = useUrlSyncedState(
     decodeWheatstoneState,
     encodeWheatstoneState,
@@ -61,28 +65,26 @@ export function WheatstoneBridge(): React.JSX.Element {
   const expression = `R1·R4 = ${formatResistance(result.r1 * result.r4)}  ${
     result.balanced ? '=' : '≠'
   }  R2·R3 = ${formatResistance(result.r2 * result.r3)}`;
-  const liveText = useThrottledValue(
-    `Bridge is ${result.balanced ? 'balanced' : 'unbalanced'}. Galvanometer current ${formatCurrent(result.ig)}.`
-  );
+  const liveText = useThrottledValue(t.liveText(result.balanced, formatCurrent(result.ig)));
 
   const content = (
     <div className="flex flex-col gap-4">
       <WheatstoneSchematic result={result} />
 
-      <ExpressionReadout label="Balance condition: R1·R4 = R2·R3">{expression}</ExpressionReadout>
+      <ExpressionReadout label={t.balanceCondition}>{expression}</ExpressionReadout>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <Stat label="Galvanometer current" value={formatCurrent(result.ig)} />
-        <Stat label="Node B voltage" value={formatVoltage(result.vb)} />
-        <Stat label="Node C voltage" value={formatVoltage(result.vc)} />
-        <Stat label="Bridge voltage VB − VC" value={formatVoltage(result.vb - result.vc)} />
-        <Stat label="R4 for balance (R2·R3/R1)" value={formatResistance(targetR4)} />
-        <Stat label="Balanced?" value={result.balanced ? 'Yes' : 'No'} />
+        <Stat label={t.ig} value={formatCurrent(result.ig)} />
+        <Stat label={t.vb} value={formatVoltage(result.vb)} />
+        <Stat label={t.vc} value={formatVoltage(result.vc)} />
+        <Stat label={t.vbc} value={formatVoltage(result.vb - result.vc)} />
+        <Stat label={t.r4Balance} value={formatResistance(targetR4)} />
+        <Stat label={t.balancedQ} value={result.balanced ? common.yes : common.no} />
       </div>
 
       <div className="flex flex-col gap-3 rounded-md border border-[var(--border)] bg-[var(--surface)] p-3">
         <Slider
-          label="Source voltage V"
+          label={t.sourceVoltage}
           value={state.voltage}
           min={0}
           max={24}
@@ -118,7 +120,7 @@ export function WheatstoneBridge(): React.JSX.Element {
           onChange={(v) => setResistor('r3', v)}
         />
         <Slider
-          label="R4 (the unknown, in a real bridge)"
+          label={t.r4}
           value={state.r4}
           min={MIN_R}
           max={MAX_R}
@@ -127,7 +129,7 @@ export function WheatstoneBridge(): React.JSX.Element {
           onChange={(v) => setResistor('r4', v)}
         />
         <Slider
-          label="Galvanometer resistance Rg"
+          label={t.rg}
           value={state.rg}
           min={MIN_R}
           max={MAX_R}
@@ -143,13 +145,15 @@ export function WheatstoneBridge(): React.JSX.Element {
             aria-describedby={balanceReachable ? undefined : 'wheatstone-balance-hint'}
             className="rounded-md border border-[var(--border)] px-3 py-1.5 text-sm hover:bg-[var(--surface-2)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent"
           >
-            Balance the bridge (solve R4)
+            {t.balanceButton}
           </button>
           {!balanceReachable && (
             <p id="wheatstone-balance-hint" className="text-xs text-[var(--foreground)]/70">
-              Balance needs R4 = {formatResistance(targetR4)}, outside the R4 slider&apos;s{' '}
-              {formatResistance(MIN_R)}–{formatResistance(MAX_R)} range. Change the ratio arms R1–R3
-              first.
+              {t.balanceHint(
+                formatResistance(targetR4),
+                formatResistance(MIN_R),
+                formatResistance(MAX_R)
+              )}
             </p>
           )}
         </div>
@@ -159,7 +163,7 @@ export function WheatstoneBridge(): React.JSX.Element {
         <PredictionCheck
           moduleId="simulator-wheatstone"
           disabled={!predictEnabled}
-          questions={QUESTIONS}
+          questions={questions}
         />
       )}
 

@@ -1,15 +1,9 @@
 import type { CircuitMode, Topology } from '@/lib/state/schemas';
 
-export const MODE_OPTIONS: readonly { value: CircuitMode; label: string }[] = [
-  { value: 'ohm', label: "Ohm's law" },
-  { value: 'network', label: 'Series & parallel' },
-  { value: 'divider', label: 'Voltage divider' },
-];
+/** Display order; labels live in the i18n dictionary under `circuits.modes` / `circuits.topologies`. */
+export const MODE_ORDER: readonly CircuitMode[] = ['ohm', 'network', 'divider'];
 
-export const TOPOLOGY_OPTIONS: readonly { value: Topology; label: string }[] = [
-  { value: 'series', label: 'Series' },
-  { value: 'parallel', label: 'Parallel' },
-];
+export const TOPOLOGY_ORDER: readonly Topology[] = ['series', 'parallel'];
 
 export const MIN_VOLTAGE = 0;
 export const MAX_VOLTAGE = 24;

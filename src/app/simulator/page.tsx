@@ -9,10 +9,7 @@ export const metadata: Metadata = {
 
 export default function SimulatorPage(): React.JSX.Element {
   return (
-    <ModuleShell
-      title="Circuit simulator"
-      tagline="Watch current actually flow through the circuit. Pick a circuit from the tabs; more are coming."
-    >
+    <ModuleShell page="simulator">
       <SimulatorModule />
     </ModuleShell>
   );

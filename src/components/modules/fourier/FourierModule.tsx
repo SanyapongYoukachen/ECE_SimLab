@@ -6,6 +6,7 @@ import { FourierPresetSchema, WindowTypeSchema } from '@/lib/state/schemas';
 import { decodeFourierState, encodeFourierState, decodePredictFlag } from '@/lib/state/urlState';
 import { useUrlSyncedState, useUrlFlag } from '@/lib/state/useUrlState';
 import { logEvent } from '@/lib/state/telemetry';
+import { useLocalizedQuestions, useMessages } from '@/lib/i18n';
 import {
   PredictionCheck,
   PredictionGate,
@@ -36,16 +37,19 @@ import {
 } from './constants';
 
 const DEFAULT_STATE = FourierPresetSchema.parse({});
-const WINDOW_OPTIONS = WindowTypeSchema.options.map((id) => ({
-  value: id,
-  label: id === 'rect' ? 'Rectangular' : id[0].toUpperCase() + id.slice(1),
-}));
 const DISPLAY_MAX_FREQ = FREQ2 + 400;
 
 export function FourierModule(): React.JSX.Element {
   const predictEnabled = useUrlFlag(decodePredictFlag, true);
   const practiceMode = usePracticeMode();
-  const practiceQuestion = usePracticeQuestion(QUESTIONS);
+  const t = useMessages();
+  const tf = t.fourier;
+  const questions = useLocalizedQuestions(QUESTIONS);
+  const practiceQuestion = usePracticeQuestion(questions);
+  const windowOptions = WindowTypeSchema.options.map((id) => ({
+    value: id,
+    label: tf.windows[id],
+  }));
   const [state, setState] = useUrlSyncedState(
     decodeFourierState,
     encodeFourierState,
@@ -85,7 +89,7 @@ export function FourierModule(): React.JSX.Element {
   }
 
   const liveText = useThrottledValue(
-    `Component 3 at ${state.freq3.toFixed(1)} Hz, ${onBin ? 'on a bin centre' : 'between bins — leakage visible'}. Window: ${state.window}.`
+    tf.liveText(state.freq3.toFixed(1), onBin, tf.windows[state.window])
   );
 
   const content = (
@@ -101,20 +105,20 @@ export function FourierModule(): React.JSX.Element {
 
       <ExpressionReadout>
         {onBin
-          ? `Component 3 sits exactly on a bin (${nearestBinFreq(state.freq3).toFixed(2)} Hz) — a single clean peak.`
-          : `Component 3 sits between bins (nearest: ${nearestBinFreq(state.freq3).toFixed(2)} Hz) — this is spectral leakage, a consequence of the finite observation window, not a bug.`}
+          ? tf.onBin(nearestBinFreq(state.freq3).toFixed(2))
+          : tf.offBin(nearestBinFreq(state.freq3).toFixed(2))}
       </ExpressionReadout>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat label="Bin spacing" value={`${BIN_SPACING.toFixed(2)} Hz`} />
-        <Stat label="Nyquist limit" value={`${NYQUIST.toFixed(0)} Hz`} />
-        <Stat label="Component 3" value={`${state.freq3.toFixed(1)} Hz`} />
-        <Stat label="On a bin?" value={onBin ? 'Yes' : 'No'} />
+        <Stat label={tf.binSpacing} value={`${BIN_SPACING.toFixed(2)} Hz`} />
+        <Stat label={tf.nyquist} value={`${NYQUIST.toFixed(0)} Hz`} />
+        <Stat label={tf.component3} value={`${state.freq3.toFixed(1)} Hz`} />
+        <Stat label={tf.onBinQ} value={onBin ? t.common.yes : t.common.no} />
       </div>
 
       <div className="flex flex-col gap-3 rounded-md border border-[var(--border)] bg-[var(--surface)] p-3">
         <Slider
-          label="Amplitude 1 (250 Hz, fixed)"
+          label={tf.amp1}
           value={state.amp1}
           min={0}
           max={1}
@@ -123,7 +127,7 @@ export function FourierModule(): React.JSX.Element {
           formatValue={(v) => v.toFixed(2)}
         />
         <Slider
-          label="Amplitude 2 (625 Hz, fixed)"
+          label={tf.amp2}
           value={state.amp2}
           min={0}
           max={1}
@@ -132,7 +136,7 @@ export function FourierModule(): React.JSX.Element {
           formatValue={(v) => v.toFixed(2)}
         />
         <Slider
-          label="Amplitude 3"
+          label={tf.amp3}
           value={state.amp3}
           min={0}
           max={1}
@@ -141,7 +145,7 @@ export function FourierModule(): React.JSX.Element {
           formatValue={(v) => v.toFixed(2)}
         />
         <Slider
-          label="Frequency 3"
+          label={tf.freq3}
           value={state.freq3}
           min={FREQ3_MIN}
           max={FREQ3_MAX}
@@ -155,7 +159,7 @@ export function FourierModule(): React.JSX.Element {
             onClick={() => set('freq3', nearestBinFreq(state.freq3))}
             className="rounded-md border border-[var(--border)] px-3 py-1.5 text-sm hover:bg-[var(--surface-2)]"
           >
-            Snap to nearest bin
+            {tf.snap}
           </button>
           <PlayPauseButton
             playing={audioPlaying}
@@ -164,27 +168,25 @@ export function FourierModule(): React.JSX.Element {
               logEvent('fourier', 'audio_toggled', { playing: !audioPlaying });
             }}
           />
-          <span className="text-xs text-[var(--foreground)]/60">Hear the three tones combined</span>
+          <span className="text-xs text-[var(--foreground)]/60">{tf.hear}</span>
         </div>
       </div>
 
       <SegmentedControl
-        label="Window function"
+        label={tf.windowFunction}
         value={state.window}
         onChange={(v) => {
           logEvent('fourier', 'window_changed', { window: v });
           set('window', v);
         }}
-        options={WINDOW_OPTIONS}
+        options={windowOptions}
       />
       <p className="text-sm text-[var(--foreground)]/70">
-        {state.window === 'rect'
-          ? 'Rectangular is really no window at all — a hard cutoff at the edges of the observation, which is what causes leakage in the first place.'
-          : 'Tapering the signal toward zero at both edges before transforming reduces (but never fully removes) leakage.'}
+        {state.window === 'rect' ? tf.rectNote : tf.taperNote}
       </p>
 
       {!practiceMode && (
-        <PredictionCheck moduleId="fourier" disabled={!predictEnabled} questions={QUESTIONS} />
+        <PredictionCheck moduleId="fourier" disabled={!predictEnabled} questions={questions} />
       )}
 
       <LiveRegion text={liveText} />

@@ -3,6 +3,7 @@
 import { useCallback } from 'react';
 import { linearScale, autoscaleWithZero, drawAxes, drawLine, type PlotTheme } from '@/lib/plot';
 import { PlotCanvas } from '@/components/ui';
+import { useMessages } from '@/lib/i18n';
 
 const HEIGHT = 220;
 const PAD_LEFT = 44;
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export function OverlayPanel({ direct, viaFft }: Props): React.JSX.Element {
+  const t = useMessages().theorem;
   const handleDraw = useCallback(
     (ctx: CanvasRenderingContext2D, size: { width: number; height: number }, theme: PlotTheme) => {
       ctx.clearRect(0, 0, size.width, size.height);
@@ -71,21 +73,19 @@ export function OverlayPanel({ direct, viaFft }: Props): React.JSX.Element {
             className="inline-block h-2 w-2 rounded-full bg-[var(--plot-input)]"
             aria-hidden="true"
           />
-          <span className="text-[var(--foreground)]/70">x * h, computed directly</span>
+          <span className="text-[var(--foreground)]/70">{t.legendDirect}</span>
         </span>
         <span className="inline-flex items-center gap-1.5">
           <span
             className="inline-block h-2 w-2 rounded-full bg-[var(--plot-output)]"
             aria-hidden="true"
           />
-          <span className="text-[var(--foreground)]/70">
-            IFFT(FFT(x) · FFT(h)) — dashed, should trace the same curve
-          </span>
+          <span className="text-[var(--foreground)]/70">{t.legendFft}</span>
         </span>
       </div>
       <PlotCanvas
         height={HEIGHT}
-        ariaLabel="Direct convolution and FFT-based convolution results overlaid — they should be visually indistinguishable."
+        ariaLabel={t.overlayAria}
         onDraw={handleDraw}
         deps={[direct, viaFft]}
       />

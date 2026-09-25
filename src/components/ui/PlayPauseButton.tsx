@@ -1,5 +1,7 @@
 'use client';
 
+import { useMessages } from '@/lib/i18n';
+
 interface PlayPauseButtonProps {
   readonly playing: boolean;
   readonly onToggle: () => void;
@@ -11,6 +13,7 @@ export function PlayPauseButton({
   onToggle,
   disabled,
 }: PlayPauseButtonProps): React.JSX.Element {
+  const t = useMessages().common;
   return (
     <button
       type="button"
@@ -25,14 +28,14 @@ export function PlayPauseButton({
             <rect x="1" y="1" width="3.5" height="10" fill="currentColor" />
             <rect x="7.5" y="1" width="3.5" height="10" fill="currentColor" />
           </svg>
-          Pause
+          {t.pause}
         </>
       ) : (
         <>
           <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
             <path d="M1.5 0.5 L11 6 L1.5 11.5 Z" fill="currentColor" />
           </svg>
-          Play
+          {t.play}
         </>
       )}
     </button>

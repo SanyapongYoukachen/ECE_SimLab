@@ -9,10 +9,7 @@ export const metadata: Metadata = {
 
 export default function TheoremPage(): React.JSX.Element {
   return (
-    <ModuleShell
-      title="The convolution theorem: two paths, one answer"
-      tagline="Drag the length slider up and watch the direct method's cost curve pull away from the FFT's."
-    >
+    <ModuleShell page="theorem">
       <TheoremModule />
     </ModuleShell>
   );

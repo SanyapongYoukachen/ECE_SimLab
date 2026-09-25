@@ -1,49 +1,15 @@
 import Link from 'next/link';
-import { ThemeToggle } from '@/components/ui';
+import { LanguageToggle, ThemeToggle } from '@/components/ui';
+import { Localized, type Messages } from '@/lib/i18n';
 
-interface ModuleCard {
-  readonly href: string;
-  readonly kicker: string;
-  readonly title: string;
-  readonly description: string;
-}
+type ModuleKey = keyof Messages['landing']['modules'];
 
-const MODULES: readonly ModuleCard[] = [
-  {
-    href: '/convolution',
-    kicker: 'Module 1',
-    title: 'Convolution',
-    description:
-      'Watch a kernel flip and slide across a signal, sample by sample, with the arithmetic shown live.',
-  },
-  {
-    href: '/fourier',
-    kicker: 'Module 2',
-    title: 'Fourier transform explorer',
-    description:
-      'Move a frequency off a bin centre and watch — and hear — its peak smear across the spectrum.',
-  },
-  {
-    href: '/theorem',
-    kicker: 'Module 3',
-    title: 'The convolution theorem',
-    description:
-      'Two independent paths to the same answer, with a live operation count showing why one of them won.',
-  },
-  {
-    href: '/circuits',
-    kicker: 'Module 4',
-    title: 'DC circuits',
-    description:
-      "Ohm's law, series and parallel resistors, and the voltage divider — drag V and R, watch the schematic and the numbers respond together.",
-  },
-  {
-    href: '/simulator',
-    kicker: 'Module 5',
-    title: 'Circuit simulator',
-    description:
-      'Animated current flow through a real circuit — starting with the Wheatstone bridge. More circuits land here in tabs as they’re added.',
-  },
+const MODULES: readonly { readonly href: string; readonly key: ModuleKey }[] = [
+  { href: '/convolution', key: 'convolution' },
+  { href: '/fourier', key: 'fourier' },
+  { href: '/theorem', key: 'theorem' },
+  { href: '/circuits', key: 'circuits' },
+  { href: '/simulator', key: 'simulator' },
 ];
 
 export default function LandingPage(): React.JSX.Element {
@@ -52,18 +18,19 @@ export default function LandingPage(): React.JSX.Element {
       <header className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-[var(--plot-active)]">
-            Signals Lab
+            <Localized pick={(m) => m.landing.kicker} />
           </p>
           <h1 className="mt-2 text-3xl font-semibold text-[var(--foreground)] sm:text-4xl">
-            Signals and circuits, made visible
+            <Localized pick={(m) => m.landing.title} />
           </h1>
           <p className="mt-3 max-w-2xl text-[var(--foreground)]/70">
-            You can already do the algebra. These five linked instruments are for the part algebra
-            doesn&apos;t teach: what the operation actually does. Manipulate either representation
-            and watch the other respond in real time.
+            <Localized pick={(m) => m.landing.intro} />
           </p>
         </div>
-        <ThemeToggle />
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+          <LanguageToggle />
+          <ThemeToggle />
+        </div>
       </header>
 
       <nav className="grid gap-4 sm:grid-cols-1">
@@ -71,23 +38,26 @@ export default function LandingPage(): React.JSX.Element {
           <Link
             key={m.href}
             href={m.href}
-            aria-label={m.title}
             className="group flex flex-col gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-5 transition-colors hover:border-[var(--plot-active)]"
           >
+            {/* The link's accessible name is just the title, in the active language. */}
+            <span className="sr-only">
+              <Localized pick={(msg) => msg.landing.modules[m.key].title} />
+            </span>
             <span
               className="text-xs font-medium uppercase tracking-wide text-[var(--foreground)]/50"
               aria-hidden="true"
             >
-              {m.kicker}
+              <Localized pick={(msg) => msg.landing.modules[m.key].kicker} />
             </span>
             <span
               className="text-xl font-medium text-[var(--foreground)] group-hover:text-[var(--plot-active)]"
               aria-hidden="true"
             >
-              {m.title} →
+              <Localized pick={(msg) => msg.landing.modules[m.key].title} /> →
             </span>
             <span className="text-sm text-[var(--foreground)]/70" aria-hidden="true">
-              {m.description}
+              <Localized pick={(msg) => msg.landing.modules[m.key].description} />
             </span>
           </Link>
         ))}
@@ -95,16 +65,16 @@ export default function LandingPage(): React.JSX.Element {
 
       <footer className="mt-auto flex flex-col gap-2 border-t border-[var(--border)] pt-6 text-sm text-[var(--foreground)]/60">
         <p>
-          Every configuration — signal values, kernel, shift, window, amplitudes, frequencies,
-          voltage, resistance — lives in the URL. Set it up, copy the link, and it reproduces
-          exactly.
+          <Localized pick={(m) => m.landing.footerUrl} />
         </p>
         <p>
-          Every module opens unlocked, with a check-your-understanding prompt at the end — turn on{' '}
-          <strong>Predict first</strong> in a module&apos;s header to switch to a stricter
-          guess-before-you-see gate for extra practice. Running a live lecture? Append{' '}
-          <code className="font-mono text-xs">?predict=off</code> to any module URL to hide that
-          prompt entirely.
+          <Localized pick={(m) => m.landing.footerPractice1} />{' '}
+          <strong>
+            <Localized pick={(m) => m.landing.footerPracticeStrong} />
+          </strong>{' '}
+          <Localized pick={(m) => m.landing.footerPractice2} />{' '}
+          <code className="font-mono text-xs">?predict=off</code>{' '}
+          <Localized pick={(m) => m.landing.footerPractice3} />
         </p>
       </footer>
     </div>

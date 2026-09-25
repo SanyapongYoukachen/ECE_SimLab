@@ -12,6 +12,7 @@ import {
 } from '@/lib/plot';
 import { PlotCanvas } from '@/components/ui';
 import { directConvOps, fftConvOps } from '@/lib/dsp';
+import { useMessages } from '@/lib/i18n';
 import { MAX_LENGTH } from './constants';
 
 const HEIGHT = 220;
@@ -27,6 +28,7 @@ interface Props {
 }
 
 export function CostChart({ n }: Props): React.JSX.Element {
+  const t = useMessages().theorem;
   const { ns, directOps, fftOps } = useMemo(() => {
     const ns: number[] = [];
     const directOps: number[] = [];
@@ -117,19 +119,19 @@ export function CostChart({ n }: Props): React.JSX.Element {
             className="inline-block h-2 w-2 rounded-full bg-[var(--plot-active)]"
             aria-hidden="true"
           />
-          <span className="text-[var(--foreground)]/70">direct: O(N·M) operations</span>
+          <span className="text-[var(--foreground)]/70">{t.costDirect}</span>
         </span>
         <span className="inline-flex items-center gap-1.5">
           <span
             className="inline-block h-2 w-2 rounded-full bg-[var(--plot-output)]"
             aria-hidden="true"
           />
-          <span className="text-[var(--foreground)]/70">FFT-based: O(N log N) operations</span>
+          <span className="text-[var(--foreground)]/70">{t.costFft}</span>
         </span>
       </div>
       <PlotCanvas
         height={HEIGHT}
-        ariaLabel={`Operation count versus signal length, up to N=${MAX_N}. Direct convolution grows quadratically; the FFT path grows almost flat by comparison. Current length: ${n}.`}
+        ariaLabel={t.costAria(MAX_N, n)}
         onDraw={handleDraw}
         deps={[n, ns, directOps, fftOps]}
       />

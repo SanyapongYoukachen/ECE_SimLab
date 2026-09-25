@@ -6,7 +6,8 @@ import { useUrlSyncedState } from '@/lib/state/useUrlState';
 import { logEvent } from '@/lib/state/telemetry';
 import { SegmentedControl } from '@/components/ui';
 import { WheatstoneBridge } from './wheatstone/WheatstoneBridge';
-import { SIMULATOR_TAB_OPTIONS } from './constants';
+import { SIMULATOR_TAB_ORDER } from './constants';
+import { useMessages } from '@/lib/i18n';
 
 const DEFAULT_STATE = SimulatorStateSchema.parse({});
 
@@ -17,6 +18,7 @@ const DEFAULT_STATE = SimulatorStateSchema.parse({});
  * writes merge into one query string rather than clobbering each other.
  */
 export function SimulatorModule(): React.JSX.Element {
+  const t = useMessages().simulator;
   const [state, setState] = useUrlSyncedState(
     decodeSimulatorState,
     encodeSimulatorState,
@@ -31,10 +33,10 @@ export function SimulatorModule(): React.JSX.Element {
   return (
     <div className="flex flex-col gap-4">
       <SegmentedControl
-        label="Circuit"
+        label={t.circuit}
         value={state.tab}
         onChange={setTab}
-        options={SIMULATOR_TAB_OPTIONS}
+        options={SIMULATOR_TAB_ORDER.map((value) => ({ value, label: t.tabs[value] }))}
       />
       {state.tab === 'wheatstone' && <WheatstoneBridge />}
     </div>

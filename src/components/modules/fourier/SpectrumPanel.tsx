@@ -5,6 +5,7 @@ import { drawAxes, drawStems, drawLine, drawVerticalLine, type PlotTheme } from 
 import { PlotCanvas } from '@/components/ui';
 import { spectrumScales, magnitudeToDb, THRESHOLD_DB } from './scales';
 import type { MagnitudeSpectrum } from '@/lib/dsp';
+import { useMessages } from '@/lib/i18n';
 
 const HEIGHT = 240;
 
@@ -23,6 +24,7 @@ export function SpectrumPanel({
   variableFreq,
   maxFreq,
 }: Props): React.JSX.Element {
+  const t = useMessages().fourier;
   const handleDraw = useCallback(
     (ctx: CanvasRenderingContext2D, size: { width: number; height: number }, theme: PlotTheme) => {
       ctx.clearRect(0, 0, size.width, size.height);
@@ -119,13 +121,13 @@ export function SpectrumPanel({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap items-center gap-3 text-xs">
-        <span className="text-[var(--foreground)]/50">vertical axis: dB, full scale = 0</span>
+        <span className="text-[var(--foreground)]/50">{t.spectrumAxis}</span>
         <span className="inline-flex items-center gap-1.5">
           <span
             className="inline-block h-2 w-2 rounded-full bg-[var(--plot-output)]"
             aria-hidden="true"
           />
-          <span className="text-[var(--foreground)]/70">bins above threshold</span>
+          <span className="text-[var(--foreground)]/70">{t.aboveThreshold}</span>
         </span>
         {showReference && (
           <span className="inline-flex items-center gap-1.5">
@@ -133,7 +135,7 @@ export function SpectrumPanel({
               className="inline-block h-2 w-3 border-t-2 border-dashed border-[var(--plot-structure)]"
               aria-hidden="true"
             />
-            <span className="text-[var(--foreground)]/70">rectangular-window reference</span>
+            <span className="text-[var(--foreground)]/70">{t.rectReference}</span>
           </span>
         )}
         <span className="inline-flex items-center gap-1.5">
@@ -141,12 +143,12 @@ export function SpectrumPanel({
             className="inline-block h-2 w-2 rounded-full bg-[var(--plot-active)]"
             aria-hidden="true"
           />
-          <span className="text-[var(--foreground)]/70">component 3&apos;s true frequency</span>
+          <span className="text-[var(--foreground)]/70">{t.trueFreq}</span>
         </span>
       </div>
       <PlotCanvas
         height={HEIGHT}
-        ariaLabel="Magnitude spectrum of the observed signal, in decibels relative to full scale, versus frequency in Hertz."
+        ariaLabel={t.spectrumAria}
         onDraw={handleDraw}
         deps={[spectrum, referenceSpectrum, showReference, variableFreq, maxFreq]}
       />

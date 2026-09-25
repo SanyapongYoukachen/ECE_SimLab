@@ -9,10 +9,7 @@ export const metadata: Metadata = {
 
 export default function CircuitsPage(): React.JSX.Element {
   return (
-    <ModuleShell
-      title="DC circuits: Ohm's law and the voltage divider"
-      tagline="Drag the sliders to change the source voltage and the resistors. The schematic and the linked readout update together."
-    >
+    <ModuleShell page="circuits">
       <CircuitsModule />
     </ModuleShell>
   );

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useSyncExternalStore, type KeyboardEvent } from 'react';
+import { useMessages } from '@/lib/i18n';
 import { logEvent } from '@/lib/state/telemetry';
 
 export interface PredictionOption {
@@ -57,6 +58,7 @@ export function PredictionGate({
   children,
   persist = true,
 }: PredictionGateProps): React.JSX.Element {
+  const t = useMessages().common.prediction;
   const storageKey = `signals-lab:predicted:${moduleId}`;
 
   const storedSelected = useSyncExternalStore(
@@ -128,13 +130,13 @@ export function PredictionGate({
         <div
           role="dialog"
           aria-modal="true"
-          aria-label="Predict before you explore"
+          aria-label={t.gateDialog}
           className="absolute inset-0 z-10 flex items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface)]/97 p-6 backdrop-blur-sm"
         >
           <div className="flex w-full max-w-md flex-col gap-4">
             <div>
               <p className="text-xs font-medium uppercase tracking-wide text-[var(--plot-active)]">
-                Predict first
+                {t.gateKicker}
               </p>
               <p className="mt-1 text-base text-[var(--foreground)]">{question}</p>
             </div>
@@ -163,7 +165,7 @@ export function PredictionGate({
                     {opt.label}
                     {isSelected && (
                       <span className="ml-2 font-medium">
-                        {opt.correct ? '— correct' : '— not quite'}
+                        {opt.correct ? t.correct : t.notQuite}
                       </span>
                     )}
                   </button>
@@ -173,16 +175,14 @@ export function PredictionGate({
             {revealed && selectedOption && (
               <div className="flex items-center justify-between gap-3 border-t border-[var(--border)] pt-3">
                 <p className="text-sm text-[var(--foreground)]/70">
-                  {selectedOption.correct
-                    ? 'Watch it play out below to confirm.'
-                    : 'Watch what actually happens below.'}
+                  {selectedOption.correct ? t.gateRight : t.gateWrong}
                 </p>
                 <button
                   type="button"
                   onClick={() => setContinueClicked(true)}
                   className="shrink-0 rounded-md bg-[var(--foreground)] px-4 py-2 text-sm font-medium text-[var(--background)]"
                 >
-                  Continue
+                  {t.continue}
                 </button>
               </div>
             )}
