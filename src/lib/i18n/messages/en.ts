@@ -36,13 +36,31 @@ export const en = {
       checkHeading: 'Check your understanding',
       correct: '— correct',
       notQuite: '— not quite',
-      checkRight: 'Matches what you just saw above.',
-      checkWrong: 'Worth another look at the panels above.',
+      checkRight: 'Matches what the Explore tab showed.',
+      checkWrong: 'Worth another look in the Explore tab.',
       gateDialog: 'Predict before you explore',
       gateKicker: 'Predict first',
       gateRight: 'Watch it play out below to confirm.',
       gateWrong: 'Watch what actually happens below.',
       continue: 'Continue',
+      tabsLabel: 'Module sections',
+      tabExplore: 'Explore',
+      progress: (answered: number, total: number) => `${answered}/${total}`,
+      progressAria: (answered: number, total: number) => `${answered} of ${total} answered`,
+      summary: (answered: number, total: number, correct: number) =>
+        `Answered ${answered} of ${total} · ${correct} correct`,
+      notStarted: (total: number) =>
+        `${total} questions on what you just explored. Each answer is final, so take a moment before choosing.`,
+      allDone: (correct: number, total: number) =>
+        correct === total
+          ? `All ${total} answered, all correct. Nicely done.`
+          : `All ${total} answered: ${correct} correct. Revisit the explore tab for the ones you missed, then clear your answers and try again.`,
+      reset: 'Clear my answers',
+      ctaTitle: 'Done exploring?',
+      ctaBody: (total: number) =>
+        `Check your understanding with ${total} short questions on what you just saw.`,
+      ctaButton: 'Start the check →',
+      back: '← Back to explore',
     },
   },
 

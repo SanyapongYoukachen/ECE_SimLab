@@ -10,6 +10,8 @@ interface PredictionCheckProps {
   readonly questions: readonly PredictionQuestion[];
   /** Instructor lecture-mode flag (URL: ?predict=off). When true, the whole block is hidden. */
   readonly disabled: boolean;
+  /** Hide the card's own "Check your understanding" heading (when a tab already names it). */
+  readonly showHeading?: boolean;
 }
 
 // Shares its storage bus with PredictionGate's — both key answers under the
@@ -22,6 +24,54 @@ function subscribeStorage(callback: () => void): () => void {
 }
 function notifyStorageChange(): void {
   storageListeners.forEach((l) => l());
+}
+
+function answerKey(moduleId: string, questionId: string): string {
+  return `signals-lab:predicted:${moduleId}:${questionId}`;
+}
+
+export interface CheckProgress {
+  readonly answered: number;
+  readonly correct: number;
+  readonly total: number;
+}
+
+/**
+ * How far a student has got through a module's check: answered and correct
+ * counts, live as answers are chosen or cleared. The snapshot is a string so
+ * useSyncExternalStore sees a stable value between unrelated renders.
+ */
+export function useCheckProgress(
+  moduleId: string,
+  questions: readonly PredictionQuestion[]
+): CheckProgress {
+  const snapshot = useSyncExternalStore(
+    subscribeStorage,
+    () => {
+      let answered = 0;
+      let correct = 0;
+      for (const q of questions) {
+        const chosen = window.localStorage.getItem(answerKey(moduleId, q.id));
+        if (chosen === null) continue;
+        answered++;
+        if (q.options.find((o) => o.id === chosen)?.correct) correct++;
+      }
+      return `${answered}/${correct}`;
+    },
+    () => '0/0'
+  );
+  const [answered, correct] = snapshot.split('/').map(Number);
+  return { answered, correct, total: questions.length };
+}
+
+/** Clears a module's check answers so the student can retake it. */
+export function resetCheckAnswers(
+  moduleId: string,
+  questions: readonly PredictionQuestion[]
+): void {
+  for (const q of questions) window.localStorage.removeItem(answerKey(moduleId, q.id));
+  notifyStorageChange();
+  logEvent(moduleId, 'prediction_check_reset', {});
 }
 
 /**
@@ -37,18 +87,21 @@ export function PredictionCheck({
   moduleId,
   questions,
   disabled,
+  showHeading = true,
 }: PredictionCheckProps): React.JSX.Element | null {
   const t = useMessages().common.prediction;
   if (disabled || questions.length === 0) return null;
 
   return (
     <div className="flex flex-col gap-4 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-5">
-      <p className="text-xs font-medium uppercase tracking-wide text-[var(--plot-active)]">
-        {t.checkHeading}
-      </p>
+      {showHeading && (
+        <p className="text-xs font-medium uppercase tracking-wide text-[var(--plot-active)]">
+          {t.checkHeading}
+        </p>
+      )}
       <div className="flex flex-col gap-5">
-        {questions.map((q) => (
-          <PredictionCheckItem key={q.id} moduleId={moduleId} question={q} />
+        {questions.map((q, i) => (
+          <PredictionCheckItem key={q.id} moduleId={moduleId} question={q} number={i + 1} />
         ))}
       </div>
     </div>
@@ -58,12 +111,14 @@ export function PredictionCheck({
 function PredictionCheckItem({
   moduleId,
   question,
+  number,
 }: {
   readonly moduleId: string;
   readonly question: PredictionQuestion;
+  readonly number: number;
 }): React.JSX.Element {
   const t = useMessages().common.prediction;
-  const storageKey = `signals-lab:predicted:${moduleId}:${question.id}`;
+  const storageKey = answerKey(moduleId, question.id);
   const options = question.options;
 
   const selected = useSyncExternalStore(
@@ -111,7 +166,10 @@ function PredictionCheckItem({
 
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-sm text-[var(--foreground)]">{question.question}</p>
+      <p className="text-sm text-[var(--foreground)]">
+        <span className="mr-1.5 font-mono text-[var(--foreground)]/50">{number}.</span>
+        {question.question}
+      </p>
       <div className="flex flex-col gap-2" role="radiogroup" aria-label={question.question}>
         {options.map((opt, index) => {
           const isSelected = selected === opt.id;

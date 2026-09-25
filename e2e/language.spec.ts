@@ -30,7 +30,7 @@ test.describe('language toggle (English ↔ Thai)', () => {
     await page.getByRole('link', { name: 'จำลองวงจร' }).click();
     await expect(page.getByRole('heading', { level: 1, name: 'จำลองวงจร' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'ปรับบริดจ์ให้สมดุล (หาค่า R4)' })).toBeVisible();
-    await expect(page.getByText('ทบทวนความเข้าใจ')).toBeVisible();
+    await expect(page.getByRole('tab', { name: /ทบทวนความเข้าใจ/ })).toBeVisible();
   });
 
   test('switches a module live, without a reload, and back again', async ({ page }) => {

@@ -18,3 +18,4 @@ export * from './LanguageToggle';
 export * from './useThemeWatcher';
 export * from './usePrefersReducedMotion';
 export * from './useThrottledValue';
+export * from './ModuleTabs';
