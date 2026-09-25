@@ -87,7 +87,17 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), system-ui, sans-serif;
+  font-family: var(--font-sans), var(--font-thai), system-ui, sans-serif;
+}
+
+/*
+ * <Localized> renders server-side chrome in every language; show only the
+ * one the pre-paint init script put on <html data-lang>. English is the
+ * fallback when the attribute is missing (scripts disabled).
+ */
+html[data-lang='th'] [data-l='en'],
+html:not([data-lang='th']) [data-l='th'] {
+  display: none;
 }
 
 /* All numerical readouts use tabular figures so values don't jitter as they update. */

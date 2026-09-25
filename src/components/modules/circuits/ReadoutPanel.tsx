@@ -16,6 +16,7 @@ import type { NetworkResult } from '@/lib/circuits/network';
 import type { DividerResult } from '@/lib/circuits/divider';
 import { formatPower, formatVoltage } from './format';
 import { MAX_VOLTAGE } from './constants';
+import { useMessages } from '@/lib/i18n';
 
 const HEIGHT = 220;
 const PAD_LEFT = 52;
@@ -32,6 +33,7 @@ interface Props {
 
 /** The linked, computed-side view: reacts to the same sliders as the schematic, in a different representation. */
 export function ReadoutPanel({ mode, ohm, network, divider }: Props): React.JSX.Element {
+  const t = useMessages().circuits;
   const handleDraw = useCallback(
     (ctx: CanvasRenderingContext2D, size: { width: number; height: number }, theme: PlotTheme) => {
       ctx.clearRect(0, 0, size.width, size.height);
@@ -88,10 +90,10 @@ export function ReadoutPanel({ mode, ohm, network, divider }: Props): React.JSX.
 
   const ariaLabel =
     mode === 'ohm'
-      ? `I-V load line for the resistor, with the operating point at ${formatVoltage(ohm.voltage)}, ${(ohm.current * 1000).toFixed(1)} milliamps.`
+      ? t.readoutOhmAria(formatVoltage(ohm.voltage), (ohm.current * 1000).toFixed(1))
       : mode === 'network'
-        ? `Power dissipated: R1 draws ${formatPower(network.p1)}, R2 draws ${formatPower(network.p2)}.`
-        : `Voltage ladder: ${formatVoltage(divider.vR1)} dropped across R1, ${formatVoltage(divider.vOut)} across R2 as Vout.`;
+        ? t.readoutNetworkAria(formatPower(network.p1), formatPower(network.p2))
+        : t.readoutDividerAria(formatVoltage(divider.vR1), formatVoltage(divider.vOut));
 
   return (
     <PlotCanvas

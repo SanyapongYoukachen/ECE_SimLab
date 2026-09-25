@@ -9,10 +9,7 @@ export const metadata: Metadata = {
 
 export default function ConvolutionPage(): React.JSX.Element {
   return (
-    <ModuleShell
-      title="Convolution: flip, slide, multiply, sum"
-      tagline="Drag the grey stems to edit the input. Scrub the shift to see the kernel flip and slide underneath it."
-    >
+    <ModuleShell page="convolution">
       <ConvolutionModule />
     </ModuleShell>
   );

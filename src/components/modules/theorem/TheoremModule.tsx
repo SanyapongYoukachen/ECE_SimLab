@@ -6,6 +6,7 @@ import { TheoremStateSchema, TheoremPresetSchema, type TheoremState } from '@/li
 import { decodeTheoremState, encodeTheoremState, decodePredictFlag } from '@/lib/state/urlState';
 import { useUrlSyncedState, useUrlFlag } from '@/lib/state/useUrlState';
 import { logEvent } from '@/lib/state/telemetry';
+import { useLocalizedQuestions, useMessages } from '@/lib/i18n';
 import {
   PredictionCheck,
   PredictionGate,
@@ -24,15 +25,17 @@ import { QUESTIONS } from './questions';
 import { MIN_LENGTH, MAX_LENGTH, LENGTH_STEP } from './constants';
 
 const DEFAULT_STATE = TheoremStateSchema.parse({});
-const PRESET_OPTIONS = TheoremPresetSchema.options.map((id) => ({
-  value: id,
-  label: id[0].toUpperCase() + id.slice(1),
-}));
 
 export function TheoremModule(): React.JSX.Element {
   const predictEnabled = useUrlFlag(decodePredictFlag, true);
   const practiceMode = usePracticeMode();
-  const practiceQuestion = usePracticeQuestion(QUESTIONS);
+  const t = useMessages().theorem;
+  const questions = useLocalizedQuestions(QUESTIONS);
+  const practiceQuestion = usePracticeQuestion(questions);
+  const presetOptions = TheoremPresetSchema.options.map((id) => ({
+    value: id,
+    label: t.presets[id],
+  }));
   const [state, setState] = useUrlSyncedState(
     decodeTheoremState,
     encodeTheoremState,
@@ -60,9 +63,12 @@ export function TheoremModule(): React.JSX.Element {
   const speedup = directOps / Math.max(1, fftOps);
 
   const liveText = useThrottledValue(
-    `Length ${deferredLength}. Direct: ${directOps.toLocaleString()} operations. FFT: ${Math.round(
-      fftOps
-    ).toLocaleString()} operations. Maximum error between the two paths: ${maxError.toExponential(2)}.`
+    t.liveText(
+      deferredLength,
+      directOps.toLocaleString(),
+      Math.round(fftOps).toLocaleString(),
+      maxError.toExponential(2)
+    )
   );
 
   function setPreset(preset: TheoremState['preset']): void {
@@ -73,22 +79,22 @@ export function TheoremModule(): React.JSX.Element {
   const content = (
     <div className="flex flex-col gap-4">
       <OverlayPanel direct={direct} viaFft={viaFft} />
-      <ExpressionReadout label="Agreement between the two paths">
+      <ExpressionReadout label={t.agreement}>
         max |direct − IFFT(FFT(x)·FFT(h))| = {maxError.toExponential(3)}
       </ExpressionReadout>
 
       <CostChart n={deferredLength} />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat label="Direct operations" value={directOps.toLocaleString()} />
-        <Stat label="FFT operations" value={Math.round(fftOps).toLocaleString()} />
-        <Stat label="Operation ratio" value={`${speedup.toFixed(1)}×`} />
-        <Stat label="Output length" value={`N + M − 1 = ${direct.length.toLocaleString()}`} />
+        <Stat label={t.directOps} value={directOps.toLocaleString()} />
+        <Stat label={t.fftOps} value={Math.round(fftOps).toLocaleString()} />
+        <Stat label={t.ratio} value={`${speedup.toFixed(1)}×`} />
+        <Stat label={t.outputLength} value={`N + M − 1 = ${direct.length.toLocaleString()}`} />
       </div>
 
       <div className="flex flex-col gap-3 rounded-md border border-[var(--border)] bg-[var(--surface)] p-3">
         <Slider
-          label="Signal length N (x and h are both this long)"
+          label={t.lengthSlider}
           value={state.length}
           min={MIN_LENGTH}
           max={MAX_LENGTH}
@@ -98,14 +104,14 @@ export function TheoremModule(): React.JSX.Element {
       </div>
 
       <SegmentedControl
-        label="Signal shape"
+        label={t.signalShape}
         value={state.preset}
         onChange={setPreset}
-        options={PRESET_OPTIONS}
+        options={presetOptions}
       />
 
       {!practiceMode && (
-        <PredictionCheck moduleId="theorem" disabled={!predictEnabled} questions={QUESTIONS} />
+        <PredictionCheck moduleId="theorem" disabled={!predictEnabled} questions={questions} />
       )}
 
       <LiveRegion text={liveText} />

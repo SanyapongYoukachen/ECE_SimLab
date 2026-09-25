@@ -14,6 +14,7 @@ export * from './ModuleShell';
 export * from './ModuleLoadingFallback';
 export * from './TelemetryExportButton';
 export * from './ThemeToggle';
+export * from './LanguageToggle';
 export * from './useThemeWatcher';
 export * from './usePrefersReducedMotion';
 export * from './useThrottledValue';

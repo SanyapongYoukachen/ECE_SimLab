@@ -211,6 +211,29 @@ scale far from balance but still moves visibly for a single slider step near
 it. It rides an underdamped spring, overshooting and settling the way a
 moving-coil meter does, and snaps straight to position under reduced motion.
 
+### Language: English and Thai
+
+A language toggle in every header switches the whole app between English
+and Thai. The choice is stored in `localStorage` (`signals-lab:lang`); with
+no stored choice, a browser whose preferred language is Thai opens in Thai.
+Language is a per-viewer preference, not part of the URL, so a shared link
+opens in each reader's own language.
+
+- `lib/i18n/messages/en.ts` is the reference dictionary. `th.ts` is typed
+  against it, so adding an English key fails the typecheck until the Thai
+  translation exists. Interpolated strings are functions; math notation and
+  units stay the same in both languages.
+- Client components read strings with `useMessages()`. Question banks are
+  `LocalizedQuestion[]` with `{ en, th }` side by side, so answer ids and
+  `correct` flags exist once; `useLocalizedQuestions()` picks the language.
+- Server-rendered chrome (landing page, module titles) uses `<Localized>`,
+  which renders every language and lets CSS on `<html data-lang>` show one.
+  An inline script in the root layout sets `lang`/`data-lang` before first
+  paint, so Thai readers never see a flash of English and React never sees a
+  hydration mismatch.
+- Thai text uses Noto Sans Thai (Geist has no Thai glyphs). Page `<title>`
+  metadata is still English only.
+
 ## Adding another module
 
 The circuits module (`lib/circuits`, `components/modules/circuits`) followed

@@ -1,6 +1,7 @@
 'use client';
 
 import { useSyncExternalStore, type KeyboardEvent } from 'react';
+import { useMessages } from '@/lib/i18n';
 import { logEvent } from '@/lib/state/telemetry';
 import type { PredictionOption, PredictionQuestion } from './PredictionGate';
 
@@ -37,12 +38,13 @@ export function PredictionCheck({
   questions,
   disabled,
 }: PredictionCheckProps): React.JSX.Element | null {
+  const t = useMessages().common.prediction;
   if (disabled || questions.length === 0) return null;
 
   return (
     <div className="flex flex-col gap-4 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-5">
       <p className="text-xs font-medium uppercase tracking-wide text-[var(--plot-active)]">
-        Check your understanding
+        {t.checkHeading}
       </p>
       <div className="flex flex-col gap-5">
         {questions.map((q) => (
@@ -60,6 +62,7 @@ function PredictionCheckItem({
   readonly moduleId: string;
   readonly question: PredictionQuestion;
 }): React.JSX.Element {
+  const t = useMessages().common.prediction;
   const storageKey = `signals-lab:predicted:${moduleId}:${question.id}`;
   const options = question.options;
 
@@ -133,9 +136,7 @@ function PredictionCheckItem({
             >
               {opt.label}
               {isSelected && (
-                <span className="ml-2 font-medium">
-                  {opt.correct ? '— correct' : '— not quite'}
-                </span>
+                <span className="ml-2 font-medium">{opt.correct ? t.correct : t.notQuite}</span>
               )}
             </button>
           );
@@ -143,9 +144,7 @@ function PredictionCheckItem({
       </div>
       {selectedOption && (
         <p className="text-xs text-[var(--foreground)]/60">
-          {selectedOption.correct
-            ? 'Matches what you just saw above.'
-            : 'Worth another look at the panels above.'}
+          {selectedOption.correct ? t.checkRight : t.checkWrong}
         </p>
       )}
     </div>

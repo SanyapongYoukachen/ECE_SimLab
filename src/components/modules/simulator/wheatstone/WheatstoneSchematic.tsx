@@ -13,6 +13,7 @@ import {
 } from '@/lib/plot';
 import { AnimatedCanvas, usePrefersReducedMotion } from '@/components/ui';
 import { galvanometerDeflection, type WheatstoneResult } from '@/lib/circuits/wheatstone';
+import { useMessages, type Messages } from '@/lib/i18n';
 
 const HEIGHT = 300;
 const PAD_TOP = 44;
@@ -38,11 +39,10 @@ function compactI(amps: number): string {
   return `${mA.toFixed(Math.abs(mA) < 10 ? 2 : 1)} mA`;
 }
 
-function needleDescription(ig: number): string {
+function needleDescription(ig: number, t: Messages['simulator']['wheatstone']): string {
   const d = galvanometerDeflection(ig);
-  if (Math.abs(d) < 0.02) return 'rests at centre zero';
-  const side = d > 0 ? 'right' : 'left';
-  return Math.abs(d) > 0.95 ? `is pinned hard ${side}` : `deflects ${side}`;
+  if (Math.abs(d) < 0.02) return t.needleRest;
+  return Math.abs(d) > 0.95 ? t.needlePinned(d > 0) : t.needleDeflects(d > 0);
 }
 
 interface FlowSegment {
@@ -89,6 +89,7 @@ interface Props {
  */
 export function WheatstoneSchematic({ result }: Props): React.JSX.Element {
   const reducedMotion = usePrefersReducedMotion();
+  const t = useMessages().simulator.wheatstone;
   const needleRef = useRef<NeedleState>({ position: 0, velocity: 0, lastPhase: 0 });
 
   const handleDraw = useCallback(
@@ -273,9 +274,11 @@ export function WheatstoneSchematic({ result }: Props): React.JSX.Element {
     [result, reducedMotion]
   );
 
-  const ariaLabel = `Wheatstone bridge schematic. Galvanometer current ${compactI(result.ig)}, bridge is ${
-    result.balanced ? 'balanced' : 'unbalanced'
-  }. Current flow is animated through every branch, direction and speed reflecting each branch's current. The galvanometer needle ${needleDescription(result.ig)}.`;
+  const ariaLabel = t.schematicAria(
+    compactI(result.ig),
+    result.balanced,
+    needleDescription(result.ig, t)
+  );
 
   return (
     <AnimatedCanvas height={HEIGHT} ariaLabel={ariaLabel} onDraw={handleDraw} deps={[result]} />

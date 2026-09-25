@@ -9,10 +9,7 @@ export const metadata: Metadata = {
 
 export default function FourierPage(): React.JSX.Element {
   return (
-    <ModuleShell
-      title="The Fourier transform: from waveform to spectrum"
-      tagline="Move the third component off a bin centre and watch its peak smear — that's leakage, not a bug."
-    >
+    <ModuleShell page="fourier">
       <FourierModule />
     </ModuleShell>
   );
