@@ -86,3 +86,20 @@ test.describe('circuit simulator', () => {
     await expect(page.getByRole('slider')).toHaveCount(0);
   });
 });
+
+test.describe('Wheatstone bridge: output voltage at the galvanometer', () => {
+  test('the schematic announces Vo = VB − VC, and it follows a resistor change', async ({
+    page,
+  }) => {
+    await page.goto('/simulator?predict=off&r1=100&r2=100&r3=100&r4=150');
+    const schematic = page.getByRole('img', { name: /Wheatstone bridge schematic/ });
+    // VB = 4.5 V, VC = 9·150/250 = 5.4 V (Rg loading pulls it slightly) → Vo negative.
+    await expect(schematic).toHaveAttribute('aria-label', /Output voltage Vo = VB − VC = -/);
+
+    await page.getByRole('button', { name: 'Balance the bridge (solve R4)' }).click();
+    await expect(schematic).toHaveAttribute(
+      'aria-label',
+      /Output voltage Vo = VB − VC = 0\.000 mV/
+    );
+  });
+});

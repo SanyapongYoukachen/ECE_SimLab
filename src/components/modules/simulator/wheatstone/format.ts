@@ -8,6 +8,8 @@ export function formatVoltage(volts: number): string {
 export function formatBridgeVoltage(volts: number): string {
   if (Math.abs(volts) >= 1) return `${volts.toFixed(3)} V`;
   const mV = volts * 1000;
+  // A balanced bridge's output is ~1e-16 V of float noise; don't print "-0.000".
+  if (Math.abs(mV) < 0.0005) return '0.000 mV';
   return `${mV.toFixed(Math.abs(mV) < 10 ? 3 : 2)} mV`;
 }
 

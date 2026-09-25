@@ -15,7 +15,7 @@ import { AnimatedCanvas, usePrefersReducedMotion } from '@/components/ui';
 import { galvanometerDeflection, type WheatstoneResult } from '@/lib/circuits/wheatstone';
 import type { ArmRole, BridgeArm, SensorId } from '@/lib/circuits/sensors';
 import { useMessages, type Messages } from '@/lib/i18n';
-import { formatCurrent } from './format';
+import { formatBridgeVoltage, formatCurrent, formatVoltage } from './format';
 
 const HEIGHT = 300;
 const PAD_TOP = 44;
@@ -78,6 +78,21 @@ function stepNeedle(needle: NeedleState, target: number, phase: number, animate:
     2 * NEEDLE_ZETA * NEEDLE_OMEGA * needle.velocity;
   needle.velocity += accel * dt;
   needle.position += needle.velocity * dt;
+}
+
+/** How long a Vo change tag ("▲ +0.43 V") stays up before it has faded out. */
+const CHANGE_TAG_MS = 1800;
+/** Time constant of the displayed Vo gliding to its new value. */
+const VO_GLIDE_S = 0.12;
+
+interface VoState {
+  /** The value currently shown, gliding toward the true Vo. */
+  shown: number;
+  /** The true Vo the last time we looked, to detect a change. */
+  last: number;
+  delta: number;
+  changedAt: number;
+  lastFrame: number;
 }
 
 interface Props {
@@ -184,6 +199,7 @@ export function WheatstoneSchematic({
   const reducedMotion = usePrefersReducedMotion();
   const t = useMessages().simulator.wheatstone;
   const needleRef = useRef<NeedleState>({ position: 0, velocity: 0, lastPhase: 0 });
+  const voRef = useRef<VoState | null>(null);
 
   const handleDraw = useCallback(
     (
@@ -389,11 +405,107 @@ export function WheatstoneSchematic({
         theme.output,
         'center'
       );
+
+      // Node voltages just outside the two vertices the galvanometer bridges
+      // (inside, they'd sit on the R1/R3 zigzags): Vo is simply their difference.
+      // On a narrow canvas, a label that would run off the edge tucks in
+      // against it one line lower, clear of the arm's zigzag.
+      function nodeLabel(text: string, vertex: Point, side: 'left' | 'right'): void {
+        ctx.save();
+        ctx.font = '11px var(--font-mono, monospace)';
+        const w = ctx.measureText(text).width;
+        ctx.restore();
+        const fits = side === 'left' ? vertex.x - 6 - w >= 4 : vertex.x + 6 + w <= size.width - 4;
+        if (fits) {
+          label(
+            text,
+            { x: vertex.x + (side === 'left' ? -6 : 6), y: midY + 14 },
+            theme.text,
+            side === 'left' ? 'right' : 'left'
+          );
+        } else {
+          label(
+            text,
+            { x: side === 'left' ? 4 : size.width - 4, y: midY + 30 },
+            theme.text,
+            side === 'left' ? 'left' : 'right'
+          );
+        }
+      }
+      nodeLabel(`VB=${formatVoltage(result.vb)}`, B, 'left');
+      nodeLabel(`VC=${formatVoltage(result.vc)}`, C, 'right');
+
+      // Vo at the galvanometer. When a resistor changes, the reading glides
+      // to its new value and a ▲/▼ tag with the change fades out, so the
+      // student sees which way the output moved and by how much.
+      const vo = result.vb - result.vc;
+      const now = performance.now();
+      let st = voRef.current;
+      if (!st) {
+        st = { shown: vo, last: vo, delta: 0, changedAt: -Infinity, lastFrame: now };
+        voRef.current = st;
+      }
+      const scale = Math.max(Math.abs(vo), Math.abs(st.last), 1e-12);
+      if (Math.abs(vo - st.last) > 1e-9 * scale) {
+        // While a tag is still up (e.g. mid-drag), keep adding to it, so it
+        // reports the whole move rather than the last frame's sliver.
+        const tagUp = now - st.changedAt < CHANGE_TAG_MS;
+        st.delta = (tagUp ? st.delta : 0) + (vo - st.last);
+        st.changedAt = now;
+        st.last = vo;
+      }
+      if (reducedMotion) {
+        st.shown = vo;
+      } else {
+        const dt = Math.min(0.1, Math.max(0, (now - st.lastFrame) / 1000));
+        st.shown += (vo - st.shown) * (1 - Math.exp(-dt / VO_GLIDE_S));
+        if (Math.abs(vo - st.shown) < 1e-6 * Math.max(Math.abs(vo), 1e-3)) st.shown = vo;
+      }
+      st.lastFrame = now;
+
+      // Short enough to sit between the R1/R3 arms at this height.
+      const voText = `Vo = ${formatBridgeVoltage(st.shown)}`;
+      const voY = galvo.y - GALVO_RADIUS - 16;
+      ctx.save();
+      ctx.font = 'bold 12px var(--font-mono, monospace)';
+      const voW = ctx.measureText(voText).width;
+      ctx.fillStyle = theme.surface;
+      ctx.strokeStyle = result.balanced ? theme.output : theme.structure;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.roundRect(galvo.x - voW / 2 - 6, voY - 10, voW + 12, 20, 4);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = theme.text;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(voText, galvo.x, voY + 0.5);
+      ctx.restore();
+
+      const age = now - st.changedAt;
+      if (st.delta !== 0 && (reducedMotion || age < CHANGE_TAG_MS)) {
+        const up = st.delta > 0;
+        const tag = `${up ? '▲' : '▼'} ${up ? '+' : ''}${formatBridgeVoltage(st.delta)}`;
+        ctx.save();
+        ctx.globalAlpha = reducedMotion ? 1 : Math.max(0, 1 - age / CHANGE_TAG_MS);
+        ctx.font = 'bold 11px var(--font-mono, monospace)';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        // Drifts up a few pixels as it fades, on a plate so the arms never garble it.
+        const tagY = voY - 20 - (reducedMotion ? 0 : (age / CHANGE_TAG_MS) * 6);
+        const tagW = ctx.measureText(tag).width;
+        ctx.fillStyle = theme.surface;
+        ctx.fillRect(galvo.x - tagW / 2 - 4, tagY - 8, tagW + 8, 16);
+        ctx.fillStyle = theme.active;
+        ctx.fillText(tag, galvo.x, tagY);
+        ctx.restore();
+      }
     },
     [result, reducedMotion, sensing, needleSensitivity]
   );
 
   const ariaLabel = t.schematicAria(
+    formatBridgeVoltage(result.vb - result.vc),
     formatCurrent(result.ig),
     result.balanced,
     needleDescription(result.ig, needleSensitivity ?? 2e-3, t)
