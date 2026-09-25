@@ -66,6 +66,16 @@ export const WheatstoneStateSchema = z.object({
   r3: z.number().min(1).max(10000).default(100),
   r4: z.number().min(1).max(10000).default(150),
   rg: z.number().min(1).max(10000).default(100),
+  /** 'free': every arm on a slider. 'sensing': a quarter bridge — one sensor arm, three fixed. */
+  mode: z.enum(['free', 'sensing']).default('free'),
+  sensor: z.enum(['ldr', 'ntc', 'rtd', 'strain', 'pot']).default('ntc'),
+  arm: z.enum(['r1', 'r2', 'r3', 'r4']).default('r4'),
+  // One reading per sensor, so switching sensor type doesn't clobber the others.
+  lux: z.number().min(1).max(10000).default(100),
+  ntc: z.number().min(-20).max(100).default(25),
+  rtd: z.number().min(-50).max(200).default(0),
+  strain: z.number().min(-2000).max(2000).default(0),
+  pot: z.number().min(10).max(2200).default(1000),
 });
 export type WheatstoneState = z.infer<typeof WheatstoneStateSchema>;
 

@@ -83,4 +83,77 @@ export const QUESTIONS: readonly LocalizedQuestion[] = [
       },
     ],
   },
+  {
+    id: 'sensor-arm-polarity',
+    question: {
+      en: 'In sensing mode, you move the sensor from R4 to R3 without changing its reading. What happens to the bridge output VB − VC?',
+      th: 'ในโหมดตรวจวัด ถ้าย้ายเซนเซอร์จาก R4 ไปที่ R3 โดยค่าที่อ่านได้ไม่เปลี่ยน เอาต์พุตบริดจ์ VB − VC จะเป็นอย่างไร?',
+    },
+    options: [
+      {
+        id: 'a',
+        label: { en: 'Nothing — the sensor is the same', th: 'ไม่เปลี่ยน — เป็นเซนเซอร์ตัวเดิม' },
+        correct: false,
+      },
+      {
+        id: 'b',
+        label: {
+          en: 'It flips sign: R3 sits on the opposite side of the balance condition from R4',
+          th: 'กลับเครื่องหมาย: R3 อยู่คนละฝั่งของเงื่อนไขสมดุลกับ R4',
+        },
+        correct: true,
+      },
+      {
+        id: 'c',
+        label: { en: 'It doubles', th: 'เพิ่มเป็นสองเท่า' },
+        correct: false,
+      },
+      {
+        id: 'd',
+        label: { en: 'It drops to zero', th: 'ลดลงเป็นศูนย์' },
+        correct: false,
+      },
+    ],
+  },
+  {
+    id: 'why-bridge-strain',
+    question: {
+      en: 'A strain gauge changes resistance by only 0.2 % at 1000 µε. Why read it with a bridge rather than measuring its resistance directly?',
+      th: 'สเตรนเกจเปลี่ยนความต้านทานเพียง 0.2 % ที่ 1000 µε ทำไมจึงอ่านค่าด้วยวงจรบริดจ์ แทนที่จะวัดความต้านทานโดยตรง?',
+    },
+    options: [
+      {
+        id: 'a',
+        label: {
+          en: 'The bridge amplifies the resistance change',
+          th: 'บริดจ์ขยายการเปลี่ยนแปลงของความต้านทาน',
+        },
+        correct: false,
+      },
+      {
+        id: 'b',
+        label: {
+          en: 'The bridge cancels the large unchanging part, so its output starts at zero and carries only the small change',
+          th: 'บริดจ์หักล้างส่วนที่คงที่ซึ่งมีค่ามาก เอาต์พุตจึงเริ่มจากศูนย์และมีเฉพาะส่วนที่เปลี่ยนแปลงเล็กน้อย',
+        },
+        correct: true,
+      },
+      {
+        id: 'c',
+        label: {
+          en: 'A bridge makes the strain gauge more sensitive to strain',
+          th: 'บริดจ์ทำให้สเตรนเกจไวต่อความเครียดมากขึ้น',
+        },
+        correct: false,
+      },
+      {
+        id: 'd',
+        label: {
+          en: 'Ohmmeters cannot measure metals',
+          th: 'โอห์มมิเตอร์วัดความต้านทานของโลหะไม่ได้',
+        },
+        correct: false,
+      },
+    ],
+  },
 ];

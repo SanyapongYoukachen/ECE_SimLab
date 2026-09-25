@@ -13,7 +13,9 @@ import {
 } from '@/lib/plot';
 import { AnimatedCanvas, usePrefersReducedMotion } from '@/components/ui';
 import { galvanometerDeflection, type WheatstoneResult } from '@/lib/circuits/wheatstone';
+import type { BridgeArm, SensorId } from '@/lib/circuits/sensors';
 import { useMessages, type Messages } from '@/lib/i18n';
+import { formatCurrent } from './format';
 
 const HEIGHT = 300;
 const PAD_TOP = 44;
@@ -31,16 +33,18 @@ const NEEDLE_OMEGA = 14;
 const NEEDLE_ZETA = 0.35;
 
 function compactR(ohms: number): string {
-  return ohms >= 1000 ? `${(ohms / 1000).toFixed(1)}k` : `${Math.round(ohms)}`;
+  if (ohms >= 1e6) return `${(ohms / 1e6).toFixed(2)}M`;
+  if (ohms >= 1000) return `${(ohms / 1000).toFixed(1)}k`;
+  // Decimals only when they carry information (a strain gauge's 351.05 Ω).
+  return `${Number(ohms.toFixed(2))}`;
 }
 
-function compactI(amps: number): string {
-  const mA = amps * 1000;
-  return `${mA.toFixed(Math.abs(mA) < 10 ? 2 : 1)} mA`;
-}
-
-function needleDescription(ig: number, t: Messages['simulator']['wheatstone']): string {
-  const d = galvanometerDeflection(ig);
+function needleDescription(
+  ig: number,
+  sensitivity: number,
+  t: Messages['simulator']['wheatstone']
+): string {
+  const d = galvanometerDeflection(ig, sensitivity);
   if (Math.abs(d) < 0.02) return t.needleRest;
   return Math.abs(d) > 0.95 ? t.needlePinned(d > 0) : t.needleDeflects(d > 0);
 }
@@ -78,6 +82,88 @@ function stepNeedle(needle: NeedleState, target: number, phase: number, animate:
 
 interface Props {
   readonly result: WheatstoneResult;
+  /** Sensing mode: which arm holds the sensor, and what kind (drawn with its circuit symbol). */
+  readonly sensing?: { readonly arm: BridgeArm; readonly sensor: SensorId };
+  /** Needle current scale (see galvanometerDeflection); sensing mode auto-ranges it per sensor. */
+  readonly needleSensitivity?: number;
+}
+
+/** Arrowhead at `tip`, pointing along (dx, dy). */
+function arrowhead(ctx: CanvasRenderingContext2D, tip: Point, dx: number, dy: number): void {
+  const len = Math.hypot(dx, dy) || 1;
+  const ux = dx / len;
+  const uy = dy / len;
+  const s = 4.5;
+  ctx.beginPath();
+  ctx.moveTo(tip.x, tip.y);
+  ctx.lineTo(tip.x - ux * s * 1.6 - uy * s, tip.y - uy * s * 1.6 + ux * s);
+  ctx.lineTo(tip.x - ux * s * 1.6 + uy * s, tip.y - uy * s * 1.6 - ux * s);
+  ctx.closePath();
+  ctx.fill();
+}
+
+/**
+ * Overlays the standard schematic mark for a sensor on its arm's zigzag:
+ * light arrows for an LDR, the hooked diagonal of a thermistor (−t° for NTC,
+ * +t° for an RTD), and the variable-resistor arrow for a strain gauge (ε) or
+ * a plain variable resistor. `n` is the arm's outward normal.
+ */
+function drawSensorMark(
+  ctx: CanvasRenderingContext2D,
+  sensor: SensorId,
+  mid: Point,
+  u: Point,
+  n: Point,
+  color: string
+): void {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.lineCap = 'round';
+  ctx.font = '10px var(--font-mono, monospace)';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  if (sensor === 'ldr') {
+    for (const offset of [-7, 7]) {
+      const start = {
+        x: mid.x + n.x * 30 + u.x * (offset - 8),
+        y: mid.y + n.y * 30 + u.y * (offset - 8),
+      };
+      const tip = { x: mid.x + n.x * 11 + u.x * offset, y: mid.y + n.y * 11 + u.y * offset };
+      ctx.beginPath();
+      ctx.moveTo(start.x, start.y);
+      ctx.lineTo(tip.x, tip.y);
+      ctx.stroke();
+      arrowhead(ctx, tip, tip.x - start.x, tip.y - start.y);
+    }
+    ctx.restore();
+    return;
+  }
+
+  // A diagonal across the zigzag, 45° between the arm and its normal.
+  const d = { x: (u.x + n.x) / Math.SQRT2, y: (u.y + n.y) / Math.SQRT2 };
+  const half = 17;
+  const start = { x: mid.x - d.x * half, y: mid.y - d.y * half };
+  const end = { x: mid.x + d.x * half, y: mid.y + d.y * half };
+  ctx.beginPath();
+  ctx.moveTo(start.x, start.y);
+  ctx.lineTo(end.x, end.y);
+  ctx.stroke();
+
+  if (sensor === 'ntc' || sensor === 'rtd') {
+    // Thermistor hook: a short tail parallel to the arm at the inner end.
+    ctx.beginPath();
+    ctx.moveTo(start.x, start.y);
+    ctx.lineTo(start.x - u.x * 8, start.y - u.y * 8);
+    ctx.stroke();
+    ctx.fillText(sensor === 'ntc' ? '−t°' : '+t°', end.x + n.x * 9, end.y + n.y * 9);
+  } else {
+    arrowhead(ctx, end, d.x, d.y);
+    if (sensor === 'strain') ctx.fillText('ε', end.x + n.x * 9, end.y + n.y * 9);
+  }
+  ctx.restore();
 }
 
 /**
@@ -87,7 +173,11 @@ interface Props {
  * (falling back to static arrows under prefers-reduced-motion) — the
  * galvanometer branch visibly slows to a stop as the bridge balances.
  */
-export function WheatstoneSchematic({ result }: Props): React.JSX.Element {
+export function WheatstoneSchematic({
+  result,
+  sensing,
+  needleSensitivity,
+}: Props): React.JSX.Element {
   const reducedMotion = usePrefersReducedMotion();
   const t = useMessages().simulator.wheatstone;
   const needleRef = useRef<NeedleState>({ position: 0, velocity: 0, lastPhase: 0 });
@@ -130,10 +220,19 @@ export function WheatstoneSchematic({ result }: Props): React.JSX.Element {
       drawWire(ctx, [batteryTop, A], theme.structure);
       drawWire(ctx, [batteryBottom, D], theme.structure);
       drawBattery(ctx, { from: batteryBottom, to: batteryTop, color: theme.input });
-      drawResistor(ctx, { from: A, to: B, color: theme.active });
-      drawResistor(ctx, { from: B, to: D, color: theme.active });
-      drawResistor(ctx, { from: A, to: C, color: theme.active });
-      drawResistor(ctx, { from: C, to: D, color: theme.active });
+      const arms: Readonly<Record<BridgeArm, { from: Point; to: Point }>> = {
+        r1: { from: A, to: B },
+        r2: { from: B, to: D },
+        r3: { from: A, to: C },
+        r4: { from: C, to: D },
+      };
+      // In sensing mode the three fixed arms recede to wiring grey; only the
+      // sensor keeps the "under your control" colour.
+      const armColor = (arm: BridgeArm): string =>
+        !sensing || sensing.arm === arm ? theme.active : theme.structure;
+      for (const arm of ['r1', 'r2', 'r3', 'r4'] as const) {
+        drawResistor(ctx, { ...arms[arm], color: armColor(arm) });
+      }
       drawWire(ctx, [B, C], theme.structure, 1.5);
 
       for (const node of [A, B, C, D]) {
@@ -177,7 +276,12 @@ export function WheatstoneSchematic({ result }: Props): React.JSX.Element {
       // Galvanometer: a centre-zero meter face painted over the B-C wire and
       // its flow dots, needle deflecting right for current B -> C.
       const needle = needleRef.current;
-      stepNeedle(needle, galvanometerDeflection(result.ig), phase, !reducedMotion);
+      stepNeedle(
+        needle,
+        galvanometerDeflection(result.ig, needleSensitivity),
+        phase,
+        !reducedMotion
+      );
       const pivot: Point = { x: galvo.x, y: galvo.y + 8 };
       const scaleR = 14;
       ctx.save();
@@ -236,20 +340,27 @@ export function WheatstoneSchematic({ result }: Props): React.JSX.Element {
       // diamond's centre, and grows outward from there (right-aligned on the
       // left arms, left-aligned on the right), so it never crosses the zigzag
       // whatever the arm's slope.
-      function armLabel(text: string, from: Point, to: Point): void {
+      function armLabel(text: string, arm: BridgeArm): void {
+        const { from, to } = arms[arm];
         const mid = { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 };
         const len = Math.hypot(to.x - from.x, to.y - from.y) || 1;
-        let nx = -(to.y - from.y) / len;
-        let ny = (to.x - from.x) / len;
+        const u = { x: (to.x - from.x) / len, y: (to.y - from.y) / len };
+        let nx = -u.y;
+        let ny = u.x;
         if (nx * (mid.x - centerX) + ny * (mid.y - midY) < 0) {
           nx = -nx;
           ny = -ny;
         }
-        const gap = 14;
+        const isSensor = sensing?.arm === arm;
+        if (sensing && isSensor) {
+          drawSensorMark(ctx, sensing.sensor, mid, u, { x: nx, y: ny }, theme.active);
+        }
+        // The sensor's label steps further out, clear of its symbol.
+        const gap = isSensor ? 36 : 14;
         label(
           text,
           { x: mid.x + nx * gap, y: mid.y + ny * gap },
-          theme.active,
+          armColor(arm),
           mid.x < centerX ? 'right' : 'left'
         );
       }
@@ -260,27 +371,32 @@ export function WheatstoneSchematic({ result }: Props): React.JSX.Element {
         theme.input,
         'left'
       );
-      armLabel(`R1=${compactR(result.r1)}Ω`, A, B);
-      armLabel(`R2=${compactR(result.r2)}Ω`, B, D);
-      armLabel(`R3=${compactR(result.r3)}Ω`, A, C);
-      armLabel(`R4=${compactR(result.r4)}Ω`, C, D);
+      armLabel(`R1=${compactR(result.r1)}Ω`, 'r1');
+      armLabel(`R2=${compactR(result.r2)}Ω`, 'r2');
+      armLabel(`R3=${compactR(result.r3)}Ω`, 'r3');
+      armLabel(`R4=${compactR(result.r4)}Ω`, 'r4');
       label(
-        `Ig=${compactI(result.ig)}`,
+        `Ig=${formatCurrent(result.ig)}`,
         { x: galvo.x, y: galvo.y + GALVO_RADIUS + 14 },
         theme.output,
         'center'
       );
     },
-    [result, reducedMotion]
+    [result, reducedMotion, sensing, needleSensitivity]
   );
 
   const ariaLabel = t.schematicAria(
-    compactI(result.ig),
+    formatCurrent(result.ig),
     result.balanced,
-    needleDescription(result.ig, t)
+    needleDescription(result.ig, needleSensitivity ?? 2e-3, t)
   );
 
   return (
-    <AnimatedCanvas height={HEIGHT} ariaLabel={ariaLabel} onDraw={handleDraw} deps={[result]} />
+    <AnimatedCanvas
+      height={HEIGHT}
+      ariaLabel={ariaLabel}
+      onDraw={handleDraw}
+      deps={[result, sensing?.arm, sensing?.sensor, needleSensitivity]}
+    />
   );
 }

@@ -131,6 +131,14 @@ export function decodeWheatstoneState(params: URLSearchParams): WheatstoneState 
     r3: num(params, 'r3'),
     r4: num(params, 'r4'),
     rg: num(params, 'rg'),
+    mode: params.get('mode') ?? undefined,
+    sensor: params.get('sensor') ?? undefined,
+    arm: params.get('arm') ?? undefined,
+    lux: num(params, 'lux'),
+    ntc: num(params, 'ntc'),
+    rtd: num(params, 'rtd'),
+    strain: num(params, 'strain'),
+    pot: num(params, 'pot'),
   };
   const result = WheatstoneStateSchema.safeParse(raw);
   return result.success ? result.data : WheatstoneStateSchema.parse({});
@@ -153,6 +161,14 @@ export function encodeWheatstoneState(state: WheatstoneState): URLSearchParams {
   params.set('r3', precise(state.r3));
   params.set('r4', precise(state.r4));
   params.set('rg', precise(state.rg));
+  params.set('mode', state.mode);
+  params.set('sensor', state.sensor);
+  params.set('arm', state.arm);
+  params.set('lux', precise(state.lux));
+  params.set('ntc', precise(state.ntc));
+  params.set('rtd', precise(state.rtd));
+  params.set('strain', precise(state.strain));
+  params.set('pot', precise(state.pot));
   return params;
 }
 
