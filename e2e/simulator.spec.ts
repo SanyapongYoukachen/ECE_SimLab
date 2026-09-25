@@ -25,7 +25,7 @@ test.describe('circuit simulator', () => {
     await page.getByRole('button', { name: 'Balance the bridge (solve R4)' }).click();
 
     await expect(
-      page.getByText('Galvanometer current').locator('..').getByText('0.00 mA')
+      page.getByText('Galvanometer current').locator('..').getByText('0.00 µA')
     ).toBeVisible();
     await expect(page.getByText('Balanced?').locator('..').getByText('Yes')).toBeVisible();
   });

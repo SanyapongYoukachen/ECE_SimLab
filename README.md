@@ -211,6 +211,31 @@ scale far from balance but still moves visibly for a single slider step near
 it. It rides an underdamped spring, overshooting and settling the way a
 moving-coil meter does, and snaps straight to position under reduced motion.
 
+### Wheatstone sensing mode: a bridge reading a real sensor
+
+The Wheatstone tab has two modes. **Free** puts every arm on a slider.
+**Sensing** turns it into a quarter bridge. The student picks a sensor and
+which arm (R1–R4) it sits in. The other three arms are fixed at the sensor's
+resistance at its reference point, so the bridge reads zero there, and a
+physical-quantity slider drives the sensor.
+
+| Sensor                   | Quantity (range, reference) | Model (`lib/circuits/sensors.ts`)    |
+| ------------------------ | --------------------------- | ------------------------------------ |
+| Light-dependent resistor | 1–10 000 lx, 100 lx         | R = 10 kΩ · (E/100 lx)^−0.7          |
+| NTC thermistor           | −20–100 °C, 25 °C           | beta model, R25 = 10 kΩ, B = 3950 K  |
+| Pt100 RTD                | −50–200 °C, 0 °C            | Callendar–Van Dusen (IEC 60751 A, B) |
+| Strain gauge             | ±2000 µε, 0                 | R = 350 Ω · (1 + 2.0 · ε)            |
+| Variable resistor        | 10–2200 Ω, 1 kΩ             | R set directly                       |
+
+Each sensor gets its schematic symbol on its arm, an animated illustration
+of the physical effect (photons and freed carriers, a thermistor bead,
+a vibrating platinum lattice, a bending cantilever), and response curves of
+resistance and bridge output across the whole range. `bridgeSweep()`
+computes those curves and also auto-ranges the galvanometer, so a strain
+gauge's microamps swing the needle as visibly as an LDR's milliamps.
+Moving the sensor between the R1/R4 and R2/R3 positions flips the output's
+sign. Both effects are covered by unit tests.
+
 ### Language: English and Thai
 
 A language toggle in every header switches the whole app between English

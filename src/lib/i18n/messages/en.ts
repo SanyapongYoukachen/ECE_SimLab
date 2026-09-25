@@ -270,6 +270,7 @@ export const en = {
     },
     wheatstone: {
       balanceCondition: 'Balance condition: R1·R4 = R2·R3',
+      balanceRatio: 'Balance condition, as ratios: R1/R2 = R3/R4',
       ig: 'Galvanometer current',
       vb: 'Node B voltage',
       vc: 'Node C voltage',
@@ -291,6 +292,60 @@ export const en = {
         `Wheatstone bridge schematic. Galvanometer current ${ig}, bridge is ${
           balanced ? 'balanced' : 'unbalanced'
         }. Current flow is animated through every branch, direction and speed reflecting each branch's current. The galvanometer needle ${needle}.`,
+
+      modeLabel: 'Bridge mode',
+      modes: {
+        free: 'Free (every arm adjustable)',
+        sensing: 'Sensing (one sensor arm)',
+      },
+      sensorLabel: 'Sensor',
+      armLabel: 'Sensor position',
+      sensors: {
+        ldr: {
+          name: 'Light (LDR)',
+          quantity: 'Light level',
+          how: 'A light-dependent resistor is a track of cadmium sulphide, a semiconductor. Each photon with enough energy frees an electron to conduct, so more light means more charge carriers and lower resistance: roughly R ∝ E^−0.7, about 5× lower for every tenfold increase in light.',
+        },
+        ntc: {
+          name: 'Temperature (NTC thermistor)',
+          quantity: 'Temperature',
+          how: 'An NTC thermistor is a bead of semiconducting metal oxide. Heat frees more charge carriers, so its resistance falls steeply and non-linearly as it warms: about −4 % per °C near room temperature (beta model, B = 3950 K).',
+        },
+        rtd: {
+          name: 'Temperature (Pt100 RTD)',
+          quantity: 'Temperature',
+          how: 'A Pt100 is a fine platinum wire, 100 Ω at 0 °C. Heat makes the metal lattice vibrate harder, scattering the electrons flowing through it, so resistance rises almost linearly: about +0.39 Ω per °C. A small change, but very stable and repeatable.',
+        },
+        strain: {
+          name: 'Strain gauge',
+          quantity: 'Strain',
+          how: 'A strain gauge is a zig-zag metal foil bonded to a part. Stretching the part makes the foil longer and thinner, so its resistance rises by GF·ε (gauge factor ≈ 2); compressing it does the opposite. At 1000 µε the change is only 0.2 %, which is exactly why strain gauges are read with a bridge.',
+        },
+        pot: {
+          name: 'Variable resistor',
+          quantity: 'Resistance',
+          how: "A plain variable resistor, with no physics in between: set the sensor arm's resistance directly and watch how the bridge responds.",
+        },
+      },
+      sensorR: 'Sensor resistance',
+      fixedR: 'Each fixed arm',
+      bridgeOut: 'Bridge output VB − VC',
+      meterRange: 'Meter full scale (auto)',
+      referenceNote: (reference: string, r: string) =>
+        `The three fixed arms equal the sensor's resistance at ${reference} (${r}), so the bridge reads zero there. Any change in the physical quantity unbalances it.`,
+      armNote: 'A sensor in R1 or R4 swings the output one way; in R2 or R3, the other.',
+      resetReference: (reference: string) => `Back to reference (${reference})`,
+      responseR: 'Sensor resistance',
+      responseV: 'Bridge output VB − VC',
+      logScale: 'log scale',
+      referenceLegend: 'reference',
+      responseAria: (sensor: string, reading: string, r: string, vout: string) =>
+        `Response curves for the ${sensor}: sensor resistance and bridge output across the whole range. Current reading ${reading}: ${r}, bridge output ${vout}.`,
+      illustrationAria: (sensor: string, reading: string, r: string) =>
+        `Illustration of the ${sensor} at ${reading}, resistance ${r}.`,
+      exaggerated: 'deformation exaggerated for visibility',
+      tension: 'tension',
+      compression: 'compression',
     },
   },
 };
