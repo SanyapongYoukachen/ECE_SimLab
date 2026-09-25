@@ -156,4 +156,31 @@ export const QUESTIONS: readonly LocalizedQuestion[] = [
       },
     ],
   },
+  {
+    id: 'config-sensitivity',
+    question: {
+      en: 'Same strain gauges, same strain, same supply. You rebuild a quarter bridge as a full bridge (four active gauges, two in tension, two in compression). The output becomes about:',
+      th: 'ใช้สเตรนเกจชนิดเดิม ความเครียดเท่าเดิม แหล่งจ่ายเดิม ถ้าเปลี่ยนจากควอเตอร์บริดจ์เป็นฟูลบริดจ์ (สเตรนเกจทำงานสี่ตัว ถูกดึงสองตัว ถูกอัดสองตัว) เอาต์พุตจะเป็นประมาณ:',
+    },
+    options: [
+      { id: 'a', label: { en: 'The same', th: 'เท่าเดิม' }, correct: false },
+      { id: 'b', label: { en: 'Twice as large', th: 'ใหญ่ขึ้นสองเท่า' }, correct: false },
+      {
+        id: 'c',
+        label: {
+          en: 'Four times as large, and more linear',
+          th: 'ใหญ่ขึ้นสี่เท่า และเป็นเชิงเส้นมากขึ้น',
+        },
+        correct: true,
+      },
+      {
+        id: 'd',
+        label: {
+          en: 'Zero: tension and compression cancel',
+          th: 'เป็นศูนย์: แรงดึงและแรงอัดหักล้างกัน',
+        },
+        correct: false,
+      },
+    ],
+  },
 ];

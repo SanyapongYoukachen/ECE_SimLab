@@ -75,7 +75,8 @@ export const WheatstoneStateSchema = z.object({
   ntc: z.number().min(-20).max(100).default(25),
   rtd: z.number().min(-50).max(200).default(0),
   strain: z.number().min(-2000).max(2000).default(0),
-  pot: z.number().min(10).max(2200).default(1000),
+  pot: z.number().min(10).max(1990).default(1000),
+  config: z.enum(['quarter', 'half', 'full']).default('quarter'),
 });
 export type WheatstoneState = z.infer<typeof WheatstoneStateSchema>;
 

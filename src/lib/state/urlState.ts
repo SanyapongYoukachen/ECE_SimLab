@@ -139,6 +139,7 @@ export function decodeWheatstoneState(params: URLSearchParams): WheatstoneState 
     rtd: num(params, 'rtd'),
     strain: num(params, 'strain'),
     pot: num(params, 'pot'),
+    config: params.get('config') ?? undefined,
   };
   const result = WheatstoneStateSchema.safeParse(raw);
   return result.success ? result.data : WheatstoneStateSchema.parse({});
@@ -169,6 +170,7 @@ export function encodeWheatstoneState(state: WheatstoneState): URLSearchParams {
   params.set('rtd', precise(state.rtd));
   params.set('strain', precise(state.strain));
   params.set('pot', precise(state.pot));
+  params.set('config', state.config);
   return params;
 }
 

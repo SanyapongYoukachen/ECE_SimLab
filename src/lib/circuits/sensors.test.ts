@@ -3,7 +3,11 @@ import {
   SENSORS,
   SENSOR_IDS,
   BRIDGE_ARMS,
-  quarterBridgeArms,
+  BRIDGE_CONFIGS,
+  armRoles,
+  bridgeArms,
+  mirroredQuantity,
+  relativeSensitivity,
   referenceResistance,
   sampleQuantities,
 } from './sensors';
@@ -57,7 +61,7 @@ describe('quarter bridge', () => {
     for (const id of SENSOR_IDS) {
       const s = SENSORS[id];
       for (const arm of BRIDGE_ARMS) {
-        const r = quarterBridgeArms(s, arm, s.reference);
+        const r = bridgeArms(s, 'quarter', arm, s.reference);
         const b = solveWheatstoneBridge(5, r.r1, r.r2, r.r3, r.r4, 100);
         expect(b.balanced).toBe(true);
         expect(b.ig).toBeCloseTo(0, 12);
@@ -68,7 +72,7 @@ describe('quarter bridge', () => {
   it('flips output polarity between the R1/R4 and R2/R3 arm positions', () => {
     const s = SENSORS.strain;
     const sign = (arm: 'r1' | 'r2' | 'r3' | 'r4'): number => {
-      const r = quarterBridgeArms(s, arm, 1000);
+      const r = bridgeArms(s, 'quarter', arm, 1000);
       return Math.sign(solveWheatstoneBridge(5, r.r1, r.r2, r.r3, r.r4, 100).ig);
     };
     expect(sign('r1')).toBe(sign('r4'));
@@ -81,5 +85,79 @@ describe('quarter bridge', () => {
     expect(qs[0]).toBeCloseTo(1, 9);
     expect(qs[2]).toBeCloseTo(100, 9);
     expect(qs[4]).toBeCloseTo(10_000, 6);
+  });
+});
+
+describe('quarter, half and full bridges', () => {
+  const open = 1e12; // galvanometer resistance → effectively open-circuit output
+
+  function output(config: 'quarter' | 'half' | 'full', q: number, rg = open): number {
+    const r = bridgeArms(SENSORS.strain, config, 'r4', q);
+    const b = solveWheatstoneBridge(10, r.r1, r.r2, r.r3, r.r4, rg);
+    return b.vb - b.vc;
+  }
+
+  it('assigns one, two and four active arms, partners changing oppositely', () => {
+    expect(armRoles('quarter', 'r4')).toEqual({
+      r1: 'fixed',
+      r2: 'fixed',
+      r3: 'fixed',
+      r4: 'plus',
+    });
+    expect(armRoles('half', 'r4')).toEqual({ r1: 'fixed', r2: 'fixed', r3: 'minus', r4: 'plus' });
+    expect(armRoles('full', 'r4')).toEqual({ r1: 'plus', r2: 'minus', r3: 'minus', r4: 'plus' });
+    expect(armRoles('half', 'r1')).toEqual({ r1: 'plus', r2: 'minus', r3: 'fixed', r4: 'fixed' });
+  });
+
+  it('mirrors linear readings about the reference and light on its log axis', () => {
+    expect(mirroredQuantity(SENSORS.strain, 800)).toBe(-800);
+    expect(mirroredQuantity(SENSORS.ntc, 40)).toBe(10);
+    expect(mirroredQuantity(SENSORS.ldr, 1000)).toBeCloseTo(10, 9);
+  });
+
+  it('balances at the reference for every configuration, sensor and arm', () => {
+    for (const config of BRIDGE_CONFIGS) {
+      for (const id of SENSOR_IDS) {
+        for (const arm of BRIDGE_ARMS) {
+          const s = SENSORS[id];
+          const r = bridgeArms(s, config, arm, s.reference);
+          expect(solveWheatstoneBridge(5, r.r1, r.r2, r.r3, r.r4, 100).balanced).toBe(true);
+        }
+      }
+    }
+  });
+
+  it('has 1 : 2 : 4 small-signal sensitivity (open circuit)', () => {
+    const args = [SENSORS.strain, 'r4', 10, open] as const;
+    expect(relativeSensitivity(args[0], 'quarter', args[1], args[2], args[3])).toBeCloseTo(1, 6);
+    expect(relativeSensitivity(args[0], 'half', args[1], args[2], args[3])).toBeCloseTo(2, 3);
+    expect(relativeSensitivity(args[0], 'full', args[1], args[2], args[3])).toBeCloseTo(4, 3);
+  });
+
+  it('matches the textbook outputs V/4·x, V/2·x and V·x for ΔR/R = x', () => {
+    const x = 2.0 * 1000e-6; // GF · ε at 1000 µε
+    expect(Math.abs(output('full', 1000))).toBeCloseTo(10 * x, 9);
+    expect(Math.abs(output('half', 1000))).toBeCloseTo((10 / 2) * x, 9);
+    // Quarter: V·x / (2·(2 + x)) — the exact form, slightly below V/4·x.
+    expect(Math.abs(output('quarter', 1000))).toBeCloseTo((10 * x) / (2 * (2 + x)), 10);
+  });
+
+  it('is exactly linear for half and full bridges, but not for a quarter bridge', () => {
+    for (const config of ['half', 'full'] as const) {
+      expect(output(config, 2000) / output(config, 1000)).toBeCloseTo(2, 9);
+    }
+    const quarterRatio = output('quarter', 2000) / output('quarter', 1000);
+    expect(Math.abs(quarterRatio - 2)).toBeGreaterThan(1e-4);
+  });
+
+  it('adds every active arm in the same direction, never cancelling', () => {
+    for (const arm of BRIDGE_ARMS) {
+      const sign = (config: 'quarter' | 'half' | 'full'): number => {
+        const r = bridgeArms(SENSORS.rtd, config, arm, 80);
+        return Math.sign(solveWheatstoneBridge(5, r.r1, r.r2, r.r3, r.r4, 100).ig);
+      };
+      expect(sign('half')).toBe(sign('quarter'));
+      expect(sign('full')).toBe(sign('quarter'));
+    }
   });
 });
