@@ -6,6 +6,8 @@ import {
   SimulatorStateSchema,
   TheoremStateSchema,
   WheatstoneStateSchema,
+  ModuleViewStateSchema,
+  type ModuleViewState,
   type CircuitState,
   type ConvolutionState,
   type FourierState,
@@ -178,4 +180,13 @@ export function decodePredictFlag(params: URLSearchParams): boolean {
   const raw = params.get('predict') ?? undefined;
   const result = PredictFlagSchema.safeParse(raw);
   return result.success ? result.data : true;
+}
+
+export function decodeModuleViewState(params: URLSearchParams): ModuleViewState {
+  const result = ModuleViewStateSchema.safeParse({ view: params.get('view') ?? undefined });
+  return result.success ? result.data : ModuleViewStateSchema.parse({});
+}
+
+export function encodeModuleViewState(state: ModuleViewState): URLSearchParams {
+  return new URLSearchParams({ view: state.view });
 }

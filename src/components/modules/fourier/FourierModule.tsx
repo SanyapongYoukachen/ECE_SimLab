@@ -8,7 +8,7 @@ import { useUrlSyncedState, useUrlFlag } from '@/lib/state/useUrlState';
 import { logEvent } from '@/lib/state/telemetry';
 import { useLocalizedQuestions, useMessages } from '@/lib/i18n';
 import {
-  PredictionCheck,
+  ModuleTabs,
   PredictionGate,
   Slider,
   SegmentedControl,
@@ -185,15 +185,17 @@ export function FourierModule(): React.JSX.Element {
         {state.window === 'rect' ? tf.rectNote : tf.taperNote}
       </p>
 
-      {!practiceMode && (
-        <PredictionCheck moduleId="fourier" disabled={!predictEnabled} questions={questions} />
-      )}
-
       <LiveRegion text={liveText} />
     </div>
   );
 
-  if (!practiceMode) return content;
+  if (!practiceMode) {
+    return (
+      <ModuleTabs moduleId="fourier" questions={questions} disabled={!predictEnabled}>
+        {content}
+      </ModuleTabs>
+    );
+  }
 
   return (
     <PredictionGate

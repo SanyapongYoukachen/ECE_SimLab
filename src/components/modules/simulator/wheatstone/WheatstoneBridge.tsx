@@ -27,7 +27,7 @@ import { useUrlSyncedState, useUrlFlag } from '@/lib/state/useUrlState';
 import { logEvent } from '@/lib/state/telemetry';
 import { useLocalizedQuestions, useMessages } from '@/lib/i18n';
 import {
-  PredictionCheck,
+  ModuleTabs,
   PredictionGate,
   SegmentedControl,
   Slider,
@@ -428,19 +428,17 @@ export function WheatstoneBridge(): React.JSX.Element {
         <p className="text-sm text-[var(--foreground)]/70">{t.sensors[state.sensor].how}</p>
       )}
 
-      {!practiceMode && (
-        <PredictionCheck
-          moduleId="simulator-wheatstone"
-          disabled={!predictEnabled}
-          questions={questions}
-        />
-      )}
-
       <LiveRegion text={liveText} />
     </div>
   );
 
-  if (!practiceMode) return content;
+  if (!practiceMode) {
+    return (
+      <ModuleTabs moduleId="simulator-wheatstone" questions={questions} disabled={!predictEnabled}>
+        {content}
+      </ModuleTabs>
+    );
+  }
 
   return (
     <PredictionGate

@@ -150,10 +150,15 @@ Every module ships a bank of 3-5 questions
 `PredictionQuestion[]`) and two ways to ask them, chosen by a single
 cross-module preference:
 
-- **Default — `components/ui/PredictionCheck.tsx`.** Renders the whole
-  question bank inline at the _end_ of the module, after the content is
-  already open and interactive. Each question persists its own answer
-  independently in `localStorage`
+- **Default — `components/ui/ModuleTabs.tsx` + `PredictionCheck.tsx`.**
+  Every module is split into two tabs: **Explore** (the interactive
+  content, ending in a "Done exploring? Start the check →" prompt) and
+  **Check your understanding** (the whole question bank, numbered, with a
+  live "Answered X of N · Y correct" summary, a final score once every
+  question is answered, and "Clear my answers" to retake). The tab label
+  shows progress (`2/5`), and the active tab lives in the URL
+  (`?view=quiz`), so an instructor can link straight to the check. Each
+  question persists its own answer independently in `localStorage`
   (`signals-lab:predicted:<moduleId>:<questionId>`) — a check on whether the
   demonstration landed, not a gate in front of it.
 - **Opt-in "Predict first" practice mode — `components/ui/PredictionGate.tsx`

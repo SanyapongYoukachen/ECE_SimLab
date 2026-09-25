@@ -12,7 +12,7 @@ import { useUrlSyncedState, useUrlFlag } from '@/lib/state/useUrlState';
 import { logEvent } from '@/lib/state/telemetry';
 import { useLocalizedQuestions, useMessages } from '@/lib/i18n';
 import {
-  PredictionCheck,
+  ModuleTabs,
   PredictionGate,
   Slider,
   SegmentedControl,
@@ -172,15 +172,17 @@ export function ConvolutionModule(): React.JSX.Element {
         ]
       </p>
 
-      {!practiceMode && (
-        <PredictionCheck moduleId="convolution" disabled={!predictEnabled} questions={questions} />
-      )}
-
       <LiveRegion text={liveText} />
     </div>
   );
 
-  if (!practiceMode) return content;
+  if (!practiceMode) {
+    return (
+      <ModuleTabs moduleId="convolution" questions={questions} disabled={!predictEnabled}>
+        {content}
+      </ModuleTabs>
+    );
+  }
 
   return (
     <PredictionGate

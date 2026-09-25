@@ -69,10 +69,10 @@ test.describe('circuit simulator', () => {
     page,
   }) => {
     await page.goto('/simulator');
-    await expect(page.getByText('Check your understanding')).toBeVisible();
+    await expect(page.getByRole('tab', { name: /Check your understanding/ })).toBeVisible();
 
     await page.goto('/simulator?predict=off');
-    await expect(page.getByText('Check your understanding')).toHaveCount(0);
+    await expect(page.getByRole('tab', { name: /Check your understanding/ })).toHaveCount(0);
   });
 
   test('practice mode gates the simulator behind one question, like the other modules', async ({

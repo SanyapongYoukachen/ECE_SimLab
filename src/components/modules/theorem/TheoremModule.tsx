@@ -8,7 +8,7 @@ import { useUrlSyncedState, useUrlFlag } from '@/lib/state/useUrlState';
 import { logEvent } from '@/lib/state/telemetry';
 import { useLocalizedQuestions, useMessages } from '@/lib/i18n';
 import {
-  PredictionCheck,
+  ModuleTabs,
   PredictionGate,
   Slider,
   SegmentedControl,
@@ -110,15 +110,17 @@ export function TheoremModule(): React.JSX.Element {
         options={presetOptions}
       />
 
-      {!practiceMode && (
-        <PredictionCheck moduleId="theorem" disabled={!predictEnabled} questions={questions} />
-      )}
-
       <LiveRegion text={liveText} />
     </div>
   );
 
-  if (!practiceMode) return content;
+  if (!practiceMode) {
+    return (
+      <ModuleTabs moduleId="theorem" questions={questions} disabled={!predictEnabled}>
+        {content}
+      </ModuleTabs>
+    );
+  }
 
   return (
     <PredictionGate

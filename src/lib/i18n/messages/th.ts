@@ -35,13 +35,30 @@ export const th: Messages = {
       checkHeading: 'ทบทวนความเข้าใจ',
       correct: '— ถูกต้อง',
       notQuite: '— ยังไม่ใช่',
-      checkRight: 'ตรงกับสิ่งที่เพิ่งเห็นด้านบน',
-      checkWrong: 'ลองกลับไปดูกราฟด้านบนอีกครั้ง',
+      checkRight: 'ตรงกับสิ่งที่เห็นในแท็บสำรวจ',
+      checkWrong: 'ลองกลับไปดูในแท็บสำรวจอีกครั้ง',
       gateDialog: 'ทำนายก่อนลงมือสำรวจ',
       gateKicker: 'ทายก่อน',
       gateRight: 'ดูผลด้านล่างเพื่อยืนยัน',
       gateWrong: 'ดูว่าเกิดอะไรขึ้นจริงด้านล่าง',
       continue: 'ดำเนินการต่อ',
+      tabsLabel: 'ส่วนของโมดูล',
+      tabExplore: 'สำรวจ',
+      progress: (answered, total) => `${answered}/${total}`,
+      progressAria: (answered, total) => `ตอบแล้ว ${answered} จาก ${total} ข้อ`,
+      summary: (answered, total, correct) =>
+        `ตอบแล้ว ${answered} จาก ${total} ข้อ · ถูก ${correct} ข้อ`,
+      notStarted: (total) =>
+        `คำถาม ${total} ข้อเกี่ยวกับสิ่งที่เพิ่งสำรวจ เลือกแล้วเปลี่ยนไม่ได้ ลองคิดให้ดีก่อนตอบ`,
+      allDone: (correct, total) =>
+        correct === total
+          ? `ตอบครบทั้ง ${total} ข้อ ถูกทุกข้อ เยี่ยมมาก`
+          : `ตอบครบทั้ง ${total} ข้อ: ถูก ${correct} ข้อ ลองกลับไปที่แท็บสำรวจเพื่อทบทวนข้อที่พลาด แล้วล้างคำตอบเพื่อลองใหม่`,
+      reset: 'ล้างคำตอบของฉัน',
+      ctaTitle: 'สำรวจเสร็จแล้วหรือยัง?',
+      ctaBody: (total) => `ทบทวนความเข้าใจด้วยคำถามสั้น ๆ ${total} ข้อเกี่ยวกับสิ่งที่เพิ่งเห็น`,
+      ctaButton: 'เริ่มทำแบบทบทวน →',
+      back: '← กลับไปสำรวจ',
     },
   },
 

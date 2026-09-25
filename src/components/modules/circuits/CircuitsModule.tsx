@@ -10,7 +10,7 @@ import { useUrlSyncedState, useUrlFlag } from '@/lib/state/useUrlState';
 import { logEvent } from '@/lib/state/telemetry';
 import { useLocalizedQuestions, useMessages, type Messages } from '@/lib/i18n';
 import {
-  PredictionCheck,
+  ModuleTabs,
   PredictionGate,
   Slider,
   SegmentedControl,
@@ -136,15 +136,17 @@ export function CircuitsModule(): React.JSX.Element {
         />
       )}
 
-      {!practiceMode && (
-        <PredictionCheck moduleId="circuits" disabled={!predictEnabled} questions={questions} />
-      )}
-
       <LiveRegion text={liveText} />
     </div>
   );
 
-  if (!practiceMode) return content;
+  if (!practiceMode) {
+    return (
+      <ModuleTabs moduleId="circuits" questions={questions} disabled={!predictEnabled}>
+        {content}
+      </ModuleTabs>
+    );
+  }
 
   return (
     <PredictionGate

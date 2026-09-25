@@ -80,6 +80,12 @@ export const WheatstoneStateSchema = z.object({
 });
 export type WheatstoneState = z.infer<typeof WheatstoneStateSchema>;
 
+/** Which section of a module is showing: the interactive content, or its understanding check. */
+export const ModuleViewStateSchema = z.object({
+  view: z.enum(['explore', 'quiz']).default('explore'),
+});
+export type ModuleViewState = z.infer<typeof ModuleViewStateSchema>;
+
 /** Instructor lecture-mode flag: when true, prediction gates are skipped entirely. */
 export const PredictFlagSchema = z
   .enum(['on', 'off'])
