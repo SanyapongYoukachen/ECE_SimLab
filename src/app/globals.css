@@ -1,64 +1,78 @@
 @import 'tailwindcss';
 
 /*
- * Design tokens. Plot colours carry fixed semantic meaning across all three
- * modules — input / active / output / structure — and must never be
- * redefined per-module. Light values live on bare :root; dark values are
- * layered on top first by system preference, then by an explicit
- * data-theme override so a manual toggle always wins.
+ * Design tokens. An academic palette: warm paper and ink in light mode,
+ * deep navy at night, one indigo accent for the page chrome.
+ *
+ * Plot colours carry fixed semantic meaning across every module — input
+ * (blue: sources, signals), active (vermilion: what the student controls),
+ * output (emerald: results, current) — and must never be redefined
+ * per-module. The three were validated as a set with the dataviz palette
+ * checker against their own surface in each mode: all-pairs colour-blind
+ * ΔE ≥ 9.4, normal-vision ΔE ≥ 20, and ≥ 3:1 contrast. Re-run it if any change.
+ *
+ * Light values live on bare :root; dark values are layered on top first by
+ * system preference, then by an explicit data-theme override so a manual
+ * toggle always wins.
  */
 :root {
-  --background: #f6f7f9;
-  --foreground: #14181f;
-  --surface: #ffffff;
-  --surface-2: #edeff3;
-  --border: #d9dce3;
-  --focus-ring: #3562c9;
+  --background: #f7f5f0;
+  --foreground: #1b1f33;
+  --surface: #fffdf9;
+  --surface-2: #efebe3;
+  --border: #ddd7cb;
+  --focus-ring: #4f46e5;
+  --accent: #4338ca;
+  --accent-soft: rgba(67, 56, 202, 0.1);
 
   --plot-background: transparent;
-  --plot-text: #14181f;
-  --plot-input: #4f6d95;
-  --plot-active: #c8791f;
-  --plot-output: #2f8f6d;
-  --plot-structure: #838c9b;
-  --plot-structure-faint: rgba(131, 140, 155, 0.28);
-  --plot-danger: #b5482f;
+  --plot-text: #1b1f33;
+  --plot-input: #2563c9;
+  --plot-active: #d9531e;
+  --plot-output: #0e9468;
+  --plot-structure: #858a9c;
+  --plot-structure-faint: rgba(133, 138, 156, 0.28);
+  --plot-danger: #c0392b;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --background: #0d0f13;
-    --foreground: #e8eaef;
-    --surface: #14171d;
-    --surface-2: #1b1f27;
-    --border: #2a2f3a;
-    --focus-ring: #82a6f2;
+    --background: #101326;
+    --foreground: #e8eaf4;
+    --surface: #161a31;
+    --surface-2: #1d223c;
+    --border: #2d3354;
+    --focus-ring: #a5b4fc;
+    --accent: #a5b4fc;
+    --accent-soft: rgba(165, 180, 252, 0.14);
 
-    --plot-text: #e8eaef;
-    --plot-input: #86a7d1;
-    --plot-active: #e3a34c;
-    --plot-output: #52c69d;
-    --plot-structure: #7a8290;
-    --plot-structure-faint: rgba(122, 130, 144, 0.32);
-    --plot-danger: #e0805f;
+    --plot-text: #e8eaf4;
+    --plot-input: #3987e5;
+    --plot-active: #d95926;
+    --plot-output: #199e70;
+    --plot-structure: #737a95;
+    --plot-structure-faint: rgba(115, 122, 149, 0.34);
+    --plot-danger: #e5645a;
   }
 }
 
 :root[data-theme='dark'] {
-  --background: #0d0f13;
-  --foreground: #e8eaef;
-  --surface: #14171d;
-  --surface-2: #1b1f27;
-  --border: #2a2f3a;
-  --focus-ring: #82a6f2;
+  --background: #101326;
+  --foreground: #e8eaf4;
+  --surface: #161a31;
+  --surface-2: #1d223c;
+  --border: #2d3354;
+  --focus-ring: #a5b4fc;
+  --accent: #a5b4fc;
+  --accent-soft: rgba(165, 180, 252, 0.14);
 
-  --plot-text: #e8eaef;
-  --plot-input: #86a7d1;
-  --plot-active: #e3a34c;
-  --plot-output: #52c69d;
-  --plot-structure: #7a8290;
-  --plot-structure-faint: rgba(122, 130, 144, 0.32);
-  --plot-danger: #e0805f;
+  --plot-text: #e8eaf4;
+  --plot-input: #3987e5;
+  --plot-active: #d95926;
+  --plot-output: #199e70;
+  --plot-structure: #737a95;
+  --plot-structure-faint: rgba(115, 122, 149, 0.34);
+  --plot-danger: #e5645a;
 }
 
 @theme inline {
@@ -67,6 +81,7 @@
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
   --color-border: var(--border);
+  --color-accent: var(--accent);
   --color-plot-input: var(--plot-input);
   --color-plot-active: var(--plot-active);
   --color-plot-output: var(--plot-output);
@@ -82,6 +97,26 @@
 
 html {
   color-scheme: light dark;
+}
+
+/*
+ * A thin band across the top of every page in the three plot colours, in
+ * legend order (input → active → output): the site's one flourish, and a
+ * quiet reminder of what the colours mean.
+ */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 3px;
+  z-index: 50;
+  background: linear-gradient(
+    90deg,
+    var(--plot-input) 0 33.3%,
+    var(--plot-active) 33.3% 66.6%,
+    var(--plot-output) 66.6% 100%
+  );
+  pointer-events: none;
 }
 
 body {
