@@ -66,7 +66,7 @@ export const en = {
 
   landing: {
     kicker: 'Signals Lab',
-    title: 'Signals and circuits, made visible',
+    title: 'Circuit simulators and signal graphs, made visible',
     intro:
       "You can already do the algebra. These five linked instruments are for the part algebra doesn't teach: what the operation actually does. Manipulate either representation and watch the other respond in real time.",
     modules: {
@@ -136,6 +136,153 @@ export const en = {
       title: 'Circuit simulator',
       tagline:
         'Watch current actually flow through the circuit. Pick a circuit from the tabs; more are coming.',
+    },
+  },
+
+  /**
+   * Server-rendered "About" text under each module: what a search engine
+   * reads (the module itself renders client-side), written for students.
+   * th.ts must keep the same number of points and FAQ entries.
+   */
+  about: {
+    heading: 'About this simulator',
+    whatHeading: 'What you can do here',
+    conceptsHeading: 'Concepts covered',
+    faqHeading: 'Common questions',
+    convolution: {
+      intro:
+        'This convolution visualizer shows discrete-time convolution the way it is taught by hand: flip the kernel h, slide it across the input x, multiply the overlapping samples and add them up. Every step of y[n] = Σ x[k]·h[n−k] is drawn on the signal graph and written out as arithmetic.',
+      points: [
+        'Scrub or play the shift n and watch the flipped kernel slide under the input signal.',
+        'Drag any input sample to edit the signal and see the output update instantly.',
+        'Compare kernels: moving average, triangular, exponential decay and the difference [1, −1].',
+        'Check the output length N + M − 1 and see which samples overlap at every shift.',
+      ],
+      concepts: [
+        'Discrete convolution',
+        'Impulse response',
+        'Moving-average filter',
+        'Commutativity',
+        'Output length N + M − 1',
+      ],
+      faq: [
+        {
+          q: 'How do you compute a convolution graphically?',
+          a: 'Flip h[k] to get h[−k], shift it by n to get h[n−k], multiply it sample by sample with x[k], and sum the products. Repeat for every n. The simulator animates exactly these four steps.',
+        },
+        {
+          q: 'Why is the output longer than the input?',
+          a: 'The kernel starts overlapping the input before the first sample and stops after the last, so an N-sample input convolved with an M-sample kernel gives N + M − 1 output samples.',
+        },
+      ],
+    },
+    fourier: {
+      intro:
+        'This Fourier transform explorer plots a signal in the time domain and its FFT magnitude spectrum side by side. Move a frequency off an FFT bin and watch its peak smear into spectral leakage; switch window functions to see how tapering the signal trades main-lobe width for lower sidelobes. You can listen to the tones as well.',
+      points: [
+        'Build a signal from three sinusoids and see each one appear as a spectral peak.',
+        'Slide one frequency between FFT bins to see spectral leakage appear and disappear.',
+        'Compare rectangular, Hann, Hamming and Blackman windows on a decibel scale.',
+        'Play the combined tones through your speakers with Web Audio.',
+      ],
+      concepts: [
+        'Discrete Fourier transform (DFT) and FFT',
+        'FFT bins and bin spacing',
+        'Spectral leakage',
+        'Window functions',
+        'Nyquist frequency',
+      ],
+      faq: [
+        {
+          q: 'What is spectral leakage?',
+          a: 'When a sinusoid does not complete a whole number of cycles in the FFT window, the hard cut at the window edges spreads its energy into neighbouring bins. Its single peak becomes a smeared hump.',
+        },
+        {
+          q: 'Why use a window function before the FFT?',
+          a: 'Tapering the signal to zero at both ends (Hann, Hamming, Blackman) greatly reduces the far sidelobes that leakage creates, at the cost of a slightly wider main peak.',
+        },
+      ],
+    },
+    ac: {
+      intro:
+        'This AC circuit simulator starts with a single sine wave: peak, peak-to-peak, RMS and the rotating phasor that draws it. It then connects R, L and C loads to a 220 V, 50 Hz source, so you can watch current lead or lag the voltage, see where real, reactive and apparent power come from, and read the power factor.',
+      points: [
+        'See why Vrms = Vp/√2 for a sine wave, and why that rule fails for square and triangle waves.',
+        'Watch a rotating phasor trace out the sine wave in real time.',
+        'Connect R, L, C, RL, RC or RLC loads and read the phase angle, impedance and power factor.',
+        'Follow v(t), i(t) and p(t) together, and find series resonance where X_L = X_C.',
+      ],
+      concepts: [
+        'RMS and peak voltage',
+        'Phasors and phase angle',
+        'Impedance Z = R + jX',
+        'Power factor (leading and lagging)',
+        'Real, reactive and apparent power',
+        'Series RLC resonance',
+      ],
+      faq: [
+        {
+          q: 'How do you calculate RMS voltage?',
+          a: 'Square the waveform, average it over one period, and take the square root. For a sine wave this gives Vrms = Vp/√2, so 220 V mains has a peak of about 311 V.',
+        },
+        {
+          q: 'What does a lagging power factor mean?',
+          a: 'In an inductive load such as a motor, the current peaks after the voltage. Only the in-phase part of the current delivers real power; the rest is reactive. Adding capacitance brings the power factor back toward 1.',
+        },
+      ],
+    },
+    circuits: {
+      intro:
+        "This DC circuit simulator links a live schematic to the numbers behind it. Drag the source voltage and resistances and watch Ohm's law, series and parallel resistors and the voltage divider respond together: the current, the I-V graph, the power in each resistor and the voltage at every node.",
+      points: [
+        "Explore Ohm's law with a live I-V graph and operating point.",
+        'Switch between series and parallel resistors and compare the power each one dissipates.',
+        'Build a voltage divider and see Vout move as the resistor ratio changes.',
+        'Read every current, voltage and power value update as you drag.',
+      ],
+      concepts: [
+        "Ohm's law V = IR",
+        'Series and parallel resistance',
+        'Voltage divider',
+        'Electrical power P = VI',
+      ],
+      faq: [
+        {
+          q: 'What stays the same in series and parallel circuits?',
+          a: 'Resistors in series carry the same current; resistors in parallel have the same voltage across them.',
+        },
+        {
+          q: 'How does a voltage divider work?',
+          a: 'Two resistors in series split the source voltage in proportion to their resistance: Vout = V × R2 / (R1 + R2).',
+        },
+      ],
+    },
+    simulator: {
+      intro:
+        'This Wheatstone bridge circuit simulator animates current flowing through all four arms and the galvanometer, and shows the output voltage Vo = VB − VC as you change the resistors. Sensing mode turns it into a real measurement bridge: quarter, half and full bridges built from light-dependent resistors, thermistors, Pt100 RTDs and strain gauges.',
+      points: [
+        'Balance the bridge and watch the galvanometer current fall to zero at R1·R4 = R2·R3.',
+        'See the output voltage Vo at the galvanometer change live as each resistor moves.',
+        'Measure light, temperature and strain with LDR, NTC thermistor, RTD and strain gauge sensors.',
+        'Compare quarter, half and full bridge sensitivity (×1, ×2, ×4) and linearity.',
+      ],
+      concepts: [
+        'Wheatstone bridge balance',
+        'Bridge output voltage',
+        'Resistive sensors',
+        'Strain gauge bridges',
+        'Quarter, half and full bridges',
+      ],
+      faq: [
+        {
+          q: 'When is a Wheatstone bridge balanced?',
+          a: 'When R1·R4 = R2·R3. The two dividers then give the same voltage, so no current flows through the galvanometer, whatever its own resistance.',
+        },
+        {
+          q: 'What is the difference between a quarter, half and full bridge?',
+          a: 'They use one, two or four active sensor arms. With the partners changing in opposite directions, the output is about V/4, V/2 and V times ΔR/R, and the half and full bridges are linear.',
+        },
+      ],
     },
   },
 

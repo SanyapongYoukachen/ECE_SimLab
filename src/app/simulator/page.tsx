@@ -1,15 +1,14 @@
 import type { Metadata } from 'next';
-import { ModuleShell } from '@/components/ui';
+import { JsonLd, ModuleShell } from '@/components/ui';
+import { moduleJsonLd, pageMetadata } from '@/lib/seo';
 import SimulatorModule from '@/components/modules/simulator/SimulatorModuleClient';
 
-export const metadata: Metadata = {
-  title: 'Circuit Simulator — Signals Lab',
-  description: 'Animated circuit simulations, starting with the Wheatstone bridge.',
-};
+export const metadata: Metadata = pageMetadata('simulator');
 
 export default function SimulatorPage(): React.JSX.Element {
   return (
     <ModuleShell page="simulator">
+      <JsonLd data={moduleJsonLd('simulator')} />
       <SimulatorModule />
     </ModuleShell>
   );
