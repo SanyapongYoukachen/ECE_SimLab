@@ -1,5 +1,7 @@
 import Link from 'next/link';
-import { LanguageToggle, ThemeToggle } from '@/components/ui';
+import type { Metadata } from 'next';
+import { JsonLd, LanguageToggle, ThemeToggle } from '@/components/ui';
+import { pageMetadata, siteJsonLd } from '@/lib/seo';
 import { Localized, type Messages } from '@/lib/i18n';
 
 type ModuleKey = keyof Messages['landing']['modules'];
@@ -12,9 +14,12 @@ const MODULES: readonly { readonly href: string; readonly key: ModuleKey }[] = [
   { href: '/simulator', key: 'simulator' },
 ];
 
+export const metadata: Metadata = pageMetadata('home');
+
 export default function LandingPage(): React.JSX.Element {
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-10 px-4 py-10 sm:px-6">
+      <JsonLd data={siteJsonLd()} />
       <header className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-[var(--accent)]">

@@ -1,15 +1,14 @@
 import type { Metadata } from 'next';
-import { ModuleShell } from '@/components/ui';
+import { JsonLd, ModuleShell } from '@/components/ui';
+import { moduleJsonLd, pageMetadata } from '@/lib/seo';
 import ConvolutionModule from '@/components/modules/convolution/ConvolutionModuleClient';
 
-export const metadata: Metadata = {
-  title: 'Convolution — Signals Lab',
-  description: 'Watch flip-and-slide convolution happen, sample by sample.',
-};
+export const metadata: Metadata = pageMetadata('convolution');
 
 export default function ConvolutionPage(): React.JSX.Element {
   return (
     <ModuleShell page="convolution">
+      <JsonLd data={moduleJsonLd('convolution')} />
       <ConvolutionModule />
     </ModuleShell>
   );

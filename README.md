@@ -283,6 +283,25 @@ opens in each reader's own language.
 - Thai text uses Noto Sans Thai (Geist has no Thai glyphs). Page `<title>`
   metadata is still English only.
 
+### Search (SEO)
+
+`lib/seo.ts` holds every page's title, description, keywords and canonical
+path, plus the schema.org JSON-LD (`LearningResource` + `WebApplication` per
+module; `WebSite` + `ItemList` on the landing page). Titles target the
+specific queries students type ("Wheatstone bridge simulator", "convolution
+visualizer", "power factor phasor") rather than only "circuit simulator",
+where established tools dominate. Also generated:
+
+- `app/robots.ts` and `app/sitemap.ts`
+- per-route `opengraph-image.tsx` share cards (`lib/og/card.tsx`)
+- a server-rendered **About** section under every module (`ModuleAbout`,
+  text in the i18n `about` dictionary). The modules render client-side, so
+  without it crawlers see little more than "Loading module…".
+
+Set `NEXT_PUBLIC_SITE_URL` for a custom domain (default:
+`https://ece-sim-lab.vercel.app`) and `GOOGLE_SITE_VERIFICATION` to verify
+Google Search Console by meta tag.
+
 ## Adding another module
 
 The circuits module (`lib/circuits`, `components/modules/circuits`) followed

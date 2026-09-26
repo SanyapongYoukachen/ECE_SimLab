@@ -5,7 +5,10 @@ test.describe('language toggle (English ↔ Thai)', () => {
     await page.goto('/');
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
     await expect(
-      page.getByRole('heading', { level: 1, name: 'Signals and circuits, made visible' })
+      page.getByRole('heading', {
+        level: 1,
+        name: 'Circuit simulators and signal graphs, made visible',
+      })
     ).toBeVisible();
     await expect(page.getByRole('button', { name: 'Switch language to Thai' })).toHaveText('ไทย');
   });
@@ -18,13 +21,13 @@ test.describe('language toggle (English ↔ Thai)', () => {
 
     await expect(page.locator('html')).toHaveAttribute('lang', 'th');
     await expect(
-      page.getByRole('heading', { level: 1, name: 'สัญญาณและวงจร ที่มองเห็นได้' })
+      page.getByRole('heading', { level: 1, name: 'จำลองวงจรและกราฟสัญญาณ ที่มองเห็นได้' })
     ).toBeVisible();
     await expect(page.getByRole('link', { name: 'คอนโวลูชัน', exact: true })).toBeVisible();
 
     await page.reload();
     await expect(
-      page.getByRole('heading', { level: 1, name: 'สัญญาณและวงจร ที่มองเห็นได้' })
+      page.getByRole('heading', { level: 1, name: 'จำลองวงจรและกราฟสัญญาณ ที่มองเห็นได้' })
     ).toBeVisible();
 
     await page.getByRole('link', { name: 'จำลองวงจร' }).click();
@@ -61,7 +64,7 @@ test.describe('Thai browser', () => {
     await page.goto('/');
     await expect(page.locator('html')).toHaveAttribute('lang', 'th');
     await expect(
-      page.getByRole('heading', { level: 1, name: 'สัญญาณและวงจร ที่มองเห็นได้' })
+      page.getByRole('heading', { level: 1, name: 'จำลองวงจรและกราฟสัญญาณ ที่มองเห็นได้' })
     ).toBeVisible();
     await expect(page.getByRole('button', { name: 'เปลี่ยนเป็นภาษาอังกฤษ' })).toHaveText('English');
   });

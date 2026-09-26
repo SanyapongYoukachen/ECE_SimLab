@@ -1,15 +1,14 @@
 import type { Metadata } from 'next';
-import { ModuleShell } from '@/components/ui';
+import { JsonLd, ModuleShell } from '@/components/ui';
+import { moduleJsonLd, pageMetadata } from '@/lib/seo';
 import FourierModule from '@/components/modules/fourier/FourierModuleClient';
 
-export const metadata: Metadata = {
-  title: 'Fourier transform explorer — Signals Lab',
-  description: 'See — and hear — how a signal built from sinusoids maps to its magnitude spectrum.',
-};
+export const metadata: Metadata = pageMetadata('fourier');
 
 export default function FourierPage(): React.JSX.Element {
   return (
     <ModuleShell page="fourier">
+      <JsonLd data={moduleJsonLd('fourier')} />
       <FourierModule />
     </ModuleShell>
   );

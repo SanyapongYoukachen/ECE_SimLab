@@ -3,6 +3,7 @@ import { ThemeToggle } from './ThemeToggle';
 import { TelemetryExportButton } from './TelemetryExportButton';
 import { PracticeModeToggle } from './PracticeModeToggle';
 import { LanguageToggle } from './LanguageToggle';
+import { ModuleAbout } from './ModuleAbout';
 import { Localized } from '@/lib/i18n';
 import type { Messages } from '@/lib/i18n';
 
@@ -37,7 +38,10 @@ export function ModuleShell({ page, children }: ModuleShellProps): React.JSX.Ele
           <ThemeToggle />
         </div>
       </header>
-      <main className="flex-1">{children}</main>
+      <main className="flex flex-1 flex-col gap-10">
+        <div>{children}</div>
+        <ModuleAbout page={page} />
+      </main>
     </div>
   );
 }

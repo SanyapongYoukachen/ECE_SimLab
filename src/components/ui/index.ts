@@ -20,3 +20,5 @@ export * from './usePrefersReducedMotion';
 export * from './useThrottledValue';
 export * from './ModuleTabs';
 export * from './Field';
+export * from './JsonLd';
+export * from './ModuleAbout';
