@@ -15,7 +15,8 @@ export const SITE_URL = (
 ).replace(/\/$/, '');
 export const SITE_NAME = 'Signals Lab';
 
-export type SeoPage = 'home' | 'convolution' | 'fourier' | 'ac' | 'circuits' | 'simulator';
+export type SeoPage =
+  'home' | 'convolution' | 'fourier' | 'ac' | 'circuits' | 'sensors' | 'simulator';
 
 interface PageSeo {
   readonly path: string;
@@ -35,13 +36,14 @@ export const SEO: Readonly<Record<SeoPage, PageSeo>> = {
     path: '/',
     title: 'Signals Lab — Interactive Circuit Simulator & Signal Graphs',
     description:
-      'Free interactive circuit simulator and signal graphs for engineering students: convolution, Fourier transform, AC and DC circuits, and a Wheatstone bridge sensor lab.',
+      'Free interactive circuit simulator and signal graphs for engineering students: convolution, Fourier transform, AC and DC circuits, sensors, and a Wheatstone bridge lab.',
     keywords: [
       'circuit simulator',
       'online circuit simulator',
       'signal graph',
       'signals and systems',
       'interactive simulation',
+      'sensor simulator',
       'electrical engineering',
       'ECE',
       'จำลองวงจร',
@@ -53,6 +55,7 @@ export const SEO: Readonly<Record<SeoPage, PageSeo>> = {
       'Fourier transform',
       'AC circuits',
       'DC circuits',
+      'Sensors',
       'Wheatstone bridge',
     ],
     priority: 1,
@@ -117,19 +120,61 @@ export const SEO: Readonly<Record<SeoPage, PageSeo>> = {
   },
   circuits: {
     path: '/circuits',
-    title: "DC Circuit Simulator — Ohm's Law & Voltage Divider",
+    title: 'DC Circuit Simulator — Thévenin, Norton, Mesh & Nodal',
     description:
-      "Drag voltage and resistance and watch Ohm's law, series and parallel resistors and the voltage divider respond: live schematic, I-V graph, power bars and voltage ladder.",
+      "Interactive DC circuit analysis: Ohm's law, series-parallel and voltage dividers, Thévenin and Norton equivalents, maximum power transfer, and mesh and nodal analysis step by step.",
     keywords: [
       'DC circuit simulator',
       "Ohm's law",
       'voltage divider',
       'series and parallel resistors',
       'I-V graph',
+      'Thevenin equivalent',
+      'Norton equivalent',
+      'maximum power transfer',
+      'mesh analysis',
+      'nodal analysis',
+      'วงจรสมมูลเทวินิน',
+      'การวิเคราะห์เมช',
       'วงจรไฟฟ้ากระแสตรง',
       'กฎของโอห์ม',
     ],
-    teaches: ["Ohm's law", 'Series and parallel resistance', 'Voltage divider', 'Electrical power'],
+    teaches: [
+      "Ohm's law",
+      'Series and parallel resistance',
+      'Voltage divider',
+      'Thévenin and Norton equivalents',
+      'Maximum power transfer',
+      'Mesh and nodal analysis',
+    ],
+    priority: 0.9,
+  },
+  sensors: {
+    path: '/sensors',
+    title: 'How Sensors Work — LDR & Thermistor Simulator',
+    description:
+      'See a sensor as a physical measurement: photons and heat free electrons in an LDR and an NTC thermistor, then a voltage divider and a 10-bit ADC turn that into a number.',
+    keywords: [
+      'sensor simulator',
+      'how sensors work',
+      'LDR',
+      'light dependent resistor',
+      'photoresistor',
+      'NTC thermistor',
+      'thermistor simulator',
+      'voltage divider sensor',
+      'ADC',
+      'เซนเซอร์',
+      'ตัวต้านทานไวแสง',
+      'เทอร์มิสเตอร์',
+    ],
+    teaches: [
+      'Photoconductivity',
+      'Band gap',
+      'NTC thermistor',
+      'Voltage divider',
+      'Analog-to-digital conversion',
+    ],
     priority: 0.9,
   },
   simulator: {
@@ -206,14 +251,14 @@ export function moduleJsonLd(page: Exclude<SeoPage, 'home'>): Record<string, unk
 
 /** The landing page: the site itself plus the list of modules. */
 export function siteJsonLd(): Record<string, unknown>[] {
-  const modules = (['convolution', 'fourier', 'ac', 'circuits', 'simulator'] as const).map(
-    (page, i) => ({
-      '@type': 'ListItem',
-      position: i + 1,
-      url: `${SITE_URL}${SEO[page].path}`,
-      name: SEO[page].title,
-    })
-  );
+  const modules = (
+    ['convolution', 'fourier', 'ac', 'circuits', 'sensors', 'simulator'] as const
+  ).map((page, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    url: `${SITE_URL}${SEO[page].path}`,
+    name: SEO[page].title,
+  }));
   return [
     {
       '@context': 'https://schema.org',

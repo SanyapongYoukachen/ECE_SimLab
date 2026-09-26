@@ -5,6 +5,7 @@ import {
   PredictFlagSchema,
   SimulatorStateSchema,
   AcStateSchema,
+  SensorsStateSchema,
   WheatstoneStateSchema,
   ModuleViewStateSchema,
   type ModuleViewState,
@@ -13,6 +14,7 @@ import {
   type FourierState,
   type SimulatorState,
   type AcState,
+  type SensorsState,
   type WheatstoneState,
 } from './schemas';
 
@@ -107,6 +109,29 @@ export function encodeAcState(state: AcState): URLSearchParams {
   return params;
 }
 
+export function decodeSensorsState(params: URLSearchParams): SensorsState {
+  const raw = {
+    sensor: params.get('sensor') ?? undefined,
+    lux: num(params, 'lux'),
+    color: params.get('color') ?? undefined,
+    temp: num(params, 'temp'),
+    flow: params.get('flow') ?? undefined,
+  };
+  const result = SensorsStateSchema.safeParse(raw);
+  return result.success ? result.data : SensorsStateSchema.parse({});
+}
+
+export function encodeSensorsState(state: SensorsState): URLSearchParams {
+  const params = new URLSearchParams();
+  params.set('sensor', state.sensor);
+  // Lux moves on a log slider, so keep enough digits to survive a reload unchanged.
+  params.set('lux', String(Number(state.lux.toPrecision(6))));
+  params.set('color', state.color);
+  params.set('temp', String(state.temp));
+  params.set('flow', state.flow);
+  return params;
+}
+
 export function decodeCircuitState(params: URLSearchParams): CircuitState {
   const raw = {
     mode: params.get('mode') ?? undefined,
@@ -114,6 +139,11 @@ export function decodeCircuitState(params: URLSearchParams): CircuitState {
     r1: num(params, 'r1'),
     r2: num(params, 'r2'),
     topology: params.get('topology') ?? undefined,
+    r3: num(params, 'r3'),
+    rl: num(params, 'rl'),
+    v2: num(params, 'v2'),
+    equiv: params.get('equiv') ?? undefined,
+    method: params.get('method') ?? undefined,
   };
   const result = CircuitStateSchema.safeParse(raw);
   return result.success ? result.data : CircuitStateSchema.parse({});
@@ -126,6 +156,11 @@ export function encodeCircuitState(state: CircuitState): URLSearchParams {
   params.set('r1', state.r1.toFixed(1));
   params.set('r2', state.r2.toFixed(1));
   params.set('topology', state.topology);
+  params.set('r3', state.r3.toFixed(1));
+  params.set('rl', state.rl.toFixed(1));
+  params.set('v2', state.v2.toFixed(2));
+  params.set('equiv', state.equiv);
+  params.set('method', state.method);
   return params;
 }
 

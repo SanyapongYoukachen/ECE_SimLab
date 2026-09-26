@@ -11,6 +11,7 @@ const MODULES: readonly { readonly href: string; readonly key: ModuleKey }[] = [
   { href: '/fourier', key: 'fourier' },
   { href: '/ac', key: 'ac' },
   { href: '/circuits', key: 'circuits' },
+  { href: '/sensors', key: 'sensors' },
   { href: '/simulator', key: 'simulator' },
 ];
 

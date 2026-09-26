@@ -84,4 +84,150 @@ export const QUESTIONS: readonly LocalizedQuestion[] = [
       { id: 'd', label: { en: 'Undefined', th: 'หาค่าไม่ได้' }, correct: false },
     ],
   },
+  {
+    id: 'thevenin-rth',
+    question: {
+      en: 'To find Rth, you "switch off" the independent voltage source. What do you replace it with?',
+      th: 'เมื่อหา Rth ต้อง "ปิด" แหล่งจ่ายแรงดันอิสระ ต้องแทนแหล่งจ่ายนั้นด้วยอะไร?',
+    },
+    options: [
+      {
+        id: 'a',
+        label: {
+          en: 'A wire (short circuit): a switched-off voltage source holds 0 V',
+          th: 'สายไฟ (ลัดวงจร): แหล่งจ่ายแรงดันที่ปิดแล้วมีแรงดัน 0 V',
+        },
+        correct: true,
+      },
+      {
+        id: 'b',
+        label: { en: 'An open circuit', th: 'วงจรเปิด' },
+        correct: false,
+      },
+      {
+        id: 'c',
+        label: { en: 'A resistor equal to RL', th: 'ตัวต้านทานที่มีค่าเท่ากับ RL' },
+        correct: false,
+      },
+      {
+        id: 'd',
+        label: { en: 'Leave it in place', th: 'ปล่อยไว้ตามเดิม' },
+        correct: false,
+      },
+    ],
+  },
+  {
+    id: 'max-power',
+    question: {
+      en: 'A source has Vth = 10 V and Rth = 50 Ω. Which load draws the most power, and how much?',
+      th: 'แหล่งจ่ายมี Vth = 10 V และ Rth = 50 Ω โหลดค่าใดรับกำลังได้มากที่สุด และเท่าใด?',
+    },
+    options: [
+      {
+        id: 'a',
+        label: {
+          en: 'RL = 50 Ω, drawing 10²/(4·50) = 0.5 W',
+          th: 'RL = 50 Ω รับกำลัง 10²/(4·50) = 0.5 W',
+        },
+        correct: true,
+      },
+      {
+        id: 'b',
+        label: { en: 'RL = 0 Ω, drawing 2 W', th: 'RL = 0 Ω รับกำลัง 2 W' },
+        correct: false,
+      },
+      {
+        id: 'c',
+        label: {
+          en: 'The largest RL possible, drawing 1 W',
+          th: 'RL ที่มากที่สุดเท่าที่เป็นไปได้ รับกำลัง 1 W',
+        },
+        correct: false,
+      },
+      {
+        id: 'd',
+        label: { en: 'RL = 25 Ω, drawing 1 W', th: 'RL = 25 Ω รับกำลัง 1 W' },
+        correct: false,
+      },
+    ],
+  },
+  {
+    id: 'mesh-negative',
+    question: {
+      en: 'You assume both mesh currents clockwise and solve to get I2 = −3 mA. What does that mean?',
+      th: 'สมมติให้กระแสเมชทั้งสองไหลตามเข็มนาฬิกา แก้สมการได้ I2 = −3 mA หมายความว่าอย่างไร?',
+    },
+    options: [
+      {
+        id: 'a',
+        label: {
+          en: 'A 3 mA loop current actually flows anticlockwise; the working is still correct',
+          th: 'กระแสลูป 3 mA ไหลทวนเข็มนาฬิกาจริง การคำนวณยังถูกต้อง',
+        },
+        correct: true,
+      },
+      {
+        id: 'b',
+        label: {
+          en: 'A mistake: currents cannot be negative',
+          th: 'คำนวณผิด: กระแสเป็นลบไม่ได้',
+        },
+        correct: false,
+      },
+      {
+        id: 'c',
+        label: {
+          en: 'The source in that loop is broken',
+          th: 'แหล่งจ่ายในลูปนั้นเสีย',
+        },
+        correct: false,
+      },
+      {
+        id: 'd',
+        label: { en: 'No current flows in that loop', th: 'ไม่มีกระแสไหลในลูปนั้น' },
+        correct: false,
+      },
+    ],
+  },
+  {
+    id: 'mesh-or-node',
+    question: {
+      en: 'A circuit has 4 windows (meshes) but only 2 nodes apart from ground. Which method needs fewer equations?',
+      th: 'วงจรหนึ่งมี 4 ช่อง (เมช) แต่มีโนดที่ไม่ใช่กราวด์เพียง 2 โนด วิธีใดใช้สมการน้อยกว่า?',
+    },
+    options: [
+      {
+        id: 'a',
+        label: {
+          en: 'Nodal analysis: 2 equations instead of 4',
+          th: 'การวิเคราะห์โนด: 2 สมการแทนที่จะเป็น 4',
+        },
+        correct: true,
+      },
+      {
+        id: 'b',
+        label: {
+          en: 'Mesh analysis: 4 equations are more accurate',
+          th: 'การวิเคราะห์เมช: 4 สมการแม่นยำกว่า',
+        },
+        correct: false,
+      },
+      {
+        id: 'c',
+        label: {
+          en: 'Both need 6 equations',
+          th: 'ทั้งสองวิธีต้องใช้ 6 สมการ',
+        },
+        correct: false,
+      },
+      {
+        id: 'd',
+        label: {
+          en: 'Neither: only series–parallel rules work',
+          th: 'ไม่มีวิธีใดใช้ได้: ต้องใช้กฎอนุกรม–ขนานเท่านั้น',
+        },
+        correct: false,
+      },
+    ],
+  },
 ];

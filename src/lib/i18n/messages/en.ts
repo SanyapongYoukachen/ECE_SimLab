@@ -68,7 +68,7 @@ export const en = {
     kicker: 'Signals Lab',
     title: 'Circuit simulators and signal graphs, made visible',
     intro:
-      "You can already do the algebra. These five linked instruments are for the part algebra doesn't teach: what the operation actually does. Manipulate either representation and watch the other respond in real time.",
+      "You can already do the algebra. These six linked instruments are for the part algebra doesn't teach: what the operation actually does. Manipulate either representation and watch the other respond in real time.",
     modules: {
       convolution: {
         kicker: 'Module 1',
@@ -92,10 +92,16 @@ export const en = {
         kicker: 'Module 4',
         title: 'DC circuits',
         description:
-          "Ohm's law, series and parallel resistors, and the voltage divider — drag V and R, watch the schematic and the numbers respond together.",
+          "Ohm's law, series and parallel resistors and the voltage divider, then Thévenin and Norton equivalents and mesh and nodal analysis — drag V and R and watch every number respond.",
+      },
+      sensors: {
+        kicker: 'Module 5',
+        title: 'Sensors: from physics to signal',
+        description:
+          'Watch photons and heat free electrons inside an LDR and a thermistor, then follow the signal through a voltage divider and an ADC to a measured number.',
       },
       simulator: {
-        kicker: 'Module 5',
+        kicker: 'Module 6',
         title: 'Circuit simulator',
         description:
           'Animated current flow through a real circuit — starting with the Wheatstone bridge. More circuits land here in tabs as they’re added.',
@@ -128,9 +134,14 @@ export const en = {
         'Start with one sine wave and what "220 V" really means, then connect R, L and C loads and watch current lead or lag.',
     },
     circuits: {
-      title: "DC circuits: Ohm's law and the voltage divider",
+      title: "DC circuits: from Ohm's law to Thévenin and mesh analysis",
       tagline:
         'Drag the sliders to change the source voltage and the resistors. The schematic and the linked readout update together.',
+    },
+    sensors: {
+      title: 'Sensors: from physics to signal',
+      tagline:
+        'A sensor is a physical measurement. Follow one from start to finish: light or heat frees electrons, the resistance falls, a divider turns that into a voltage, and an ADC turns the voltage into a number.',
     },
     simulator: {
       title: 'Circuit simulator',
@@ -233,18 +244,24 @@ export const en = {
     },
     circuits: {
       intro:
-        "This DC circuit simulator links a live schematic to the numbers behind it. Drag the source voltage and resistances and watch Ohm's law, series and parallel resistors and the voltage divider respond together: the current, the I-V graph, the power in each resistor and the voltage at every node.",
+        "This DC circuit simulator links a live schematic to the numbers behind it. Drag the source voltage and resistances and watch Ohm's law, series and parallel resistors and the voltage divider respond together. Then go further: reduce a network to its Thévenin or Norton equivalent, and solve a two-source circuit by mesh analysis and by nodal analysis, with every equation filled in.",
       points: [
         "Explore Ohm's law with a live I-V graph and operating point.",
         'Switch between series and parallel resistors and compare the power each one dissipates.',
         'Build a voltage divider and see Vout move as the resistor ratio changes.',
-        'Read every current, voltage and power value update as you drag.',
+        'Find a Thévenin and Norton equivalent step by step, and see the load current stay the same in all three circuits.',
+        'Find the load that draws maximum power, RL = Rth, on a live power curve.',
+        'Solve the same circuit by mesh (KVL) and nodal (KCL) analysis and compare the equations.',
       ],
       concepts: [
         "Ohm's law V = IR",
         'Series and parallel resistance',
         'Voltage divider',
-        'Electrical power P = VI',
+        'Thévenin equivalent',
+        'Norton equivalent',
+        'Maximum power transfer',
+        'Mesh analysis',
+        'Nodal analysis',
       ],
       faq: [
         {
@@ -254,6 +271,46 @@ export const en = {
         {
           q: 'How does a voltage divider work?',
           a: 'Two resistors in series split the source voltage in proportion to their resistance: Vout = V × R2 / (R1 + R2).',
+        },
+        {
+          q: 'How do you find a Thévenin equivalent circuit?',
+          a: 'Vth is the open-circuit voltage at the terminals. Rth is the resistance seen into the terminals with every independent source switched off: voltage sources become wires, current sources open circuits. The Norton equivalent is a current source IN = Vth/Rth in parallel with the same Rth.',
+        },
+        {
+          q: 'Should I use mesh analysis or nodal analysis?',
+          a: 'Both give the same answer. Mesh analysis needs one KVL equation per window of the circuit; nodal analysis needs one KCL equation per node apart from ground. Pick the method with fewer unknowns.',
+        },
+      ],
+    },
+    sensors: {
+      intro:
+        'This sensor simulator shows how a light-dependent resistor (LDR) and an NTC thermistor turn a physical quantity into an electrical signal. Inside the material, photons or heat free electrons; outside, a voltage divider turns the changing resistance into a voltage, and a 10-bit ADC turns that voltage into the number a microcontroller reads.',
+      points: [
+        'Watch photons free electrons in an LDR, and see why infrared below the band gap frees none.',
+        'Heat a thermistor and watch the lattice shake and electrons break free, with kT and the activation energy to scale.',
+        'Follow the electron flow around a voltage divider and read Vout on a 10-bit ADC.',
+        'Play a day–night or heat–cool cycle and watch the physical and electrical signals move together.',
+      ],
+      concepts: [
+        'Photoconductivity',
+        'Band gap and photon energy',
+        'NTC thermistor',
+        'Voltage divider',
+        'Analog-to-digital conversion',
+        'Sensor resolution',
+      ],
+      faq: [
+        {
+          q: 'How does an LDR (photoresistor) work?',
+          a: 'An LDR is a film of cadmium sulfide. Each photon it absorbs frees one electron, so brighter light means more free electrons and a lower resistance, from about a megohm in darkness to a few hundred ohms in sunlight. Photons below the band gap energy, such as infrared, free none.',
+        },
+        {
+          q: 'Why does a thermistor’s resistance decrease with temperature?',
+          a: 'In an NTC thermistor’s metal-oxide semiconductor, electrons need about 0.34 eV to break free. Thermal energy kT is only about 26 meV at room temperature, so only a small, exponentially temperature-dependent fraction escape. Warm it up and many more escape, so the resistance falls by about 4 % per °C.',
+        },
+        {
+          q: 'How do you connect a sensor to a microcontroller?',
+          a: 'Put the resistive sensor in a voltage divider with a fixed resistor of similar value. The divider turns the resistance into a voltage, and the microcontroller’s ADC turns the voltage into a number. Firmware then runs the calibration curve backwards to get lux or °C.',
         },
       ],
     },
@@ -456,6 +513,8 @@ export const en = {
       ohm: "Ohm's law",
       network: 'Series & parallel',
       divider: 'Voltage divider',
+      thevenin: 'Thévenin & Norton',
+      mesh: 'Mesh & node analysis',
     },
     topologies: {
       series: 'Series',
@@ -491,6 +550,199 @@ export const en = {
       `Schematic: two resistors, ${r1} and ${r2}, in ${topology} across a ${v} source.`,
     schematicDividerAria: (r1: string, r2: string, v: string) =>
       `Schematic: a voltage divider — ${r1} and ${r2} in series across ${v}, tapped between them.`,
+    thevenin: {
+      intro:
+        'Seen from its load, any network of sources and resistors behaves like one voltage source Vth in series with one resistor Rth (Thévenin), or one current source IN in parallel with Rth (Norton). Switch views: the load RL gets exactly the same current in all three.',
+      viewLabel: 'Show the source network as',
+      views: {
+        original: 'Original circuit',
+        thevenin: 'Thévenin equivalent',
+        norton: 'Norton equivalent',
+      },
+      boxTitle: {
+        original: 'source network (as built)',
+        thevenin: 'Thévenin: Vth in series with Rth',
+        norton: 'Norton: IN in parallel with Rth',
+      },
+      step1: 'Open a–b (remove RL): no current flows in R3, so Vth is the R1–R2 divider',
+      step2: 'Switch the source off (replace V with a wire) and look into a–b',
+      step3: 'Short a–b: the Norton current',
+      step4: 'Reconnect the load',
+      sameLoad: (il: string) =>
+        `The load cannot tell the difference: IL = ${il} in the original circuit, the Thévenin equivalent and the Norton equivalent. That's why the equivalent is useful: analyse a complicated network once, then try any load with one line of arithmetic.`,
+      statVth: 'Thévenin voltage Vth',
+      statRth: 'Thévenin resistance Rth',
+      statIn: 'Norton current IN',
+      statIl: 'Load current IL',
+      statVl: 'Load voltage VL',
+      statPl: 'Load power PL',
+      statPmax: 'Max possible Pmax = Vth²/4Rth',
+      statEff: 'Efficiency RL/(Rth+RL)',
+      sliderV: 'Source voltage V',
+      sliders: {
+        r1: 'Resistance R1',
+        r2: 'Resistance R2',
+        r3: 'Resistance R3',
+        rl: 'Load resistance RL',
+      },
+      matchLoad: (rth: string) => `Set RL = Rth (${rth}) for maximum power`,
+      ivTitle: 'Terminal line V = Vth − I·Rth [V vs mA], with the load line',
+      loadLine: 'load line V = I·RL',
+      powerTitle: 'Power in the load [mW] vs RL [Ω]',
+      matched: 'RL = Rth',
+      schematicAria: (view: string, vth: string, rth: string, il: string) =>
+        `Schematic, ${view}: the source network across terminals a and b feeds load RL. Vth ${vth}, Rth ${rth}, load current ${il}.`,
+      ivAria: (vth: string, iN: string, il: string) =>
+        `Terminal I-V line from ${vth} at open circuit to ${iN} at short circuit; the load line crosses it at ${il}.`,
+      powerAria: (rth: string, pmax: string, pl: string) =>
+        `Load power against load resistance, peaking at ${pmax} when RL equals Rth, ${rth}. Now ${pl}.`,
+    },
+    mesh: {
+      intro:
+        'Two sources, three resistors: too many for series and parallel rules. Mesh analysis writes Kirchhoff’s voltage law around each window, with a loop current I1 and I2 as the unknowns. Nodal analysis writes Kirchhoff’s current law at node A, with its voltage VA as the only unknown. Switch methods: the branch currents come out the same.',
+      methodLabel: 'Method',
+      methods: { mesh: 'Mesh (KVL, loop currents)', node: 'Node (KCL, node voltages)' },
+      meshHow: 'KVL around each window, clockwise, then solve the 2 × 2 system:',
+      nodeHow: 'KCL at node A (sum of currents leaving = 0), with ground as 0 V:',
+      loop1: 'Loop 1',
+      loop2: 'Loop 2',
+      kcl: 'KCL at A',
+      branchR2: 'R2 carries both loop currents',
+      meshSign:
+        'Both loop currents are assumed clockwise. A negative answer just means that loop current actually flows anticlockwise, and the arrow on the schematic flips to show it.',
+      nodeSign:
+        'Each branch current is written as leaving node A. A negative value means it actually flows into A; the arrows on the schematic show the real directions.',
+      compare: (va: string, ir2: string) =>
+        `Same circuit, same answers: VA = ${va} and I_R2 = ${ir2} either way. Mesh needed two equations; nodal needed one. For each new circuit, count windows and non-ground nodes, and pick the method with fewer unknowns.`,
+      statVa: 'Node voltage VA',
+      statI1: 'Mesh current I1 (clockwise)',
+      statI2: 'Mesh current I2 (clockwise)',
+      delivers: 'delivers',
+      absorbs: 'absorbs (charging)',
+      sliderV1: 'Source voltage V1',
+      sliderV2: 'Source voltage V2',
+      sliders: { r1: 'Resistance R1', r2: 'Resistance R2', r3: 'Resistance R3' },
+      clockwise: 'loop currents drawn clockwise when positive',
+      reference: '0 V (reference)',
+      schematicAria: (va: string, i1: string, i2: string) =>
+        `Schematic: V1 through R1 to node A, R2 from A to ground, R3 from A to V2. Node voltage ${va}; mesh currents I1 ${i1}, I2 ${i2}.`,
+    },
+  },
+
+  sensors: {
+    sensorLabel: 'Sensor',
+    sensors: { ldr: 'LDR (light)', ntc: 'NTC thermistor (temperature)' },
+    sensorShort: { ldr: 'LDR', ntc: 'NTC' },
+    intro: {
+      ldr: 'A light-dependent resistor is a thin film of cadmium sulfide. In the dark, almost every electron is bound to an atom, so it barely conducts. Each photon it absorbs frees one electron, so the more light, the lower the resistance.',
+      ntc: 'An NTC thermistor is a bead of metal-oxide semiconductor. Heat shakes its lattice, and a few electrons gain enough energy to break free. Warm it up and many more break free, so the resistance falls steeply.',
+    },
+    lightLevel: 'Light level (photons per second)',
+    temperature: 'Temperature',
+    colorLabel: 'Light colour (energy per photon)',
+    colors: {
+      blue: 'Blue 450 nm',
+      green: 'Green 555 nm',
+      red: 'Red 650 nm',
+      ir: 'Infrared 940 nm',
+    },
+    scenario: {
+      ldr: 'Night → noon → night',
+      ntc: 'Heat up, then cool down',
+    },
+    flowLabel: 'Show moving charge as',
+    flows: { electron: 'Electron flow', conventional: 'Conventional current' },
+    chainTitle: 'The measurement chain',
+    chain: {
+      physical: 'Physical quantity',
+      material: 'Free electrons',
+      resistance: 'Resistance',
+      circuit: 'Voltage',
+      digital: 'ADC code',
+      measured: 'Measured',
+      photons: (rate: string) => `${rate} photons/s`,
+      thermal: (kt: string) => `thermal energy kT = ${kt}`,
+      carriers: 'vs. the reference point',
+      nothingFreed: 'photons pass through',
+      resistanceSub: 'more electrons → lower R',
+      lsb: (step: string) => `1 step = ${step}`,
+      resolution: (step: string) => `1 step ≈ ${step} here`,
+    },
+    materialTitle: 'Inside the sensor: where the physics happens',
+    materialAria: {
+      ldr: (q: string, ratio: string) =>
+        `Magnified LDR film at ${q}: photons fall onto the film, free electrons drift toward the positive contact. Free electrons ${ratio} relative to 100 lux.`,
+      ntc: (q: string, ratio: string) =>
+        `Magnified thermistor at ${q}: lattice atoms vibrate, and electrons break free and drift toward the positive contact. Free electrons ${ratio} relative to 25 °C.`,
+    },
+    canvas: {
+      carriers: (ratio: string) => `free electrons ${ratio}`,
+      drift: 'e⁻ drift toward +',
+      conventional: 'conventional current I',
+      photon: (nm: number, ev: string, absorbed: boolean) =>
+        `${nm} nm photon: ${ev} eV ${absorbed ? '≥' : '<'} Eg`,
+      electronFlow: 'electrons: − → R fixed → sensor → +',
+      conventionalFlow: 'conventional I: + → sensor → R fixed → −',
+      current: (i: string, rate: string) => `I = ${i} = ${rate} e⁻/s`,
+    },
+    energyTitle: 'Energy picture',
+    energy: {
+      cb: 'Conduction band: free',
+      vb: 'Valence band: bound',
+      hole: 'hole',
+      bound: 'Bound electrons',
+      absorbed: 'hν ≥ Eg: the photon frees an electron',
+      notAbsorbed: 'hν < Eg: not enough energy, nothing freed',
+      ratio: (r: string) => `Ea is ${r}× the typical thermal kick kT,`,
+      tail: 'so only a tiny tail of electrons escape.',
+      ldrAria: (ev: string, absorbed: boolean) =>
+        `Band diagram: a ${ev} eV photon ${absorbed ? 'lifts an electron across' : 'falls short of'} the 1.8 eV band gap.`,
+      ntcAria: (kt: string, ea: string) =>
+        `Energy diagram: bound electrons sit ${ea} eV below the conduction band; thermal energy kT is ${kt} meV.`,
+    },
+    colorInsight: {
+      blue: 'A blue photon carries 2.76 eV, more than the 1.8 eV needed, but it still frees only one electron; the extra energy becomes heat. Brightness (photons per second) sets the resistance, not colour.',
+      green:
+        'A green photon carries 2.23 eV, enough to lift an electron across the 1.8 eV gap. Every absorbed photon frees one electron, so the resistance follows the number of photons per second.',
+      red: 'A red photon carries 1.91 eV, just above the 1.8 eV gap, so it still frees an electron. Redder than about 690 nm, and the LDR stops responding.',
+      ir: 'An infrared photon carries only 1.32 eV, less than the 1.8 eV gap, so it passes straight through. However bright the infrared, the LDR stays dark: a sensor measures only what its physics responds to.',
+    },
+    ntcInsight: (kt: string, ea: string, alpha: string) =>
+      `Thermal energy kT is ${kt} meV here, far below the ${ea} eV an electron needs. Only electrons in the far tail of the thermal distribution escape, and that tail grows exponentially: the resistance falls about ${alpha} % per °C at this temperature.`,
+    materialNote:
+      'Blue dots are free electrons; each red + marks an atom that has just lost one. Counts are compressed and time is slowed so you can watch it. A real sensor has about 10¹⁵ electrons passing through it each second.',
+    circuitTitle: 'Into the circuit: resistance becomes a voltage, then a number',
+    circuitNote:
+      'On its own, a sensor only changes resistance. To read it, drive a current through it: in a voltage divider with a fixed 10 kΩ resistor, the sensor’s share of the 5 V changes with its resistance. The ADC then turns Vout into one of 1024 codes.',
+    fixedName: 'R fixed',
+    adcTitle: 'ADC 10-bit',
+    circuitAria: (name: string, r: string, v: string, code: number) =>
+      `Voltage divider: 5 V source, ${name} at ${r} on top, 10 kΩ below. Vout ${v}, ADC code ${code}. Dots show charge moving around the loop.`,
+    trace: {
+      physical: { ldr: 'Physical signal: light [lx]', ntc: 'Physical signal: temperature [°C]' },
+      electrical: 'Electrical signal: Vout [V]',
+      time: 'last 12 s →',
+      aria: (q: string, v: string) =>
+        `Signal traces over the last 12 seconds. Now: physical ${q}, electrical Vout ${v}.`,
+    },
+    traceNote:
+      'Drag the slider or press Play. The top trace is what the sensor feels; the bottom trace is the voltage it produces. The shapes differ: the sensor is not linear.',
+    calibrationTitle: 'Calibration curves: reading the number back',
+    curves: {
+      resistance: {
+        ldr: 'Sensor: resistance vs. light (both log scales)',
+        ntc: 'Sensor: resistance vs. temperature (log scale)',
+      },
+      vout: { ldr: 'Circuit: Vout vs. light', ntc: 'Circuit: Vout vs. temperature' },
+      resistanceAria: (q: string, r: string) =>
+        `Resistance against the physical quantity; now ${q} gives ${r}.`,
+      voutAria: (q: string, v: string) =>
+        `Vout against the physical quantity; now ${q} gives ${v}.`,
+    },
+    calibrationNote:
+      'The microcontroller runs these curves backwards: ADC code → voltage → resistance → lux or °C. That is the "Measured" value in the chain. Where Vout changes steeply, one ADC step is a small change in the quantity (fine resolution); where the curve flattens, resolution is coarse.',
+    live: (q: string, r: string, v: string, code: number) =>
+      `${q}: resistance ${r}, Vout ${v}, ADC code ${code}.`,
   },
 
   simulator: {
