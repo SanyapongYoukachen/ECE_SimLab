@@ -1,13 +1,14 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('landing page', () => {
-  test('links to all five modules', async ({ page }) => {
+  test('links to all six modules', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Convolution', exact: true })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Fourier transform explorer' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'AC circuits' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'DC circuits' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Sensors: from physics to signal' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Circuit simulator' })).toBeVisible();
   });
 
@@ -23,7 +24,7 @@ test.describe('search engine surface', () => {
     const robots = await (await request.get('/robots.txt')).text();
     expect(robots).toContain('Sitemap: ');
     const sitemap = await (await request.get('/sitemap.xml')).text();
-    for (const path of ['/convolution', '/fourier', '/ac', '/circuits', '/simulator']) {
+    for (const path of ['/convolution', '/fourier', '/ac', '/circuits', '/sensors', '/simulator']) {
       expect(sitemap).toContain(`${path}</loc>`);
     }
   });

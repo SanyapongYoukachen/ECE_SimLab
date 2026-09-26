@@ -48,6 +48,20 @@ export const AcStateSchema = z.object({
 });
 export type AcState = z.infer<typeof AcStateSchema>;
 
+/**
+ * Module 5, sensors as a measurement chain. Defaults are each sensor's
+ * reference point: 100 lx of green light, and 25 °C.
+ */
+export const SensorsStateSchema = z.object({
+  sensor: z.enum(['ldr', 'ntc']).default('ldr'),
+  lux: z.number().min(1).max(10000).default(100),
+  color: z.enum(['blue', 'green', 'red', 'ir']).default('green'),
+  temp: z.number().min(-20).max(100).default(25),
+  /** Draw moving charge as electrons (− → +) or as conventional current (+ → −). */
+  flow: z.enum(['electron', 'conventional']).default('electron'),
+});
+export type SensorsState = z.infer<typeof SensorsStateSchema>;
+
 export const CircuitModeSchema = z.enum(['ohm', 'network', 'divider']);
 export type CircuitMode = z.infer<typeof CircuitModeSchema>;
 
