@@ -62,7 +62,7 @@ export const SensorsStateSchema = z.object({
 });
 export type SensorsState = z.infer<typeof SensorsStateSchema>;
 
-export const CircuitModeSchema = z.enum(['ohm', 'network', 'divider']);
+export const CircuitModeSchema = z.enum(['ohm', 'network', 'divider', 'thevenin', 'mesh']);
 export type CircuitMode = z.infer<typeof CircuitModeSchema>;
 
 export const TopologySchema = z.enum(['series', 'parallel']);
@@ -74,6 +74,14 @@ export const CircuitStateSchema = z.object({
   r1: z.number().min(1).max(10000).default(220),
   r2: z.number().min(1).max(10000).default(470),
   topology: TopologySchema.default('series'),
+  // Thévenin/Norton and mesh/node sections (R1, R2 and `voltage` are shared).
+  r3: z.number().min(1).max(10000).default(330),
+  rl: z.number().min(1).max(10000).default(1000),
+  /** Second source for mesh/node analysis. */
+  v2: z.number().min(0).max(24).default(5),
+  /** Which form of the source network to draw: as built, or its equivalents. */
+  equiv: z.enum(['original', 'thevenin', 'norton']).default('original'),
+  method: z.enum(['mesh', 'node']).default('mesh'),
 });
 export type CircuitState = z.infer<typeof CircuitStateSchema>;
 

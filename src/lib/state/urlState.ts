@@ -139,6 +139,11 @@ export function decodeCircuitState(params: URLSearchParams): CircuitState {
     r1: num(params, 'r1'),
     r2: num(params, 'r2'),
     topology: params.get('topology') ?? undefined,
+    r3: num(params, 'r3'),
+    rl: num(params, 'rl'),
+    v2: num(params, 'v2'),
+    equiv: params.get('equiv') ?? undefined,
+    method: params.get('method') ?? undefined,
   };
   const result = CircuitStateSchema.safeParse(raw);
   return result.success ? result.data : CircuitStateSchema.parse({});
@@ -151,6 +156,11 @@ export function encodeCircuitState(state: CircuitState): URLSearchParams {
   params.set('r1', state.r1.toFixed(1));
   params.set('r2', state.r2.toFixed(1));
   params.set('topology', state.topology);
+  params.set('r3', state.r3.toFixed(1));
+  params.set('rl', state.rl.toFixed(1));
+  params.set('v2', state.v2.toFixed(2));
+  params.set('equiv', state.equiv);
+  params.set('method', state.method);
   return params;
 }
 

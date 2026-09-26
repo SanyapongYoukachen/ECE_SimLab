@@ -26,6 +26,9 @@ import { ReadoutPanel } from './ReadoutPanel';
 import { formatCircuitExpression } from './expression';
 import { formatCurrent, formatPower, formatResistance, formatVoltage } from './format';
 import { QUESTIONS } from './questions';
+import { Stat } from './Stat';
+import { TheveninSection } from './TheveninSection';
+import { MeshNodeSection } from './MeshNodeSection';
 import {
   MODE_ORDER,
   TOPOLOGY_ORDER,
@@ -95,52 +98,60 @@ export function CircuitsModule(): React.JSX.Element {
         )}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
-        <SchematicPanel
-          mode={state.mode}
-          topology={state.topology}
-          voltage={state.voltage}
-          r1={state.r1}
-          r2={state.r2}
-        />
-        <ReadoutPanel mode={state.mode} ohm={ohm} network={network} divider={divider} />
-      </div>
+      {state.mode === 'thevenin' ? (
+        <TheveninSection state={state} setState={setState} />
+      ) : state.mode === 'mesh' ? (
+        <MeshNodeSection state={state} setState={setState} />
+      ) : (
+        <>
+          <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
+            <SchematicPanel
+              mode={state.mode}
+              topology={state.topology}
+              voltage={state.voltage}
+              r1={state.r1}
+              r2={state.r2}
+            />
+            <ReadoutPanel mode={state.mode} ohm={ohm} network={network} divider={divider} />
+          </div>
 
-      <ExpressionReadout label={t.governingEquation}>{expression}</ExpressionReadout>
+          <ExpressionReadout label={t.governingEquation}>{expression}</ExpressionReadout>
 
-      <StatGrid mode={state.mode} ohm={ohm} network={network} divider={divider} t={t} />
+          <StatGrid mode={state.mode} ohm={ohm} network={network} divider={divider} t={t} />
 
-      <div className="flex flex-col gap-3 rounded-md border border-[var(--border)] bg-[var(--surface)] p-3">
-        <Slider
-          label={t.sourceVoltage}
-          value={state.voltage}
-          min={MIN_VOLTAGE}
-          max={MAX_VOLTAGE}
-          step={0.5}
-          formatValue={(v) => `${v.toFixed(1)} V`}
-          onChange={(voltage) => setState((prev) => ({ ...prev, voltage }))}
-        />
-        <Slider
-          label={state.mode === 'ohm' ? t.resistanceR : t.resistanceR1}
-          value={state.r1}
-          min={MIN_RESISTANCE}
-          max={MAX_RESISTANCE}
-          step={10}
-          formatValue={(v) => formatResistance(v)}
-          onChange={(r1) => setState((prev) => ({ ...prev, r1 }))}
-        />
-        {state.mode !== 'ohm' && (
-          <Slider
-            label={t.resistanceR2}
-            value={state.r2}
-            min={MIN_RESISTANCE}
-            max={MAX_RESISTANCE}
-            step={10}
-            formatValue={(v) => formatResistance(v)}
-            onChange={(r2) => setState((prev) => ({ ...prev, r2 }))}
-          />
-        )}
-      </div>
+          <div className="flex flex-col gap-3 rounded-md border border-[var(--border)] bg-[var(--surface)] p-3">
+            <Slider
+              label={t.sourceVoltage}
+              value={state.voltage}
+              min={MIN_VOLTAGE}
+              max={MAX_VOLTAGE}
+              step={0.5}
+              formatValue={(v) => `${v.toFixed(1)} V`}
+              onChange={(voltage) => setState((prev) => ({ ...prev, voltage }))}
+            />
+            <Slider
+              label={state.mode === 'ohm' ? t.resistanceR : t.resistanceR1}
+              value={state.r1}
+              min={MIN_RESISTANCE}
+              max={MAX_RESISTANCE}
+              step={10}
+              formatValue={(v) => formatResistance(v)}
+              onChange={(r1) => setState((prev) => ({ ...prev, r1 }))}
+            />
+            {state.mode !== 'ohm' && (
+              <Slider
+                label={t.resistanceR2}
+                value={state.r2}
+                min={MIN_RESISTANCE}
+                max={MAX_RESISTANCE}
+                step={10}
+                formatValue={(v) => formatResistance(v)}
+                onChange={(r2) => setState((prev) => ({ ...prev, r2 }))}
+              />
+            )}
+          </div>
+        </>
+      )}
 
       <LiveRegion text={liveText} />
     </div>
@@ -216,21 +227,6 @@ function StatGrid({
       <Stat label={t.current} value={formatCurrent(divider.current)} />
       <Stat label={t.vAcrossR1} value={formatVoltage(divider.vR1)} />
       <Stat label={t.dividerRatio} value={`${(divider.ratio * 100).toFixed(1)}%`} />
-    </div>
-  );
-}
-
-function Stat({
-  label,
-  value,
-}: {
-  readonly label: string;
-  readonly value: string;
-}): React.JSX.Element {
-  return (
-    <div className="rounded-md border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2">
-      <div className="text-xs text-[var(--foreground)]/60">{label}</div>
-      <div className="font-mono tabular-nums text-sm text-[var(--foreground)]">{value}</div>
     </div>
   );
 }

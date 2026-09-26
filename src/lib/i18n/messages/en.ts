@@ -92,7 +92,7 @@ export const en = {
         kicker: 'Module 4',
         title: 'DC circuits',
         description:
-          "Ohm's law, series and parallel resistors, and the voltage divider — drag V and R, watch the schematic and the numbers respond together.",
+          "Ohm's law, series and parallel resistors and the voltage divider, then Thévenin and Norton equivalents and mesh and nodal analysis — drag V and R and watch every number respond.",
       },
       sensors: {
         kicker: 'Module 5',
@@ -134,7 +134,7 @@ export const en = {
         'Start with one sine wave and what "220 V" really means, then connect R, L and C loads and watch current lead or lag.',
     },
     circuits: {
-      title: "DC circuits: Ohm's law and the voltage divider",
+      title: "DC circuits: from Ohm's law to Thévenin and mesh analysis",
       tagline:
         'Drag the sliders to change the source voltage and the resistors. The schematic and the linked readout update together.',
     },
@@ -244,18 +244,24 @@ export const en = {
     },
     circuits: {
       intro:
-        "This DC circuit simulator links a live schematic to the numbers behind it. Drag the source voltage and resistances and watch Ohm's law, series and parallel resistors and the voltage divider respond together: the current, the I-V graph, the power in each resistor and the voltage at every node.",
+        "This DC circuit simulator links a live schematic to the numbers behind it. Drag the source voltage and resistances and watch Ohm's law, series and parallel resistors and the voltage divider respond together. Then go further: reduce a network to its Thévenin or Norton equivalent, and solve a two-source circuit by mesh analysis and by nodal analysis, with every equation filled in.",
       points: [
         "Explore Ohm's law with a live I-V graph and operating point.",
         'Switch between series and parallel resistors and compare the power each one dissipates.',
         'Build a voltage divider and see Vout move as the resistor ratio changes.',
-        'Read every current, voltage and power value update as you drag.',
+        'Find a Thévenin and Norton equivalent step by step, and see the load current stay the same in all three circuits.',
+        'Find the load that draws maximum power, RL = Rth, on a live power curve.',
+        'Solve the same circuit by mesh (KVL) and nodal (KCL) analysis and compare the equations.',
       ],
       concepts: [
         "Ohm's law V = IR",
         'Series and parallel resistance',
         'Voltage divider',
-        'Electrical power P = VI',
+        'Thévenin equivalent',
+        'Norton equivalent',
+        'Maximum power transfer',
+        'Mesh analysis',
+        'Nodal analysis',
       ],
       faq: [
         {
@@ -265,6 +271,14 @@ export const en = {
         {
           q: 'How does a voltage divider work?',
           a: 'Two resistors in series split the source voltage in proportion to their resistance: Vout = V × R2 / (R1 + R2).',
+        },
+        {
+          q: 'How do you find a Thévenin equivalent circuit?',
+          a: 'Vth is the open-circuit voltage at the terminals. Rth is the resistance seen into the terminals with every independent source switched off: voltage sources become wires, current sources open circuits. The Norton equivalent is a current source IN = Vth/Rth in parallel with the same Rth.',
+        },
+        {
+          q: 'Should I use mesh analysis or nodal analysis?',
+          a: 'Both give the same answer. Mesh analysis needs one KVL equation per window of the circuit; nodal analysis needs one KCL equation per node apart from ground. Pick the method with fewer unknowns.',
         },
       ],
     },
@@ -499,6 +513,8 @@ export const en = {
       ohm: "Ohm's law",
       network: 'Series & parallel',
       divider: 'Voltage divider',
+      thevenin: 'Thévenin & Norton',
+      mesh: 'Mesh & node analysis',
     },
     topologies: {
       series: 'Series',
@@ -534,6 +550,83 @@ export const en = {
       `Schematic: two resistors, ${r1} and ${r2}, in ${topology} across a ${v} source.`,
     schematicDividerAria: (r1: string, r2: string, v: string) =>
       `Schematic: a voltage divider — ${r1} and ${r2} in series across ${v}, tapped between them.`,
+    thevenin: {
+      intro:
+        'Seen from its load, any network of sources and resistors behaves like one voltage source Vth in series with one resistor Rth (Thévenin), or one current source IN in parallel with Rth (Norton). Switch views: the load RL gets exactly the same current in all three.',
+      viewLabel: 'Show the source network as',
+      views: {
+        original: 'Original circuit',
+        thevenin: 'Thévenin equivalent',
+        norton: 'Norton equivalent',
+      },
+      boxTitle: {
+        original: 'source network (as built)',
+        thevenin: 'Thévenin: Vth in series with Rth',
+        norton: 'Norton: IN in parallel with Rth',
+      },
+      step1: 'Open a–b (remove RL): no current flows in R3, so Vth is the R1–R2 divider',
+      step2: 'Switch the source off (replace V with a wire) and look into a–b',
+      step3: 'Short a–b: the Norton current',
+      step4: 'Reconnect the load',
+      sameLoad: (il: string) =>
+        `The load cannot tell the difference: IL = ${il} in the original circuit, the Thévenin equivalent and the Norton equivalent. That's why the equivalent is useful: analyse a complicated network once, then try any load with one line of arithmetic.`,
+      statVth: 'Thévenin voltage Vth',
+      statRth: 'Thévenin resistance Rth',
+      statIn: 'Norton current IN',
+      statIl: 'Load current IL',
+      statVl: 'Load voltage VL',
+      statPl: 'Load power PL',
+      statPmax: 'Max possible Pmax = Vth²/4Rth',
+      statEff: 'Efficiency RL/(Rth+RL)',
+      sliderV: 'Source voltage V',
+      sliders: {
+        r1: 'Resistance R1',
+        r2: 'Resistance R2',
+        r3: 'Resistance R3',
+        rl: 'Load resistance RL',
+      },
+      matchLoad: (rth: string) => `Set RL = Rth (${rth}) for maximum power`,
+      ivTitle: 'Terminal line V = Vth − I·Rth [V vs mA], with the load line',
+      loadLine: 'load line V = I·RL',
+      powerTitle: 'Power in the load [mW] vs RL [Ω]',
+      matched: 'RL = Rth',
+      schematicAria: (view: string, vth: string, rth: string, il: string) =>
+        `Schematic, ${view}: the source network across terminals a and b feeds load RL. Vth ${vth}, Rth ${rth}, load current ${il}.`,
+      ivAria: (vth: string, iN: string, il: string) =>
+        `Terminal I-V line from ${vth} at open circuit to ${iN} at short circuit; the load line crosses it at ${il}.`,
+      powerAria: (rth: string, pmax: string, pl: string) =>
+        `Load power against load resistance, peaking at ${pmax} when RL equals Rth, ${rth}. Now ${pl}.`,
+    },
+    mesh: {
+      intro:
+        'Two sources, three resistors: too many for series and parallel rules. Mesh analysis writes Kirchhoff’s voltage law around each window, with a loop current I1 and I2 as the unknowns. Nodal analysis writes Kirchhoff’s current law at node A, with its voltage VA as the only unknown. Switch methods: the branch currents come out the same.',
+      methodLabel: 'Method',
+      methods: { mesh: 'Mesh (KVL, loop currents)', node: 'Node (KCL, node voltages)' },
+      meshHow: 'KVL around each window, clockwise, then solve the 2 × 2 system:',
+      nodeHow: 'KCL at node A (sum of currents leaving = 0), with ground as 0 V:',
+      loop1: 'Loop 1',
+      loop2: 'Loop 2',
+      kcl: 'KCL at A',
+      branchR2: 'R2 carries both loop currents',
+      meshSign:
+        'Both loop currents are assumed clockwise. A negative answer just means that loop current actually flows anticlockwise, and the arrow on the schematic flips to show it.',
+      nodeSign:
+        'Each branch current is written as leaving node A. A negative value means it actually flows into A; the arrows on the schematic show the real directions.',
+      compare: (va: string, ir2: string) =>
+        `Same circuit, same answers: VA = ${va} and I_R2 = ${ir2} either way. Mesh needed two equations; nodal needed one. For each new circuit, count windows and non-ground nodes, and pick the method with fewer unknowns.`,
+      statVa: 'Node voltage VA',
+      statI1: 'Mesh current I1 (clockwise)',
+      statI2: 'Mesh current I2 (clockwise)',
+      delivers: 'delivers',
+      absorbs: 'absorbs (charging)',
+      sliderV1: 'Source voltage V1',
+      sliderV2: 'Source voltage V2',
+      sliders: { r1: 'Resistance R1', r2: 'Resistance R2', r3: 'Resistance R3' },
+      clockwise: 'loop currents drawn clockwise when positive',
+      reference: '0 V (reference)',
+      schematicAria: (va: string, i1: string, i2: string) =>
+        `Schematic: V1 through R1 to node A, R2 from A to ground, R3 from A to V2. Node voltage ${va}; mesh currents I1 ${i1}, I2 ${i2}.`,
+    },
   },
 
   sensors: {
