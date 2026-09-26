@@ -5,6 +5,7 @@ import {
   PredictFlagSchema,
   SimulatorStateSchema,
   AcStateSchema,
+  SensorsStateSchema,
   WheatstoneStateSchema,
   ModuleViewStateSchema,
   type ModuleViewState,
@@ -13,6 +14,7 @@ import {
   type FourierState,
   type SimulatorState,
   type AcState,
+  type SensorsState,
   type WheatstoneState,
 } from './schemas';
 
@@ -104,6 +106,29 @@ export function encodeAcState(state: AcState): URLSearchParams {
   params.set('r', String(state.r));
   params.set('l', String(state.l));
   params.set('c', String(state.c));
+  return params;
+}
+
+export function decodeSensorsState(params: URLSearchParams): SensorsState {
+  const raw = {
+    sensor: params.get('sensor') ?? undefined,
+    lux: num(params, 'lux'),
+    color: params.get('color') ?? undefined,
+    temp: num(params, 'temp'),
+    flow: params.get('flow') ?? undefined,
+  };
+  const result = SensorsStateSchema.safeParse(raw);
+  return result.success ? result.data : SensorsStateSchema.parse({});
+}
+
+export function encodeSensorsState(state: SensorsState): URLSearchParams {
+  const params = new URLSearchParams();
+  params.set('sensor', state.sensor);
+  // Lux moves on a log slider, so keep enough digits to survive a reload unchanged.
+  params.set('lux', String(Number(state.lux.toPrecision(6))));
+  params.set('color', state.color);
+  params.set('temp', String(state.temp));
+  params.set('flow', state.flow);
   return params;
 }
 

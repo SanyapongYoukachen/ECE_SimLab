@@ -68,7 +68,7 @@ export const en = {
     kicker: 'Signals Lab',
     title: 'Circuit simulators and signal graphs, made visible',
     intro:
-      "You can already do the algebra. These five linked instruments are for the part algebra doesn't teach: what the operation actually does. Manipulate either representation and watch the other respond in real time.",
+      "You can already do the algebra. These six linked instruments are for the part algebra doesn't teach: what the operation actually does. Manipulate either representation and watch the other respond in real time.",
     modules: {
       convolution: {
         kicker: 'Module 1',
@@ -94,8 +94,14 @@ export const en = {
         description:
           "Ohm's law, series and parallel resistors, and the voltage divider — drag V and R, watch the schematic and the numbers respond together.",
       },
-      simulator: {
+      sensors: {
         kicker: 'Module 5',
+        title: 'Sensors: from physics to signal',
+        description:
+          'Watch photons and heat free electrons inside an LDR and a thermistor, then follow the signal through a voltage divider and an ADC to a measured number.',
+      },
+      simulator: {
+        kicker: 'Module 6',
         title: 'Circuit simulator',
         description:
           'Animated current flow through a real circuit — starting with the Wheatstone bridge. More circuits land here in tabs as they’re added.',
@@ -131,6 +137,11 @@ export const en = {
       title: "DC circuits: Ohm's law and the voltage divider",
       tagline:
         'Drag the sliders to change the source voltage and the resistors. The schematic and the linked readout update together.',
+    },
+    sensors: {
+      title: 'Sensors: from physics to signal',
+      tagline:
+        'A sensor is a physical measurement. Follow one from start to finish: light or heat frees electrons, the resistance falls, a divider turns that into a voltage, and an ADC turns the voltage into a number.',
     },
     simulator: {
       title: 'Circuit simulator',
@@ -254,6 +265,38 @@ export const en = {
         {
           q: 'How does a voltage divider work?',
           a: 'Two resistors in series split the source voltage in proportion to their resistance: Vout = V × R2 / (R1 + R2).',
+        },
+      ],
+    },
+    sensors: {
+      intro:
+        'This sensor simulator shows how a light-dependent resistor (LDR) and an NTC thermistor turn a physical quantity into an electrical signal. Inside the material, photons or heat free electrons; outside, a voltage divider turns the changing resistance into a voltage, and a 10-bit ADC turns that voltage into the number a microcontroller reads.',
+      points: [
+        'Watch photons free electrons in an LDR, and see why infrared below the band gap frees none.',
+        'Heat a thermistor and watch the lattice shake and electrons break free, with kT and the activation energy to scale.',
+        'Follow the electron flow around a voltage divider and read Vout on a 10-bit ADC.',
+        'Play a day–night or heat–cool cycle and watch the physical and electrical signals move together.',
+      ],
+      concepts: [
+        'Photoconductivity',
+        'Band gap and photon energy',
+        'NTC thermistor',
+        'Voltage divider',
+        'Analog-to-digital conversion',
+        'Sensor resolution',
+      ],
+      faq: [
+        {
+          q: 'How does an LDR (photoresistor) work?',
+          a: 'An LDR is a film of cadmium sulfide. Each photon it absorbs frees one electron, so brighter light means more free electrons and a lower resistance, from about a megohm in darkness to a few hundred ohms in sunlight. Photons below the band gap energy, such as infrared, free none.',
+        },
+        {
+          q: 'Why does a thermistor’s resistance decrease with temperature?',
+          a: 'In an NTC thermistor’s metal-oxide semiconductor, electrons need about 0.34 eV to break free. Thermal energy kT is only about 26 meV at room temperature, so only a small, exponentially temperature-dependent fraction escape. Warm it up and many more escape, so the resistance falls by about 4 % per °C.',
+        },
+        {
+          q: 'How do you connect a sensor to a microcontroller?',
+          a: 'Put the resistive sensor in a voltage divider with a fixed resistor of similar value. The divider turns the resistance into a voltage, and the microcontroller’s ADC turns the voltage into a number. Firmware then runs the calibration curve backwards to get lux or °C.',
         },
       ],
     },
@@ -491,6 +534,122 @@ export const en = {
       `Schematic: two resistors, ${r1} and ${r2}, in ${topology} across a ${v} source.`,
     schematicDividerAria: (r1: string, r2: string, v: string) =>
       `Schematic: a voltage divider — ${r1} and ${r2} in series across ${v}, tapped between them.`,
+  },
+
+  sensors: {
+    sensorLabel: 'Sensor',
+    sensors: { ldr: 'LDR (light)', ntc: 'NTC thermistor (temperature)' },
+    sensorShort: { ldr: 'LDR', ntc: 'NTC' },
+    intro: {
+      ldr: 'A light-dependent resistor is a thin film of cadmium sulfide. In the dark, almost every electron is bound to an atom, so it barely conducts. Each photon it absorbs frees one electron, so the more light, the lower the resistance.',
+      ntc: 'An NTC thermistor is a bead of metal-oxide semiconductor. Heat shakes its lattice, and a few electrons gain enough energy to break free. Warm it up and many more break free, so the resistance falls steeply.',
+    },
+    lightLevel: 'Light level (photons per second)',
+    temperature: 'Temperature',
+    colorLabel: 'Light colour (energy per photon)',
+    colors: {
+      blue: 'Blue 450 nm',
+      green: 'Green 555 nm',
+      red: 'Red 650 nm',
+      ir: 'Infrared 940 nm',
+    },
+    scenario: {
+      ldr: 'Night → noon → night',
+      ntc: 'Heat up, then cool down',
+    },
+    flowLabel: 'Show moving charge as',
+    flows: { electron: 'Electron flow', conventional: 'Conventional current' },
+    chainTitle: 'The measurement chain',
+    chain: {
+      physical: 'Physical quantity',
+      material: 'Free electrons',
+      resistance: 'Resistance',
+      circuit: 'Voltage',
+      digital: 'ADC code',
+      measured: 'Measured',
+      photons: (rate: string) => `${rate} photons/s`,
+      thermal: (kt: string) => `thermal energy kT = ${kt}`,
+      carriers: 'vs. the reference point',
+      nothingFreed: 'photons pass through',
+      resistanceSub: 'more electrons → lower R',
+      lsb: (step: string) => `1 step = ${step}`,
+      resolution: (step: string) => `1 step ≈ ${step} here`,
+    },
+    materialTitle: 'Inside the sensor: where the physics happens',
+    materialAria: {
+      ldr: (q: string, ratio: string) =>
+        `Magnified LDR film at ${q}: photons fall onto the film, free electrons drift toward the positive contact. Free electrons ${ratio} relative to 100 lux.`,
+      ntc: (q: string, ratio: string) =>
+        `Magnified thermistor at ${q}: lattice atoms vibrate, and electrons break free and drift toward the positive contact. Free electrons ${ratio} relative to 25 °C.`,
+    },
+    canvas: {
+      carriers: (ratio: string) => `free electrons ${ratio}`,
+      drift: 'e⁻ drift toward +',
+      conventional: 'conventional current I',
+      photon: (nm: number, ev: string, absorbed: boolean) =>
+        `${nm} nm photon: ${ev} eV ${absorbed ? '≥' : '<'} Eg`,
+      electronFlow: 'electrons: − → R fixed → sensor → +',
+      conventionalFlow: 'conventional I: + → sensor → R fixed → −',
+      current: (i: string, rate: string) => `I = ${i} = ${rate} e⁻/s`,
+    },
+    energyTitle: 'Energy picture',
+    energy: {
+      cb: 'Conduction band: free',
+      vb: 'Valence band: bound',
+      hole: 'hole',
+      bound: 'Bound electrons',
+      absorbed: 'hν ≥ Eg: the photon frees an electron',
+      notAbsorbed: 'hν < Eg: not enough energy, nothing freed',
+      ratio: (r: string) => `Ea is ${r}× the typical thermal kick kT,`,
+      tail: 'so only a tiny tail of electrons escape.',
+      ldrAria: (ev: string, absorbed: boolean) =>
+        `Band diagram: a ${ev} eV photon ${absorbed ? 'lifts an electron across' : 'falls short of'} the 1.8 eV band gap.`,
+      ntcAria: (kt: string, ea: string) =>
+        `Energy diagram: bound electrons sit ${ea} eV below the conduction band; thermal energy kT is ${kt} meV.`,
+    },
+    colorInsight: {
+      blue: 'A blue photon carries 2.76 eV, more than the 1.8 eV needed, but it still frees only one electron; the extra energy becomes heat. Brightness (photons per second) sets the resistance, not colour.',
+      green:
+        'A green photon carries 2.23 eV, enough to lift an electron across the 1.8 eV gap. Every absorbed photon frees one electron, so the resistance follows the number of photons per second.',
+      red: 'A red photon carries 1.91 eV, just above the 1.8 eV gap, so it still frees an electron. Redder than about 690 nm, and the LDR stops responding.',
+      ir: 'An infrared photon carries only 1.32 eV, less than the 1.8 eV gap, so it passes straight through. However bright the infrared, the LDR stays dark: a sensor measures only what its physics responds to.',
+    },
+    ntcInsight: (kt: string, ea: string, alpha: string) =>
+      `Thermal energy kT is ${kt} meV here, far below the ${ea} eV an electron needs. Only electrons in the far tail of the thermal distribution escape, and that tail grows exponentially: the resistance falls about ${alpha} % per °C at this temperature.`,
+    materialNote:
+      'Blue dots are free electrons; each red + marks an atom that has just lost one. Counts are compressed and time is slowed so you can watch it. A real sensor has about 10¹⁵ electrons passing through it each second.',
+    circuitTitle: 'Into the circuit: resistance becomes a voltage, then a number',
+    circuitNote:
+      'On its own, a sensor only changes resistance. To read it, drive a current through it: in a voltage divider with a fixed 10 kΩ resistor, the sensor’s share of the 5 V changes with its resistance. The ADC then turns Vout into one of 1024 codes.',
+    fixedName: 'R fixed',
+    adcTitle: 'ADC 10-bit',
+    circuitAria: (name: string, r: string, v: string, code: number) =>
+      `Voltage divider: 5 V source, ${name} at ${r} on top, 10 kΩ below. Vout ${v}, ADC code ${code}. Dots show charge moving around the loop.`,
+    trace: {
+      physical: { ldr: 'Physical signal: light [lx]', ntc: 'Physical signal: temperature [°C]' },
+      electrical: 'Electrical signal: Vout [V]',
+      time: 'last 12 s →',
+      aria: (q: string, v: string) =>
+        `Signal traces over the last 12 seconds. Now: physical ${q}, electrical Vout ${v}.`,
+    },
+    traceNote:
+      'Drag the slider or press Play. The top trace is what the sensor feels; the bottom trace is the voltage it produces. The shapes differ: the sensor is not linear.',
+    calibrationTitle: 'Calibration curves: reading the number back',
+    curves: {
+      resistance: {
+        ldr: 'Sensor: resistance vs. light (both log scales)',
+        ntc: 'Sensor: resistance vs. temperature (log scale)',
+      },
+      vout: { ldr: 'Circuit: Vout vs. light', ntc: 'Circuit: Vout vs. temperature' },
+      resistanceAria: (q: string, r: string) =>
+        `Resistance against the physical quantity; now ${q} gives ${r}.`,
+      voutAria: (q: string, v: string) =>
+        `Vout against the physical quantity; now ${q} gives ${v}.`,
+    },
+    calibrationNote:
+      'The microcontroller runs these curves backwards: ADC code → voltage → resistance → lux or °C. That is the "Measured" value in the chain. Where Vout changes steeply, one ADC step is a small change in the quantity (fine resolution); where the curve flattens, resolution is coarse.',
+    live: (q: string, r: string, v: string, code: number) =>
+      `${q}: resistance ${r}, Vout ${v}, ADC code ${code}.`,
   },
 
   simulator: {
