@@ -24,35 +24,78 @@ test.describe('module tabs: Explore, then Check your understanding', () => {
     await page.getByRole('button', { name: 'Start the check →' }).click();
 
     await expect(page.getByRole('tab', { name: quizTab })).toHaveAttribute('aria-selected', 'true');
-    await expect(page.getByText('Answered 0 of 9 · 0 correct')).toBeVisible();
+    await expect(page.getByText('Question 1 of 9')).toBeVisible();
     await expect(page).toHaveURL(/view=quiz/);
 
     await page.reload();
-    await expect(page.getByText('Answered 0 of 9 · 0 correct')).toBeVisible();
+    await expect(page.getByText('Question 1 of 9')).toBeVisible();
 
     await page.getByRole('button', { name: '← Back to explore' }).click();
     await expect(page.getByRole('slider').first()).toBeVisible();
     await expect(page).toHaveURL(/view=explore/);
   });
 
-  test('scores answers as they come, then clears them for a retake', async ({ page }) => {
-    await page.goto('/circuits?view=quiz');
+  test('shows one question at a time, moves on by itself, and scores only at the end', async ({
+    page,
+  }) => {
+    await page.goto('/ac?view=quiz');
+    await expect(page.getByRole('radiogroup')).toHaveCount(1);
+    await expect(page.getByText('Question 1 of 6')).toBeVisible();
 
-    await page
-      .getByRole('radiogroup', { name: /You double R/ })
-      .getByRole('radio', { name: "It's cut in half" })
-      .click();
-    await page
-      .getByRole('radiogroup', { name: /You double the voltage V/ })
-      .getByRole('radio', { name: 'It doubles' })
-      .click();
-
-    await expect(page.getByText('Answered 2 of 9 · 1 correct')).toBeVisible();
-    await expect(page.getByRole('tab', { name: quizTab })).toContainText('2/9');
-
-    await page.getByRole('button', { name: 'Clear my answers' }).click();
-    await expect(page.getByText('Answered 0 of 9 · 0 correct')).toBeVisible();
+    await page.getByRole('radio', { name: 'About 311 V (220 × √2)' }).click();
+    // No verdict yet: straight on to the next question.
+    await expect(page.getByText('Question 2 of 6')).toBeVisible();
     await expect(page.getByText(/— correct|— not quite/)).toHaveCount(0);
+    await expect(page.getByRole('tab', { name: quizTab })).toContainText('1/6');
+
+    for (let n = 2; n <= 6; n++) {
+      await expect(page.getByText(`Question ${n} of 6`)).toBeVisible();
+      await page.getByRole('radiogroup').getByRole('radio').first().click();
+    }
+
+    await expect(page.getByText('Your result')).toBeVisible();
+    await expect(page.getByText(/^\d \/ 6 correct$/)).toBeVisible();
+    await expect(page.getByRole('tabpanel').getByRole('listitem')).toHaveCount(6);
+    // Question 1 was right; the review marks it and lists the right answer for misses.
+    await expect(page.getByRole('tabpanel').getByRole('listitem').first()).toContainText(
+      '— correct'
+    );
+    await expect(page.getByText('Correct answer:').first()).toBeVisible();
+
+    await page.getByRole('button', { name: 'Retake the check' }).click();
+    await expect(page.getByText('Question 1 of 6')).toBeVisible();
+    await expect(page.getByRole('tab', { name: quizTab })).toContainText('0/6');
+  });
+
+  test('Previous changes an answer before finishing, and a reload resumes', async ({ page }) => {
+    await page.goto('/ac?view=quiz');
+    await page.getByRole('radio', { name: '220 V' }).first().click();
+    await expect(page.getByText('Question 2 of 6')).toBeVisible();
+
+    await page.reload();
+    await expect(page.getByText('Question 2 of 6')).toBeVisible();
+
+    await page.getByRole('button', { name: '← Previous' }).click();
+    await expect(page.getByText('Question 1 of 6')).toBeVisible();
+    await expect(page.getByRole('radio', { name: '220 V' }).first()).toHaveAttribute(
+      'aria-checked',
+      'true'
+    );
+    await page.getByRole('radio', { name: 'About 311 V (220 × √2)' }).click();
+    await expect(page.getByText('Question 2 of 6')).toBeVisible();
+    await expect(page.getByRole('tab', { name: quizTab })).toContainText('1/6');
+  });
+
+  test('the explore tab offers to continue a check in progress', async ({ page }) => {
+    await page.goto('/ac?view=quiz');
+    await page.getByRole('radio', { name: '220 V' }).first().click();
+    await expect(page.getByText('Question 2 of 6')).toBeVisible();
+    await page.getByRole('tab', { name: 'Explore' }).click();
+    await expect(
+      page.getByText("You're part-way through the check: 1 of 6 answered.")
+    ).toBeVisible();
+    await page.getByRole('button', { name: 'Continue the check →' }).click();
+    await expect(page.getByText('Question 2 of 6')).toBeVisible();
   });
 
   test('arrow keys move between the tabs', async ({ page }) => {
@@ -62,7 +105,7 @@ test.describe('module tabs: Explore, then Check your understanding', () => {
 
     await expect(page.getByRole('tab', { name: quizTab })).toBeFocused();
     await expect(page.getByRole('tab', { name: quizTab })).toHaveAttribute('aria-selected', 'true');
-    await expect(page.getByRole('tabpanel')).toContainText('Answered 0 of');
+    await expect(page.getByRole('tabpanel')).toContainText('Question 1 of');
   });
 
   test('every module gets the tabs', async ({ page }) => {

@@ -6,7 +6,7 @@ import { ModuleViewStateSchema, type ModuleViewState } from '@/lib/state/schemas
 import { decodeModuleViewState, encodeModuleViewState } from '@/lib/state/urlState';
 import { useUrlSyncedState } from '@/lib/state/useUrlState';
 import { logEvent } from '@/lib/state/telemetry';
-import { PredictionCheck, resetCheckAnswers, useCheckProgress } from './PredictionCheck';
+import { PredictionCheck, useCheckProgress } from './PredictionCheck';
 import type { PredictionQuestion } from './PredictionGate';
 
 const DEFAULT_VIEW = ModuleViewStateSchema.parse({});
@@ -148,7 +148,9 @@ export function ModuleTabs({
                 <p className="mt-0.5 text-sm text-[var(--foreground)]/70">
                   {allDone
                     ? t.summary(progress.answered, progress.total, progress.correct)
-                    : t.ctaBody(progress.total)}
+                    : progress.answered > 0
+                      ? t.ctaResume(progress.answered, progress.total)
+                      : t.ctaBody(progress.total)}
                 </p>
               </div>
               <button
@@ -156,36 +158,12 @@ export function ModuleTabs({
                 onClick={() => select('quiz')}
                 className="shrink-0 rounded-md bg-[var(--foreground)] px-4 py-2 text-sm font-medium text-[var(--background)]"
               >
-                {t.ctaButton}
+                {allDone ? t.ctaReview : progress.answered > 0 ? t.ctaContinue : t.ctaButton}
               </button>
             </div>
           </>
         ) : (
           <>
-            <div
-              className="flex flex-col gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-4 sm:flex-row sm:items-center sm:justify-between"
-              aria-live="polite"
-            >
-              <div className="flex flex-col gap-1">
-                <p className="font-mono text-sm tabular-nums text-[var(--foreground)]">
-                  {t.summary(progress.answered, progress.total, progress.correct)}
-                </p>
-                <p className="text-sm text-[var(--foreground)]/70">
-                  {allDone
-                    ? t.allDone(progress.correct, progress.total)
-                    : t.notStarted(progress.total)}
-                </p>
-              </div>
-              {progress.answered > 0 && (
-                <button
-                  type="button"
-                  onClick={() => resetCheckAnswers(moduleId, questions)}
-                  className="shrink-0 rounded-md border border-[var(--border)] px-3 py-1.5 text-sm hover:bg-[var(--surface)]"
-                >
-                  {t.reset}
-                </button>
-              )}
-            </div>
             <PredictionCheck
               moduleId={moduleId}
               questions={questions}
