@@ -13,14 +13,14 @@ import type { Metadata } from 'next';
 export const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL ?? 'https://ece-sim-lab.vercel.app'
 ).replace(/\/$/, '');
-export const SITE_NAME = 'Signals Lab';
+export const SITE_NAME = 'ECE Labsim';
 
 export type SeoPage =
   'home' | 'convolution' | 'fourier' | 'ac' | 'circuits' | 'sensors' | 'simulator';
 
 interface PageSeo {
   readonly path: string;
-  /** ≤ ~60 characters with the " | Signals Lab" suffix where possible. */
+  /** ≤ ~60 characters with the " | ECE Labsim" suffix where possible. */
   readonly title: string;
   /** ~150–160 characters: what a student gets, in the words they search with. */
   readonly description: string;
@@ -34,7 +34,7 @@ interface PageSeo {
 export const SEO: Readonly<Record<SeoPage, PageSeo>> = {
   home: {
     path: '/',
-    title: 'Signals Lab — Interactive Circuit Simulator & Signal Graphs',
+    title: 'ECE Labsim — Interactive Circuit Simulator & Signal Graphs',
     description:
       'Free interactive circuit simulator and signal graphs for engineering students: convolution, Fourier transform, AC and DC circuits, sensors, and a Wheatstone bridge lab.',
     keywords: [
