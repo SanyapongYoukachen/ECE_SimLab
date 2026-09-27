@@ -1,4 +1,4 @@
-# Signals Lab
+# ECE Labsim
 
 An interactive teaching instrument for signals and circuits, built for
 undergraduate ECE courses. Five linked modules show the same object in two

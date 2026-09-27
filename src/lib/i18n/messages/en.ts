@@ -6,7 +6,7 @@
  */
 export const en = {
   common: {
-    home: '← Signals Lab',
+    home: '← ECE Labsim',
     loading: 'Loading module…',
     exportLog: 'Export log',
     exportLogTitle: "Download this browser's interaction log as JSON",
@@ -73,7 +73,7 @@ export const en = {
   },
 
   landing: {
-    kicker: 'Signals Lab',
+    kicker: 'ECE Labsim',
     title: 'Circuit simulators and signal graphs, made visible',
     intro:
       "You can already do the algebra. These six linked instruments are for the part algebra doesn't teach: what the operation actually does. Manipulate either representation and watch the other respond in real time.",

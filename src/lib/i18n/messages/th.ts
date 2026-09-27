@@ -7,7 +7,7 @@ import type { Messages } from './en';
  */
 export const th: Messages = {
   common: {
-    home: '← Signals Lab',
+    home: '← ECE Labsim',
     loading: 'กำลังโหลดโมดูล…',
     exportLog: 'ส่งออกบันทึก',
     exportLogTitle: 'ดาวน์โหลดบันทึกการใช้งานในเบราว์เซอร์นี้เป็นไฟล์ JSON',
@@ -70,7 +70,7 @@ export const th: Messages = {
   },
 
   landing: {
-    kicker: 'Signals Lab',
+    kicker: 'ECE Labsim',
     title: 'จำลองวงจรและกราฟสัญญาณ ที่มองเห็นได้',
     intro:
       'คุณคำนวณพีชคณิตเป็นอยู่แล้ว เครื่องมือทั้งหกชิ้นที่เชื่อมโยงกันนี้มีไว้สำหรับส่วนที่พีชคณิตไม่ได้สอน นั่นคือการดำเนินการนั้นทำอะไรจริง ๆ ปรับรูปแบบหนึ่ง แล้วดูอีกรูปแบบหนึ่งตอบสนองแบบเรียลไทม์',
