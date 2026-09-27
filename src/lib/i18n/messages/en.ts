@@ -36,8 +36,6 @@ export const en = {
       checkHeading: 'Check your understanding',
       correct: '— correct',
       notQuite: '— not quite',
-      checkRight: 'Matches what the Explore tab showed.',
-      checkWrong: 'Worth another look in the Explore tab.',
       gateDialog: 'Predict before you explore',
       gateKicker: 'Predict first',
       gateRight: 'Watch it play out below to confirm.',
@@ -49,17 +47,27 @@ export const en = {
       progressAria: (answered: number, total: number) => `${answered} of ${total} answered`,
       summary: (answered: number, total: number, correct: number) =>
         `Answered ${answered} of ${total} · ${correct} correct`,
-      notStarted: (total: number) =>
-        `${total} questions on what you just explored. Each answer is final, so take a moment before choosing.`,
       allDone: (correct: number, total: number) =>
         correct === total
           ? `All ${total} answered, all correct. Nicely done.`
-          : `All ${total} answered: ${correct} correct. Revisit the explore tab for the ones you missed, then clear your answers and try again.`,
-      reset: 'Clear my answers',
+          : `${correct} of ${total} correct. Review the ones you missed below, revisit them in the Explore tab, then retake the check.`,
+      questionOf: (n: number, total: number) => `Question ${n} of ${total}`,
+      stepperHint: 'Choosing an answer moves on. Your score appears after the last question.',
+      previous: '← Previous',
+      next: 'Next →',
+      resultsTitle: 'Your result',
+      score: (correct: number, total: number) => `${correct} / ${total} correct`,
+      yourAnswer: 'Your answer',
+      correctAnswer: 'Correct answer',
+      retake: 'Retake the check',
       ctaTitle: 'Done exploring?',
       ctaBody: (total: number) =>
         `Check your understanding with ${total} short questions on what you just saw.`,
       ctaButton: 'Start the check →',
+      ctaResume: (answered: number, total: number) =>
+        `You're part-way through the check: ${answered} of ${total} answered.`,
+      ctaContinue: 'Continue the check →',
+      ctaReview: 'See your result →',
       back: '← Back to explore',
     },
   },

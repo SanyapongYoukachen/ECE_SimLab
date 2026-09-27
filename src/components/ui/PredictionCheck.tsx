@@ -1,6 +1,6 @@
 'use client';
 
-import { useSyncExternalStore, type KeyboardEvent } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent } from 'react';
 import { useMessages } from '@/lib/i18n';
 import { logEvent } from '@/lib/state/telemetry';
 import type { PredictionOption, PredictionQuestion } from './PredictionGate';
@@ -74,14 +74,31 @@ export function resetCheckAnswers(
   logEvent(moduleId, 'prediction_check_reset', {});
 }
 
+/** Each question's chosen option id (or null), live from storage. */
+function useAnswers(moduleId: string, questions: readonly PredictionQuestion[]): (string | null)[] {
+  const snapshot = useSyncExternalStore(
+    subscribeStorage,
+    () =>
+      questions
+        .map((q) => window.localStorage.getItem(answerKey(moduleId, q.id)) ?? '')
+        .join('\u0000'),
+    () => questions.map(() => '').join('\u0000')
+  );
+  return snapshot.split('\u0000').map((id) => (id === '' ? null : id));
+}
+
+/** How long a chosen answer stays on screen before the next question slides in. */
+const ADVANCE_MS = 450;
+
 /**
- * A non-blocking "check your understanding" quiz shown after a module's
- * interactive content, rather than gating access to it (see PredictionGate
- * for that variant, used when a student turns on "predict first" practice
- * mode). The student has already watched the concepts play out; this bank
- * of 3-5 questions checks whether they landed, instead of demanding a guess
- * before anything is shown. Each question persists its own answer
- * independently, so answering one doesn't affect the others.
+ * A non-blocking "check your understanding" quiz, taken one question at a
+ * time: choosing an answer moves straight on to the next question, with no
+ * right/wrong shown yet, and the score and a full review appear only after
+ * the last one — so students commit to what they think rather than
+ * adjusting to feedback mid-way. Answers persist (a reload resumes at the
+ * first unanswered question), can be changed with Previous until the check
+ * is finished, and are cleared by Retake. See PredictionGate for the
+ * blocking "predict first" variant.
  */
 export function PredictionCheck({
   moduleId,
@@ -90,7 +107,75 @@ export function PredictionCheck({
   showHeading = true,
 }: PredictionCheckProps): React.JSX.Element | null {
   const t = useMessages().common.prediction;
+  const answers = useAnswers(moduleId, questions);
+  const firstUnanswered = answers.findIndex((a) => a === null);
+  const finished = questions.length > 0 && firstUnanswered === -1;
+  // null follows the first unanswered question; a number is where Previous/Next put us.
+  const [position, setPosition] = useState<number | null>(null);
+  const [advancing, setAdvancing] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const headingRef = useRef<HTMLParagraphElement>(null);
+  const moved = useRef(false);
+
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    []
+  );
+
+  const index = Math.min(questions.length - 1, Math.max(0, position ?? firstUnanswered));
+
+  // Move focus to each new question (not on first render), so keyboard and
+  // screen-reader users land on it.
+  useEffect(() => {
+    if (!moved.current) return;
+    headingRef.current?.focus();
+  }, [index, finished]);
+
   if (disabled || questions.length === 0) return null;
+
+  function go(next: number | null): void {
+    moved.current = true;
+    setPosition(next);
+  }
+
+  function choose(qIndex: number, opt: PredictionOption): void {
+    if (advancing) return;
+    const q = questions[qIndex];
+    window.localStorage.setItem(answerKey(moduleId, q.id), opt.id);
+    notifyStorageChange();
+    logEvent(moduleId, 'prediction_answered', {
+      questionId: q.id,
+      optionId: opt.id,
+      correct: opt.correct,
+    });
+    const after = answers.map((a, i) => (i === qIndex ? opt.id : a));
+    const nowFinished = after.every((a) => a !== null);
+    if (nowFinished) {
+      const correct = questions.filter(
+        (qq, i) => qq.options.find((o) => o.id === after[i])?.correct
+      ).length;
+      logEvent(moduleId, 'prediction_check_completed', { correct, total: questions.length });
+    }
+    // Hold this question on screen, showing the choice, until the delay ends:
+    // otherwise following "first unanswered" would jump ahead instantly.
+    setPosition(qIndex);
+    setAdvancing(true);
+    timer.current = setTimeout(() => {
+      setAdvancing(false);
+      if (nowFinished) go(null);
+      else {
+        const nextOpen = after.findIndex((a, i) => i > qIndex && a === null);
+        go(nextOpen === -1 ? after.findIndex((a) => a === null) : nextOpen);
+      }
+    }, ADVANCE_MS);
+  }
+
+  function retake(): void {
+    resetCheckAnswers(moduleId, questions);
+    go(null);
+  }
 
   return (
     <div className="flex flex-col gap-4 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-5">
@@ -99,53 +184,92 @@ export function PredictionCheck({
           {t.checkHeading}
         </p>
       )}
-      <div className="flex flex-col gap-5">
-        {questions.map((q, i) => (
-          <PredictionCheckItem key={q.id} moduleId={moduleId} question={q} number={i + 1} />
-        ))}
-      </div>
+      {finished ? (
+        <CheckResults
+          questions={questions}
+          answers={answers}
+          headingRef={headingRef}
+          onRetake={retake}
+        />
+      ) : (
+        <>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-baseline justify-between gap-3">
+              <p
+                ref={headingRef}
+                tabIndex={-1}
+                aria-live="polite"
+                className="font-mono text-xs tabular-nums text-[var(--foreground)]/65 outline-none"
+              >
+                {t.questionOf(index + 1, questions.length)}
+              </p>
+              <p className="text-xs text-[var(--foreground)]/55">{t.stepperHint}</p>
+            </div>
+            <div className="flex gap-1" aria-hidden="true">
+              {questions.map((q, i) => (
+                <span
+                  key={q.id}
+                  className={
+                    'h-1.5 flex-1 rounded-full transition-colors ' +
+                    (i === index
+                      ? 'bg-[var(--accent)]'
+                      : answers[i] !== null
+                        ? 'bg-[var(--accent)]/40'
+                        : 'bg-[var(--surface-2)]')
+                  }
+                />
+              ))}
+            </div>
+          </div>
+          <CheckQuestion
+            key={questions[index].id}
+            question={questions[index]}
+            selected={answers[index]}
+            locked={advancing}
+            onChoose={(opt) => choose(index, opt)}
+          />
+          <div className="flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => go(index - 1)}
+              disabled={index === 0 || advancing}
+              className="rounded-md border border-[var(--border)] px-3 py-1.5 text-sm hover:bg-[var(--surface-2)] disabled:opacity-40"
+            >
+              {t.previous}
+            </button>
+            <button
+              type="button"
+              onClick={() => go(index + 1 < questions.length ? index + 1 : null)}
+              disabled={answers[index] === null || advancing}
+              className="rounded-md border border-[var(--border)] px-3 py-1.5 text-sm hover:bg-[var(--surface-2)] disabled:opacity-40"
+            >
+              {t.next}
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }
 
-function PredictionCheckItem({
-  moduleId,
+function CheckQuestion({
   question,
-  number,
+  selected,
+  locked,
+  onChoose,
 }: {
-  readonly moduleId: string;
   readonly question: PredictionQuestion;
-  readonly number: number;
+  readonly selected: string | null;
+  readonly locked: boolean;
+  readonly onChoose: (opt: PredictionOption) => void;
 }): React.JSX.Element {
-  const t = useMessages().common.prediction;
-  const storageKey = answerKey(moduleId, question.id);
   const options = question.options;
-
-  const selected = useSyncExternalStore(
-    subscribeStorage,
-    () => (typeof window !== 'undefined' ? window.localStorage.getItem(storageKey) : null),
-    () => null
-  );
-
-  function choose(opt: PredictionOption): void {
-    if (selected !== null) return;
-    window.localStorage.setItem(storageKey, opt.id);
-    notifyStorageChange();
-    logEvent(moduleId, 'prediction_answered', {
-      questionId: question.id,
-      optionId: opt.id,
-      correct: opt.correct,
-    });
-  }
-
-  const selectedOption = options.find((o) => o.id === selected);
   const focusableIndex = Math.max(
     0,
     options.findIndex((o) => o.id === selected)
   );
 
   function handleKeyDown(e: KeyboardEvent<HTMLButtonElement>, index: number): void {
-    if (selected !== null) return;
     let nextIndex: number | null = null;
     if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
       nextIndex = (index + 1) % options.length;
@@ -159,17 +283,13 @@ function PredictionCheckItem({
     if (nextIndex !== null) {
       e.preventDefault();
       const group = e.currentTarget.parentElement;
-      const buttons = group?.querySelectorAll<HTMLButtonElement>('[role="radio"]');
-      buttons?.[nextIndex]?.focus();
+      group?.querySelectorAll<HTMLButtonElement>('[role="radio"]')[nextIndex]?.focus();
     }
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <p className="text-sm text-[var(--foreground)]">
-        <span className="mr-1.5 font-mono text-[var(--foreground)]/50">{number}.</span>
-        {question.question}
-      </p>
+    <div className="flex flex-col gap-3">
+      <p className="text-base text-[var(--foreground)]">{question.question}</p>
       <div className="flex flex-col gap-2" role="radiogroup" aria-label={question.question}>
         {options.map((opt, index) => {
           const isSelected = selected === opt.id;
@@ -180,31 +300,92 @@ function PredictionCheckItem({
               role="radio"
               aria-checked={isSelected}
               tabIndex={index === focusableIndex ? 0 : -1}
-              onClick={() => choose(opt)}
+              onClick={() => onChoose(opt)}
               onKeyDown={(e) => handleKeyDown(e, index)}
-              disabled={selected !== null && !isSelected}
+              disabled={locked}
               className={
-                'rounded-md border px-4 py-2.5 text-left text-sm transition-colors disabled:opacity-50 ' +
+                'rounded-md border px-4 py-2.5 text-left text-sm text-[var(--foreground)] transition-colors ' +
                 (isSelected
-                  ? opt.correct
-                    ? 'border-[var(--plot-output)] bg-[var(--plot-output)]/10 text-[var(--foreground)]'
-                    : 'border-[var(--plot-danger)] bg-[var(--plot-danger)]/10 text-[var(--foreground)]'
-                  : 'border-[var(--border)] hover:bg-[var(--surface-2)] text-[var(--foreground)]')
+                  ? 'border-[var(--accent)] bg-[var(--accent-soft)] ring-1 ring-[var(--accent)]'
+                  : 'border-[var(--border)] hover:bg-[var(--surface-2)]')
               }
             >
               {opt.label}
-              {isSelected && (
-                <span className="ml-2 font-medium">{opt.correct ? t.correct : t.notQuite}</span>
-              )}
             </button>
           );
         })}
       </div>
-      {selectedOption && (
-        <p className="text-xs text-[var(--foreground)]/60">
-          {selectedOption.correct ? t.checkRight : t.checkWrong}
-        </p>
-      )}
+    </div>
+  );
+}
+
+function CheckResults({
+  questions,
+  answers,
+  headingRef,
+  onRetake,
+}: {
+  readonly questions: readonly PredictionQuestion[];
+  readonly answers: readonly (string | null)[];
+  readonly headingRef: React.RefObject<HTMLParagraphElement | null>;
+  readonly onRetake: () => void;
+}): React.JSX.Element {
+  const t = useMessages().common.prediction;
+  const results = questions.map((q, i) => {
+    const chosen = q.options.find((o) => o.id === answers[i]);
+    return { q, chosen, right: q.options.find((o) => o.correct), ok: !!chosen?.correct };
+  });
+  const correct = results.filter((r) => r.ok).length;
+  const total = questions.length;
+
+  return (
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-3 rounded-md bg-[var(--surface-2)] p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-1" aria-live="polite">
+          <p
+            ref={headingRef}
+            tabIndex={-1}
+            className="text-xs font-medium uppercase tracking-wide text-[var(--foreground)]/60 outline-none"
+          >
+            {t.resultsTitle}
+          </p>
+          <p className="font-mono text-2xl font-semibold tabular-nums text-[var(--foreground)]">
+            {t.score(correct, total)}
+          </p>
+          <p className="text-sm text-[var(--foreground)]/75">{t.allDone(correct, total)}</p>
+        </div>
+        <button
+          type="button"
+          onClick={onRetake}
+          className="shrink-0 rounded-md bg-[var(--foreground)] px-4 py-2 text-sm font-medium text-[var(--background)]"
+        >
+          {t.retake}
+        </button>
+      </div>
+      <ol className="flex flex-col gap-3">
+        {results.map(({ q, chosen, right, ok }, i) => (
+          <li
+            key={q.id}
+            className="flex flex-col gap-1 rounded-md border border-[var(--border)] p-3 text-sm"
+            style={{ borderLeft: `3px solid var(${ok ? '--plot-output' : '--plot-danger'})` }}
+          >
+            <p className="text-[var(--foreground)]">
+              <span className="mr-1.5 font-mono text-[var(--foreground)]/50">{i + 1}.</span>
+              {q.question}
+            </p>
+            <p className="text-[var(--foreground)]/80">
+              <span className="text-[var(--foreground)]/60">{t.yourAnswer}: </span>
+              {chosen?.label} <span className="font-medium">{ok ? t.correct : t.notQuite}</span>
+            </p>
+            {!ok && right && (
+              <p className="text-[var(--foreground)]/80">
+                <span className="text-[var(--foreground)]/60">{t.correctAnswer}: </span>
+                {right.label}
+              </p>
+            )}
+          </li>
+        ))}
+      </ol>
     </div>
   );
 }

@@ -18,7 +18,8 @@ test.describe('default: non-blocking check-your-understanding (all modules)', ()
 
     await page.getByRole('tab', { name: /Check your understanding/ }).click();
     await expect(page.getByText(/x has 5 samples and h has 3 samples/)).toBeVisible();
-    await expect(page.getByText(/Does it matter which signal you call x/)).toBeVisible();
+    // One question at a time: the next one waits until this is answered.
+    await expect(page.getByText(/Does it matter which signal you call x/)).toHaveCount(0);
   });
 
   test('the check-your-understanding tab never locks the content', async ({ page }) => {
@@ -26,7 +27,7 @@ test.describe('default: non-blocking check-your-understanding (all modules)', ()
 
     await page.getByRole('tab', { name: /Check your understanding/ }).click();
     await page.getByRole('radio', { name: /Energy spreads across/ }).click();
-    await expect(page.getByText('— correct')).toBeVisible();
+    await expect(page.getByText(/Question 2 of/)).toBeVisible();
 
     // Answering it never locked anything, so a slider is still directly usable.
     await page.getByRole('tab', { name: 'Explore' }).click();
@@ -47,10 +48,11 @@ test.describe('default: non-blocking check-your-understanding (all modules)', ()
       name: /Thai household mains/,
     });
     await checkGroup.getByRole('radio').first().click();
-    await expect(page.getByText(/— correct|— not quite/)).toBeVisible();
+    await expect(page.getByText('Question 2 of 6')).toBeVisible();
 
     await page.reload();
-    await expect(page.getByText(/— correct|— not quite/)).toBeVisible();
+    await expect(page.getByText('Question 2 of 6')).toBeVisible();
+    await expect(page.getByRole('tab', { name: /Check your understanding/ })).toContainText('1/6');
   });
 
   test('circuits also defaults to the non-blocking check, not a gate', async ({ page }) => {
