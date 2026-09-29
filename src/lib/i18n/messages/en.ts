@@ -94,7 +94,7 @@ export const en = {
         kicker: 'Module 3',
         title: 'AC circuits',
         description:
-          'Sine waves, RMS and phasors, then R, L and C loads: watch current lead or lag the voltage, and see where the power factor comes from.',
+          'Start where electricity is made: a coil turning in a magnetic field. Then sine waves, RMS and phasors, R, L and C loads with lead, lag and power factor, and three-phase supply.',
       },
       circuits: {
         kicker: 'Module 4',
@@ -137,9 +137,9 @@ export const en = {
         "Move the third component off a bin centre and watch its peak smear — that's leakage, not a bug.",
     },
     ac: {
-      title: 'AC circuits: sine waves, RMS and power factor',
+      title: 'AC circuits: from the generator to three phase',
       tagline:
-        'Start with one sine wave and what "220 V" really means, then connect R, L and C loads and watch current lead or lag.',
+        'See how a generator makes a sine wave, what "220 V" really means, how R, L and C loads make current lead or lag, and why power grids use three phases.',
     },
     circuits: {
       title: "DC circuits: from Ohm's law to Thévenin and mesh analysis",
@@ -224,14 +224,20 @@ export const en = {
     },
     ac: {
       intro:
-        'This AC circuit simulator starts with a single sine wave: peak, peak-to-peak, RMS and the rotating phasor that draws it. It then connects R, L and C loads to a 220 V, 50 Hz source, so you can watch current lead or lag the voltage, see where real, reactive and apparent power come from, and read the power factor.',
+        'This AC circuit simulator starts where electricity is made: a coil turning in a magnetic field, with the generated sine wave drawn as it turns. It then takes a single sine wave apart (peak, RMS and the rotating phasor), connects R, L and C loads so you can watch current lead or lag and read the power factor, and ends with three-phase supply: star and delta, line and phase voltage, and the neutral.',
       points: [
         'See why Vrms = Vp/√2 for a sine wave, and why that rule fails for square and triangle waves.',
         'Watch a rotating phasor trace out the sine wave in real time.',
         'Connect R, L, C, RL, RC or RLC loads and read the phase angle, impedance and power factor.',
         'Follow v(t), i(t) and p(t) together, and find series resonance where X_L = X_C.',
+        'Turn an AC generator by hand and see Faraday’s law make the sine wave: E = N·B·A·ω, f = P·n/120.',
+        'Explore three-phase power: line voltage √3 × phase voltage, star and delta, neutral current and constant power.',
       ],
       concepts: [
+        'AC generator (alternator)',
+        'Faraday’s law of induction',
+        'Three-phase power',
+        'Star (Y) and delta (Δ) connection',
         'RMS and peak voltage',
         'Phasors and phase angle',
         'Impedance Z = R + jX',
@@ -247,6 +253,14 @@ export const en = {
         {
           q: 'What does a lagging power factor mean?',
           a: 'In an inductive load such as a motor, the current peaks after the voltage. Only the in-phase part of the current delivers real power; the rest is reactive. Adding capacitance brings the power factor back toward 1.',
+        },
+        {
+          q: 'How does an AC generator produce a sine wave?',
+          a: 'A coil turning in a magnetic field sees its flux linkage change as N·B·A·cos θ. By Faraday’s law the induced EMF is the rate of change of that flux, e = N·B·A·ω·sin θ, so a steadily turning coil produces a sine wave. Its frequency is f = P·n/120 for P poles at n rpm: 50 Hz from 2 poles at 3000 rpm.',
+        },
+        {
+          q: 'Why is line voltage √3 times phase voltage in three phase?',
+          a: 'The phase voltages are 120° apart, so the difference between two of them, the line voltage, is √3 times longer and leads by 30°. That is why the same supply is quoted as 230/400 V.',
         },
       ],
     },
@@ -429,8 +443,110 @@ export const en = {
   ac: {
     modeLabel: 'Section',
     modes: {
+      generator: 'Generator',
       sine: 'Sine wave & RMS',
       load: 'RLC load & power factor',
+      threephase: 'Three phase',
+    },
+    gen: {
+      intro:
+        'Electricity is made by turning a coil in a magnetic field. As the coil turns, the flux through it rises and falls as N·B·A·cos θ, and Faraday’s law turns that changing flux into a voltage: e = N·B·A·ω·sin θ. A steadily turning coil therefore gives a sine wave. Drag the rotor to turn it by hand.',
+      machineTitle: (poles: number) => `${poles}-pole AC generator`,
+      machineSub: (b: string) => `end view along the shaft · B = ${b} T`,
+      drag: 'drag the rotor to step through the cycle',
+      circuitLabel: 'slip rings → armature Ra → load R',
+      machineAria: (poles: number, peak: string) =>
+        `End view of a ${poles}-pole generator: the coil turns between the poles; dot and cross marks show the current direction in each coil side. Peak EMF ${peak}.`,
+      circuitAria: (ra: number, rl: number) =>
+        `External circuit: slip rings carry the coil's current through armature resistance ${ra} ohms to a ${rl} ohm load.`,
+      slowMotion: (ratio: string) => `shown in slow motion, 1 : ${ratio}`,
+      stopped: 'speed is 0 rpm: no motion, no voltage',
+      waveTitle: 'Output waveform',
+      legendE: 'e(t) generated',
+      legendV: 'v(t) terminal',
+      legendI: 'i(t) load',
+      waveAxis: 'ωt: 2 cycles, marker = now',
+      waveAria: (peak: string, v: string, i: string, f: string) =>
+        `Two cycles of generated EMF (peak ${peak}), terminal voltage (${v} rms) and load current (${i} rms) at ${f}; a marker shows the rotor's present angle.`,
+      stepBack: '◀ −15°',
+      stepForward: '+15° ▶',
+      polesLabel: 'Poles',
+      polesOption: (p: number) => `${p} poles (${p / 2} pair${p > 2 ? 's' : ''})`,
+      presetLabel: 'Preset',
+      presets: {
+        custom: 'Custom…',
+        grid50: 'Power station, 50 Hz (2 poles, 3000 rpm)',
+        grid60: 'Power station, 60 Hz (2 poles, 3600 rpm)',
+        four: '4 poles at 1500 rpm (still 50 Hz)',
+        hydro: 'Hydro, 12 poles at 500 rpm',
+        crank: 'Hand crank, 120 rpm (2 Hz)',
+      },
+      showCalc: 'Show calculations',
+      hideCalc: 'Hide calculations',
+      statPeak: 'Peak EMF',
+      statRmsEmf: 'RMS EMF',
+      statTerminal: 'Terminal V (rms)',
+      statFreq: 'Frequency',
+      statCurrent: 'RMS current',
+      statPower: 'Load power',
+      statPeriod: 'Period',
+      statTorque: 'Shaft torque',
+      turns: 'Turns N',
+      flux: 'Flux density B',
+      area: 'Coil area A',
+      speed: 'Speed n',
+      load: 'Load R',
+      armature: 'Armature Ra',
+      explain:
+        'Why a sine? The EMF depends on how fast the flux changes, not on how much flux there is. When the coil faces the poles (θ = 0°) the flux is largest but momentarily not changing, so e = 0. A quarter turn later the coil lies along the field: no flux through it, but it is changing fastest, so e is at its peak. More turns, a stronger field, a bigger coil or a faster spin all raise the voltage; only the speed and the number of poles set the frequency.',
+      live: (e: string, f: string, p: string) => `Generator: ${e} rms at ${f}, delivering ${p}.`,
+    },
+    three: {
+      intro:
+        'Power stations use three coils 120° apart instead of one, so the generator produces three sine voltages 120° apart. Three wires (plus a neutral) then carry the same power as six wires would in single phase, and a balanced load draws perfectly steady power.',
+      connLabel: 'Load connection',
+      conn: { wye: 'Star (Y)', delta: 'Delta (Δ)' },
+      machineTitle: 'Generator: a spinning magnet, three fixed coils',
+      machineAria:
+        'A magnet spins inside three stator coils a, b and c spaced 120 degrees apart; dot and cross marks show each coil’s current direction.',
+      phasorTitle: 'Phasors: three voltages 120° apart',
+      phasorAria: (vph: string, vl: string, phi: string) =>
+        `Phasor diagram: Va, Vb and Vc of ${vph} each, 120 degrees apart; line voltage Vab ${vl}; currents lag by ${phi}.`,
+      connTitle: 'How the loads connect',
+      connAria: (name: string) => `${name} connection of three loads to lines A, B and C.`,
+      starPoint: 'star point',
+      noNeutral: 'Δ: no neutral',
+      loadCaption: 'three loads, R + jX each',
+      panelV: 'phase voltages va, vb, vc',
+      panelI: 'line currents ia, ib, ic (grey: neutral)',
+      panelP: 'total power p(t) = Σ v·i',
+      lagging: 'lagging',
+      live: (vl: string, il: string, p: string) =>
+        `Three phase: line voltage ${vl}, line current ${il}, total power ${p}.`,
+      waveAria: (vph: string, p: string) =>
+        `Three phase voltages of ${vph} rms, 120 degrees apart; line currents; total power, averaging ${p}.`,
+      insightBalanced:
+        'Balanced: at every instant the three currents add up to zero, so the neutral carries nothing, and the total power p(t) is a flat line. That is why three-phase motors run smoothly, while single-phase power pulses at twice the supply frequency.',
+      insightUnbalanced: (iN: string) =>
+        `Unbalanced: phase A's load differs, so the currents no longer cancel. The difference, ${iN}, returns through the neutral, and the total power now ripples.`,
+      insightDelta: (iph: string, il: string) =>
+        `Delta: each load sits across a line voltage (√3 × the phase voltage), and each line current is the difference of two load currents: ${iph} in each load gives ${il} in each line, √3 times more when balanced. There is no neutral.`,
+      statVph: 'Phase voltage (line–neutral)',
+      statVl: 'Line voltage (line–line)',
+      statIl: 'Line current (A)',
+      statIph: 'Load current (phase A)',
+      statIn: 'Neutral current',
+      statP: 'Total real power P',
+      statQ: 'Total reactive power Q',
+      statPf: 'Power factor',
+      statS: 'Apparent power S',
+      statFreq: 'Frequency',
+      sliderV: 'Phase voltage (rms)',
+      sliderF: 'Frequency f',
+      sliderR: 'Load R per phase',
+      sliderX: 'Load reactance X per phase (inductive)',
+      sliderUnb: 'Phase A load vs B and C (1 = balanced)',
+      balance: 'Balance the load',
     },
     // Sine-wave section
     shapeLabel: 'Waveform',

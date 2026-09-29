@@ -101,11 +101,14 @@ export const SEO: Readonly<Record<SeoPage, PageSeo>> = {
   },
   ac: {
     path: '/ac',
-    title: 'AC Circuit Simulator — RMS, Phasors & Power Factor',
+    title: 'AC Circuit Simulator — Generator, RMS, Power Factor & 3-Phase',
     description:
-      'Interactive AC circuits: sine waves, RMS and phasors, then R, L, C, RL, RC and RLC loads with leading and lagging current, the power triangle, power factor and resonance.',
+      'Interactive AC circuits: see a generator make a sine wave, then RMS and phasors, R, L and C loads with leading and lagging current and power factor, and three-phase star and delta.',
     keywords: [
       'AC circuit simulator',
+      'AC generator simulation',
+      'three phase',
+      'star delta connection',
       'RMS voltage',
       'phasor diagram',
       'power factor',
@@ -115,7 +118,15 @@ export const SEO: Readonly<Record<SeoPage, PageSeo>> = {
       'วงจรไฟฟ้ากระแสสลับ',
       'ตัวประกอบกำลัง',
     ],
-    teaches: ['RMS value', 'Phasors', 'Impedance', 'Power factor', 'Series resonance'],
+    teaches: [
+      'AC generator',
+      'Three-phase power',
+      'RMS value',
+      'Phasors',
+      'Impedance',
+      'Power factor',
+      'Series resonance',
+    ],
     priority: 0.9,
   },
   circuits: {

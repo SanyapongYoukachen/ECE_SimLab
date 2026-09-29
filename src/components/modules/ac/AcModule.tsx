@@ -44,6 +44,8 @@ import {
   formatWatts,
 } from './format';
 import { QUESTIONS } from './questions';
+import { GeneratorSection } from './GeneratorSection';
+import { ThreePhaseSection } from './ThreePhaseSection';
 
 const DEFAULT_STATE = AcStateSchema.parse({});
 const MODULE_ID = 'ac';
@@ -72,16 +74,20 @@ export function AcModule(): React.JSX.Element {
           label={t.modeLabel}
           value={state.mode}
           onChange={setMode}
-          options={[
-            { value: 'sine', label: t.modes.sine },
-            { value: 'load', label: t.modes.load },
-          ]}
+          options={(['generator', 'sine', 'load', 'threephase'] as const).map((m) => ({
+            value: m,
+            label: t.modes[m],
+          }))}
         />
       </Field>
-      {state.mode === 'sine' ? (
+      {state.mode === 'generator' ? (
+        <GeneratorSection state={state} setState={setState} />
+      ) : state.mode === 'sine' ? (
         <SineSection state={state} set={set} />
-      ) : (
+      ) : state.mode === 'load' ? (
         <LoadSection state={state} set={set} />
+      ) : (
+        <ThreePhaseSection state={state} setState={setState} />
       )}
     </div>
   );

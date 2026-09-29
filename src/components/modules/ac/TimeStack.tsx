@@ -13,7 +13,9 @@ const PAD_TOP = 18;
 const PAD_BOTTOM = 18;
 const SAMPLES = 360;
 
-type ThemeColor = 'input' | 'active' | 'output' | 'structure';
+const THEME_KEYS = ['input', 'active', 'output', 'structure'] as const;
+/** A theme role, or any CSS colour (the three-phase plots use fixed phase colours). */
+type ThemeColor = (typeof THEME_KEYS)[number] | (string & {});
 
 export interface StackSeries {
   readonly f: (t: number) => number;
@@ -62,7 +64,8 @@ export function TimeStack({ panels, period, guides, ariaLabel }: Props): React.J
       const ts = Array.from({ length: SAMPLES + 1 }, (_, k) => (k / SAMPLES) * span);
       const xScale = linearScale([0, span], [PAD_LEFT, size.width - PAD_RIGHT]);
       const tCursor = cursorTime(animationAngle(reducedMotion), period);
-      const color = (c: ThemeColor): string => theme[c];
+      const color = (c: ThemeColor): string =>
+        (THEME_KEYS as readonly string[]).includes(c) ? theme[c as (typeof THEME_KEYS)[number]] : c;
 
       panels.forEach((panel, index) => {
         const top = index * (PANEL_HEIGHT + GAP);

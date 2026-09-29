@@ -89,6 +89,18 @@ export function decodeAcState(params: URLSearchParams): AcState {
     r: num(params, 'r'),
     l: num(params, 'l'),
     c: num(params, 'c'),
+    turns: num(params, 'turns'),
+    flux: num(params, 'flux'),
+    area: num(params, 'area'),
+    rpm: num(params, 'rpm'),
+    poles: num(params, 'poles'),
+    rload: num(params, 'rload'),
+    ra: num(params, 'ra'),
+    vph: num(params, 'vph'),
+    conn: params.get('conn') ?? undefined,
+    rph: num(params, 'rph'),
+    xph: num(params, 'xph'),
+    unb: num(params, 'unb'),
   };
   const result = AcStateSchema.safeParse(raw);
   return result.success ? result.data : AcStateSchema.parse({});
@@ -106,6 +118,22 @@ export function encodeAcState(state: AcState): URLSearchParams {
   params.set('r', String(state.r));
   params.set('l', String(state.l));
   params.set('c', String(state.c));
+  for (const key of [
+    'turns',
+    'flux',
+    'area',
+    'rpm',
+    'poles',
+    'rload',
+    'ra',
+    'vph',
+    'rph',
+    'xph',
+    'unb',
+  ] as const) {
+    params.set(key, String(state[key]));
+  }
+  params.set('conn', state.conn);
   return params;
 }
 
