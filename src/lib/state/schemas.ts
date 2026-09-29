@@ -30,7 +30,7 @@ export type FourierState = z.infer<typeof FourierPresetSchema>;
 
 /** Module 3, AC circuits. Defaults are Thai mains: 220 V rms (311 V peak), 50 Hz. */
 export const AcStateSchema = z.object({
-  mode: z.enum(['sine', 'load']).default('sine'),
+  mode: z.enum(['generator', 'sine', 'load', 'threephase']).default('generator'),
   // Sine-wave section
   shape: z.enum(['sine', 'square', 'triangle']).default('sine'),
   peak: z.number().min(1).max(400).default(311),
@@ -45,6 +45,23 @@ export const AcStateSchema = z.object({
   l: z.number().min(1).max(500).default(50),
   /** Capacitance in µF. */
   c: z.number().min(1).max(1000).default(100),
+  // Generator section (single-phase coil in a field)
+  turns: z.number().min(1).max(500).default(100),
+  /** Flux density, T. */
+  flux: z.number().min(0.05).max(1.5).default(0.5),
+  /** Coil area, m². */
+  area: z.number().min(0.001).max(0.05).default(0.01),
+  rpm: z.number().min(0).max(3600).default(3000),
+  poles: z.number().int().min(2).max(12).multipleOf(2).default(2),
+  rload: z.number().min(1).max(1000).default(100),
+  ra: z.number().min(0.1).max(20).default(1),
+  // Three-phase section (230/400 V, like Thai low-voltage supply)
+  vph: z.number().min(50).max(400).default(230),
+  conn: z.enum(['wye', 'delta']).default('wye'),
+  rph: z.number().min(1).max(200).default(20),
+  xph: z.number().min(0).max(200).default(10),
+  /** Phase a's load relative to b and c: 1 = balanced. */
+  unb: z.number().min(0.2).max(3).default(1),
 });
 export type AcState = z.infer<typeof AcStateSchema>;
 

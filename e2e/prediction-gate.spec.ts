@@ -48,11 +48,11 @@ test.describe('default: non-blocking check-your-understanding (all modules)', ()
       name: /Thai household mains/,
     });
     await checkGroup.getByRole('radio').first().click();
-    await expect(page.getByText('Question 2 of 6')).toBeVisible();
+    await expect(page.getByText('Question 2 of 9')).toBeVisible();
 
     await page.reload();
-    await expect(page.getByText('Question 2 of 6')).toBeVisible();
-    await expect(page.getByRole('tab', { name: /Check your understanding/ })).toContainText('1/6');
+    await expect(page.getByText('Question 2 of 9')).toBeVisible();
+    await expect(page.getByRole('tab', { name: /Check your understanding/ })).toContainText('1/9');
   });
 
   test('circuits also defaults to the non-blocking check, not a gate', async ({ page }) => {

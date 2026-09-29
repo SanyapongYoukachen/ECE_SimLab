@@ -153,4 +153,87 @@ export const QUESTIONS: readonly LocalizedQuestion[] = [
       },
     ],
   },
+  {
+    id: 'generator-frequency',
+    question: {
+      en: 'A 4-pole generator turns at 1500 rpm. What frequency does it produce?',
+      th: 'เครื่องกำเนิดไฟฟ้า 4 ขั้วหมุนที่ 1500 rpm ให้ความถี่เท่าใด?',
+    },
+    options: [
+      {
+        id: 'a',
+        label: {
+          en: '50 Hz, since f = P·n/120 = 4·1500/120',
+          th: '50 Hz เพราะ f = P·n/120 = 4·1500/120',
+        },
+        correct: true,
+      },
+      { id: 'b', label: { en: '25 Hz', th: '25 Hz' }, correct: false },
+      { id: 'c', label: { en: '100 Hz', th: '100 Hz' }, correct: false },
+      { id: 'd', label: { en: '1500 Hz', th: '1500 Hz' }, correct: false },
+    ],
+  },
+  {
+    id: 'generator-zero',
+    question: {
+      en: 'At which moment is the EMF of a turning coil zero?',
+      th: 'แรงเคลื่อนไฟฟ้าของขดลวดที่หมุนเป็นศูนย์ในขณะใด?',
+    },
+    options: [
+      {
+        id: 'a',
+        label: {
+          en: 'When the coil faces the poles: the flux through it is largest but not changing',
+          th: 'เมื่อขดลวดหันหน้าเข้าหาขั้วแม่เหล็ก: ฟลักซ์ผ่านขดลวดมากที่สุดแต่ไม่เปลี่ยนแปลง',
+        },
+        correct: true,
+      },
+      {
+        id: 'b',
+        label: {
+          en: 'When no flux passes through the coil',
+          th: 'เมื่อไม่มีฟลักซ์ผ่านขดลวดเลย',
+        },
+        correct: false,
+      },
+      {
+        id: 'c',
+        label: { en: 'Never, while it keeps turning', th: 'ไม่มีเลย ตราบใดที่ยังหมุนอยู่' },
+        correct: false,
+      },
+      {
+        id: 'd',
+        label: { en: 'Only when the load is disconnected', th: 'เฉพาะเมื่อถอดโหลดออก' },
+        correct: false,
+      },
+    ],
+  },
+  {
+    id: 'three-phase-line',
+    question: {
+      en: 'A balanced star-connected supply has 230 V between each line and neutral. What is the line-to-line voltage, and the neutral current with a balanced load?',
+      th: 'แหล่งจ่ายสามเฟสแบบสตาร์ที่สมดุลมีแรงดันระหว่างสายกับนิวทรัล 230 V แรงดันระหว่างสายกับสายเป็นเท่าใด และกระแสนิวทรัลเมื่อโหลดสมดุลเป็นเท่าใด?',
+    },
+    options: [
+      {
+        id: 'a',
+        label: { en: 'About 400 V (230 × √3), and 0 A', th: 'ประมาณ 400 V (230 × √3) และ 0 A' },
+        correct: true,
+      },
+      {
+        id: 'b',
+        label: { en: '460 V (230 × 2), and 0 A', th: '460 V (230 × 2) และ 0 A' },
+        correct: false,
+      },
+      {
+        id: 'c',
+        label: {
+          en: 'About 400 V, and three times the line current',
+          th: 'ประมาณ 400 V และสามเท่าของกระแสสาย',
+        },
+        correct: false,
+      },
+      { id: 'd', label: { en: '230 V, and 0 A', th: '230 V และ 0 A' }, correct: false },
+    ],
+  },
 ];
