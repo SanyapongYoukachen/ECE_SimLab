@@ -72,6 +72,14 @@ export const en = {
     },
   },
 
+  topic: {
+    mistakes: 'Common mistakes',
+    faq: 'Common questions',
+    more: (module: string) => `More in ${module}`,
+    hubIntro:
+      'Pick a topic. Each one opens the simulator on that idea, with the theory, a worked example and common mistakes underneath.',
+  },
+
   landing: {
     kicker: 'ECE Labsim',
     title: 'Circuit simulators and signal graphs, made visible',
@@ -144,7 +152,7 @@ export const en = {
     circuits: {
       title: "DC circuits: from Ohm's law to Thévenin and mesh analysis",
       tagline:
-        'Drag the sliders to change the source voltage and the resistors. The schematic and the linked readout update together.',
+        'Five topics, from a single resistor to whole networks. Each opens the simulator on that idea, with the theory and a worked example underneath.',
     },
     sensors: {
       title: 'Sensors: from physics to signal',

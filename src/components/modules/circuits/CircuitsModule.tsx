@@ -11,6 +11,7 @@ import { logEvent } from '@/lib/state/telemetry';
 import { useLocalizedQuestions, useMessages, type Messages } from '@/lib/i18n';
 import {
   ModuleTabs,
+  TopicNav,
   PredictionGate,
   Slider,
   SegmentedControl,
@@ -27,10 +28,10 @@ import { formatCircuitExpression } from './expression';
 import { formatCurrent, formatPower, formatResistance, formatVoltage } from './format';
 import { QUESTIONS } from './questions';
 import { Stat } from './Stat';
+import { CIRCUIT_TOPICS, topicPath } from '@/lib/topics';
 import { TheveninSection } from './TheveninSection';
 import { MeshNodeSection } from './MeshNodeSection';
 import {
-  MODE_ORDER,
   TOPOLOGY_ORDER,
   MIN_VOLTAGE,
   MAX_VOLTAGE,
@@ -40,17 +41,19 @@ import {
 
 const DEFAULT_STATE = CircuitStateSchema.parse({});
 
-export function CircuitsModule(): React.JSX.Element {
+export function CircuitsModule({ topic }: { readonly topic: CircuitMode }): React.JSX.Element {
   const predictEnabled = useUrlFlag(decodePredictFlag, true);
   const practiceMode = usePracticeMode();
   const t = useMessages().circuits;
   const questions = useLocalizedQuestions(QUESTIONS);
   const practiceQuestion = usePracticeQuestion(questions);
-  const [state, setState] = useUrlSyncedState(
+  const [urlState, setState] = useUrlSyncedState(
     decodeCircuitState,
     encodeCircuitState,
     DEFAULT_STATE
   );
+  // The section comes from the page's URL (/circuits/<topic>), not the query string.
+  const state = { ...urlState, mode: topic };
 
   const ohm = useMemo(() => solveOhm(state.voltage, state.r1), [state.voltage, state.r1]);
   const network = useMemo(
@@ -61,11 +64,6 @@ export function CircuitsModule(): React.JSX.Element {
     () => solveDivider(state.voltage, state.r1, state.r2),
     [state.voltage, state.r1, state.r2]
   );
-
-  function setMode(mode: CircuitMode): void {
-    logEvent('circuits', 'mode_changed', { mode });
-    setState((prev) => ({ ...prev, mode }));
-  }
 
   function setTopology(topology: Topology): void {
     logEvent('circuits', 'topology_changed', { topology });
@@ -78,14 +76,14 @@ export function CircuitsModule(): React.JSX.Element {
   const content = (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start">
-        <Field label={t.circuit}>
-          <SegmentedControl
-            label={t.circuit}
-            value={state.mode}
-            onChange={setMode}
-            options={MODE_ORDER.map((value) => ({ value, label: t.modes[value] }))}
-          />
-        </Field>
+        <TopicNav
+          label={t.circuit}
+          items={CIRCUIT_TOPICS.map((tp) => ({
+            href: topicPath(tp),
+            label: t.modes[tp.mode as CircuitMode],
+            current: tp.mode === topic,
+          }))}
+        />
         {state.mode === 'network' && (
           <Field label={t.topology}>
             <SegmentedControl

@@ -4,7 +4,7 @@ const quizTab = /Check your understanding/;
 
 test.describe('module tabs: Explore, then Check your understanding', () => {
   test('opens on Explore with the quiz a tab away, showing its progress', async ({ page }) => {
-    await page.goto('/circuits');
+    await page.goto('/circuits/ohms-law');
 
     await expect(page.getByRole('tab', { name: 'Explore' })).toHaveAttribute(
       'aria-selected',
@@ -20,7 +20,7 @@ test.describe('module tabs: Explore, then Check your understanding', () => {
   });
 
   test('the end-of-explore button opens the check, and the URL remembers it', async ({ page }) => {
-    await page.goto('/circuits');
+    await page.goto('/circuits/ohms-law');
     await page.getByRole('button', { name: 'Start the check →' }).click();
 
     await expect(page.getByRole('tab', { name: quizTab })).toHaveAttribute('aria-selected', 'true');
@@ -38,7 +38,7 @@ test.describe('module tabs: Explore, then Check your understanding', () => {
   test('shows one question at a time, moves on by itself, and scores only at the end', async ({
     page,
   }) => {
-    await page.goto('/ac?view=quiz');
+    await page.goto('/ac/generator?view=quiz');
     await expect(page.getByRole('radiogroup')).toHaveCount(1);
     await expect(page.getByText('Question 1 of 9')).toBeVisible();
 
@@ -68,7 +68,7 @@ test.describe('module tabs: Explore, then Check your understanding', () => {
   });
 
   test('Previous changes an answer before finishing, and a reload resumes', async ({ page }) => {
-    await page.goto('/ac?view=quiz');
+    await page.goto('/ac/generator?view=quiz');
     await page.getByRole('radio', { name: '220 V' }).first().click();
     await expect(page.getByText('Question 2 of 9')).toBeVisible();
 
@@ -87,7 +87,7 @@ test.describe('module tabs: Explore, then Check your understanding', () => {
   });
 
   test('the explore tab offers to continue a check in progress', async ({ page }) => {
-    await page.goto('/ac?view=quiz');
+    await page.goto('/ac/generator?view=quiz');
     await page.getByRole('radio', { name: '220 V' }).first().click();
     await expect(page.getByText('Question 2 of 9')).toBeVisible();
     await page.getByRole('tab', { name: 'Explore' }).click();
@@ -99,7 +99,7 @@ test.describe('module tabs: Explore, then Check your understanding', () => {
   });
 
   test('arrow keys move between the tabs', async ({ page }) => {
-    await page.goto('/ac');
+    await page.goto('/ac/generator');
     await page.getByRole('tab', { name: 'Explore' }).focus();
     await page.keyboard.press('ArrowRight');
 
@@ -109,7 +109,14 @@ test.describe('module tabs: Explore, then Check your understanding', () => {
   });
 
   test('every module gets the tabs', async ({ page }) => {
-    for (const path of ['/convolution', '/fourier', '/ac', '/circuits', '/sensors', '/simulator']) {
+    for (const path of [
+      '/convolution',
+      '/fourier',
+      '/ac/generator',
+      '/circuits/ohms-law',
+      '/sensors',
+      '/simulator',
+    ]) {
       await page.goto(path);
       await expect(page.getByRole('tab', { name: quizTab })).toBeVisible();
     }

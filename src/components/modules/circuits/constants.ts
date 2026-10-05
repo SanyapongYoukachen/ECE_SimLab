@@ -1,8 +1,6 @@
-import type { CircuitMode, Topology } from '@/lib/state/schemas';
+import type { Topology } from '@/lib/state/schemas';
 
-/** Display order; labels live in the i18n dictionary under `circuits.modes` / `circuits.topologies`. */
-export const MODE_ORDER: readonly CircuitMode[] = ['ohm', 'network', 'divider', 'thevenin', 'mesh'];
-
+/** Display order; labels live in the i18n dictionary under `circuits.topologies`. (Section order: lib/topics.) */
 export const TOPOLOGY_ORDER: readonly Topology[] = ['series', 'parallel'];
 
 export const MIN_VOLTAGE = 0;
