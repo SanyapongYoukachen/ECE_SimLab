@@ -79,6 +79,39 @@ export const SensorsStateSchema = z.object({
 });
 export type SensorsState = z.infer<typeof SensorsStateSchema>;
 
+/**
+ * Module 7, electronics. The section comes from the page path
+ * (/electronics/<topic>); the rest are each section's controls.
+ */
+export const ElectronicsStateSchema = z.object({
+  mode: z.enum(['pn', 'diode', 'bjt', 'amp']).default('pn'),
+  // P/N junction: doping in cm⁻³, applied bias in V
+  na: z.number().min(1e14).max(1e18).default(1e16),
+  nd: z.number().min(1e14).max(1e18).default(1e16),
+  va: z.number().min(-10).max(0.65).default(0),
+  // Diode circuit
+  kind: z.enum(['si', 'ge', 'red', 'green', 'blue']).default('si'),
+  approx: z.enum(['ideal', 'drop', 'exp']).default('exp'),
+  vs: z.number().min(-10).max(15).default(5),
+  rd: z.number().min(10).max(10000).default(430),
+  // BJT bias circuit (VCC and β shared with the amplifier)
+  vbb: z.number().min(0).max(5).default(2),
+  rb: z.number().min(1000).max(1_000_000).default(100_000),
+  vcc: z.number().min(3).max(20).default(12),
+  rc: z.number().min(100).max(10_000).default(2200),
+  beta: z.number().min(20).max(400).default(100),
+  // Common-emitter amplifier
+  r1: z.number().min(1000).max(470_000).default(100_000),
+  r2: z.number().min(1000).max(100_000).default(22_000),
+  rca: z.number().min(100).max(20_000).default(4700),
+  re: z.number().min(0).max(5000).default(1000),
+  rl: z.number().min(1000).max(100_000).default(10_000),
+  byp: z.enum(['on', 'off']).default('on'),
+  /** Input amplitude, mV peak. */
+  vin: z.number().min(1).max(200).default(2),
+});
+export type ElectronicsState = z.infer<typeof ElectronicsStateSchema>;
+
 export const CircuitModeSchema = z.enum(['ohm', 'network', 'divider', 'thevenin', 'mesh']);
 export type CircuitMode = z.infer<typeof CircuitModeSchema>;
 

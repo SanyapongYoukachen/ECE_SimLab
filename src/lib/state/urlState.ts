@@ -6,6 +6,7 @@ import {
   SimulatorStateSchema,
   AcStateSchema,
   SensorsStateSchema,
+  ElectronicsStateSchema,
   WheatstoneStateSchema,
   ModuleViewStateSchema,
   type ModuleViewState,
@@ -15,6 +16,7 @@ import {
   type SimulatorState,
   type AcState,
   type SensorsState,
+  type ElectronicsState,
   type WheatstoneState,
 } from './schemas';
 
@@ -157,6 +159,49 @@ export function encodeSensorsState(state: SensorsState): URLSearchParams {
   params.set('color', state.color);
   params.set('temp', String(state.temp));
   params.set('flow', state.flow);
+  return params;
+}
+
+const ELECTRONICS_NUMBERS = [
+  'na',
+  'nd',
+  'va',
+  'vs',
+  'rd',
+  'vbb',
+  'rb',
+  'vcc',
+  'rc',
+  'beta',
+  'r1',
+  'r2',
+  'rca',
+  're',
+  'rl',
+  'vin',
+] as const;
+
+export function decodeElectronicsState(params: URLSearchParams): ElectronicsState {
+  const raw: Record<string, unknown> = {
+    kind: params.get('kind') ?? undefined,
+    approx: params.get('approx') ?? undefined,
+    byp: params.get('byp') ?? undefined,
+  };
+  for (const key of ELECTRONICS_NUMBERS) raw[key] = num(params, key);
+  const result = ElectronicsStateSchema.safeParse(raw);
+  return result.success ? result.data : ElectronicsStateSchema.parse({});
+}
+
+export function encodeElectronicsState(state: ElectronicsState): URLSearchParams {
+  // No `mode`: the section is the page's path (/electronics/<topic>).
+  const params = new URLSearchParams();
+  for (const key of ELECTRONICS_NUMBERS) {
+    // Log sliders (doping, resistances) need enough digits to survive a reload.
+    params.set(key, String(Number(state[key].toPrecision(6))));
+  }
+  params.set('kind', state.kind);
+  params.set('approx', state.approx);
+  params.set('byp', state.byp);
   return params;
 }
 

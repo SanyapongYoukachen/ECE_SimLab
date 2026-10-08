@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('landing page', () => {
-  test('links to all six modules', async ({ page }) => {
+  test('links to all seven modules', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Convolution', exact: true })).toBeVisible();
@@ -9,6 +9,7 @@ test.describe('landing page', () => {
     await expect(page.getByRole('link', { name: 'AC circuits' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'DC circuits' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Sensors: from physics to signal' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Electronics', exact: true })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Circuit simulator' })).toBeVisible();
   });
 
@@ -31,6 +32,7 @@ test.describe('search engine surface', () => {
       '/circuits/ohms-law',
       '/sensors',
       '/simulator',
+      '/electronics/pn-junction',
     ]) {
       expect(sitemap).toContain(`${path}</loc>`);
     }

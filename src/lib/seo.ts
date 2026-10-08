@@ -18,7 +18,7 @@ export const SITE_URL = (
 export const SITE_NAME = 'ECE Labsim';
 
 export type SeoPage =
-  'home' | 'convolution' | 'fourier' | 'ac' | 'circuits' | 'sensors' | 'simulator';
+  'home' | 'convolution' | 'fourier' | 'ac' | 'circuits' | 'sensors' | 'simulator' | 'electronics';
 
 interface PageSeo {
   readonly path: string;
@@ -38,7 +38,7 @@ export const SEO: Readonly<Record<SeoPage, PageSeo>> = {
     path: '/',
     title: 'ECE Labsim — Interactive Circuit Simulator & Signal Graphs',
     description:
-      'Free interactive circuit simulator and signal graphs for engineering students: convolution, Fourier transform, AC and DC circuits, sensors, and a Wheatstone bridge lab.',
+      'Free interactive circuit simulator and signal graphs for engineering students: convolution, Fourier transform, AC and DC circuits, sensors, a Wheatstone bridge lab and electronics.',
     keywords: [
       'circuit simulator',
       'online circuit simulator',
@@ -46,6 +46,7 @@ export const SEO: Readonly<Record<SeoPage, PageSeo>> = {
       'signals and systems',
       'interactive simulation',
       'sensor simulator',
+      'electronics simulator',
       'electrical engineering',
       'ECE',
       'จำลองวงจร',
@@ -59,6 +60,7 @@ export const SEO: Readonly<Record<SeoPage, PageSeo>> = {
       'DC circuits',
       'Sensors',
       'Wheatstone bridge',
+      'Semiconductor electronics',
     ],
     priority: 1,
   },
@@ -209,6 +211,24 @@ export const SEO: Readonly<Record<SeoPage, PageSeo>> = {
     teaches: ['Wheatstone bridge', 'Bridge balance', 'Resistive sensors', 'Strain gauge bridges'],
     priority: 0.9,
   },
+  electronics: {
+    path: '/electronics',
+    title: 'Electronics Simulator — P-N Junction, Diode, BJT, Amplifier',
+    description:
+      'Interactive basic electronics: the P-N junction and depletion region, diode I-V curves and LEDs, BJT transistor regions, and a common-emitter amplifier with gain and clipping.',
+    keywords: [
+      'electronics simulator',
+      'semiconductor simulation',
+      'pn junction',
+      'diode simulator',
+      'transistor simulator',
+      'common emitter amplifier',
+      'อิเล็กทรอนิกส์',
+      'สารกึ่งตัวนำ',
+    ],
+    teaches: ['P-N junction', 'Diodes', 'Bipolar junction transistor', 'Common-emitter amplifier'],
+    priority: 0.9,
+  },
 };
 
 /** Page metadata: title, description, canonical URL and social previews. */
@@ -265,7 +285,7 @@ export function moduleJsonLd(page: Exclude<SeoPage, 'home'>): Record<string, unk
 /** The landing page: the site itself plus the list of modules. */
 export function siteJsonLd(): Record<string, unknown>[] {
   const modules = (
-    ['convolution', 'fourier', 'ac', 'circuits', 'sensors', 'simulator'] as const
+    ['convolution', 'fourier', 'ac', 'circuits', 'sensors', 'simulator', 'electronics'] as const
   ).map((page, i) => ({
     '@type': 'ListItem',
     position: i + 1,

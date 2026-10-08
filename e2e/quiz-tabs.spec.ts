@@ -116,6 +116,7 @@ test.describe('module tabs: Explore, then Check your understanding', () => {
       '/circuits/ohms-law',
       '/sensors',
       '/simulator',
+      '/electronics/pn-junction',
     ]) {
       await page.goto(path);
       await expect(page.getByRole('tab', { name: quizTab })).toBeVisible();
