@@ -5,7 +5,7 @@ import type { Lang } from '@/lib/i18n';
  * module's simulator opened on that topic, and a server-rendered article
  * — what a search engine reads, since the simulator draws on canvas.
  */
-export type TopicModule = 'ac' | 'circuits';
+export type TopicModule = 'ac' | 'circuits' | 'electronics';
 
 export interface TopicSection {
   readonly heading: string;

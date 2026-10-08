@@ -84,7 +84,7 @@ export const en = {
     kicker: 'ECE Labsim',
     title: 'Circuit simulators and signal graphs, made visible',
     intro:
-      "You can already do the algebra. These six linked instruments are for the part algebra doesn't teach: what the operation actually does. Manipulate either representation and watch the other respond in real time.",
+      "You can already do the algebra. These seven linked instruments are for the part algebra doesn't teach: what the operation actually does. Manipulate either representation and watch the other respond in real time.",
     modules: {
       convolution: {
         kicker: 'Module 1',
@@ -109,6 +109,12 @@ export const en = {
         title: 'DC circuits',
         description:
           "Ohm's law, series and parallel resistors and the voltage divider, then Thévenin and Norton equivalents and mesh and nodal analysis — drag V and R and watch every number respond.",
+      },
+      electronics: {
+        kicker: 'Module 7',
+        title: 'Electronics',
+        description:
+          'From the P/N junction to a working amplifier: watch the depletion region form, find a diode’s operating point, drive a transistor through its regions and make a signal bigger.',
       },
       sensors: {
         kicker: 'Module 5',
@@ -153,6 +159,11 @@ export const en = {
       title: "DC circuits: from Ohm's law to Thévenin and mesh analysis",
       tagline:
         'Five topics, from a single resistor to whole networks. Each opens the simulator on that idea, with the theory and a worked example underneath.',
+    },
+    electronics: {
+      title: 'Electronics: from P/N junction to amplifier',
+      tagline:
+        'Four topics on semiconductor devices, each a live simulator with the theory and a worked example underneath.',
     },
     sensors: {
       title: 'Sensors: from physics to signal',
@@ -309,6 +320,34 @@ export const en = {
         {
           q: 'Should I use mesh analysis or nodal analysis?',
           a: 'Both give the same answer. Mesh analysis needs one KVL equation per window of the circuit; nodal analysis needs one KCL equation per node apart from ground. Pick the method with fewer unknowns.',
+        },
+      ],
+    },
+    electronics: {
+      intro:
+        'This electronics simulator builds up semiconductor devices one step at a time: the P/N junction and its depletion region, the diode and its I-V curve, the bipolar transistor and its three regions, and finally a common-emitter amplifier that turns a few millivolts into volts.',
+      points: [
+        'Watch holes, electrons and fixed ions form a depletion region, and see bias change the barrier and band diagram.',
+        'Find a diode’s operating point with a load line, and compare the ideal, 0.7 V and exponential models.',
+        'Drive an NPN transistor from cutoff through the active region into saturation on its output curves.',
+        'Bias a common-emitter amplifier, read its gain, and push it into distortion and clipping.',
+      ],
+      concepts: [
+        'P-N junction',
+        'Depletion region',
+        'Diode I-V curve',
+        'LED forward voltage',
+        'BJT regions',
+        'Common-emitter amplifier',
+      ],
+      faq: [
+        {
+          q: 'What is the difference between a diode and a transistor?',
+          a: 'A diode is one P/N junction: it lets current flow one way. A bipolar transistor is two junctions sharing a thin base: a small base current controls a much larger collector current, so it can switch and amplify.',
+        },
+        {
+          q: 'Why does an amplifier need biasing?',
+          a: 'The transistor only amplifies in its active region. Biasing sets a quiet operating point in the middle of that region so the signal can swing both up and down without reaching cutoff or saturation.',
         },
       ],
     },
@@ -638,6 +677,162 @@ export const en = {
     liveSine: (rms: string, peak: string) => `RMS ${rms}, peak ${peak}.`,
     liveLoad: (i: string, relation: string, pf: string) =>
       `Current ${i}, ${relation}, power factor ${pf}.`,
+  },
+
+  electronics: {
+    navLabel: 'Topic',
+    modes: { pn: 'P/N junction', diode: 'Diode', bjt: 'Transistor (BJT)', amp: 'CE amplifier' },
+    pn: {
+      intro:
+        'Left: P-type silicon, full of holes (red rings). Right: N-type, full of free electrons (blue dots). Between them, the depletion region holds only fixed ions, and their field stops more carriers crossing. Slide the bias to push the barrier down or up.',
+      insight: {
+        forward:
+          'Forward bias: the applied voltage works against the built-in field, so the barrier drops, the depletion region narrows, and carriers diffuse across in large numbers. The current grows exponentially with voltage.',
+        reverse:
+          'Reverse bias: the applied voltage adds to the barrier, so the depletion region widens and the field grows. Only a tiny trickle of minority carriers, generated by heat, is swept across.',
+        zero: 'No bias: diffusion of carriers across the junction is exactly balanced by the built-in field pushing them back. No net current flows.',
+      },
+      statVbi: 'Built-in potential Vbi',
+      statBarrier: 'Barrier q(Vbi − Va)',
+      statW: 'Depletion width W',
+      statEmax: 'Peak field Emax',
+      statXp: 'Into P side, xp',
+      statXn: 'Into N side, xn',
+      statMinority: 'Electrons in P (minority)',
+      statCurrent: 'Current I / Is',
+      sliderVa: 'Applied bias Va (P relative to N)',
+      sliderNa: 'P-side doping Na',
+      sliderNd: 'N-side doping Nd',
+      pLabel: (d: string) => `P-type · Na = ${d}`,
+      nLabel: (d: string) => `N-type · Nd = ${d}`,
+      widthLabel: (w: string) => `depletion width W = ${w}`,
+      legend: '○ hole   ● electron   ⊖ acceptor ion   ⊕ donor ion',
+      canvasAria: (w: string, va: string) =>
+        `P/N junction at ${va} V bias: holes on the P side, electrons on the N side, and a depletion region ${w} wide holding fixed ions.`,
+      barrier: (v: string) => `barrier ${v} eV`,
+      bandTitle: 'Energy bands across the junction (electron energy, eV)',
+      fieldTitle: (e: string) => `Electric field |E(x)|, peak ${e} kV/cm`,
+      bandAria: (v: string, e: string) =>
+        `Band diagram: conduction and valence bands bend by ${v} eV across the junction; the electric field peaks at ${e} kV/cm.`,
+    },
+    diode: {
+      intro:
+        'A source drives current through a resistor and a diode. Where the diode’s I-V curve meets the circuit’s load line is the operating point. Try each model, and swap in an LED.',
+      kindLabel: 'Diode',
+      kinds: {
+        si: 'Silicon',
+        ge: 'Germanium',
+        red: 'Red LED',
+        green: 'Green LED',
+        blue: 'Blue LED',
+      },
+      modelLabel: 'Model',
+      models: { ideal: 'Ideal', drop: 'Constant drop', exp: 'Exponential' },
+      insightReverse:
+        'Reverse biased: the diode blocks. The whole source voltage appears across it and only the tiny saturation current flows.',
+      insightBelow: (vf: string) =>
+        `Forward biased, but the source is below the diode’s turn-on voltage (about ${vf}), so almost no current flows yet.`,
+      insightLed: (nm: number, ev: string, vd: string) =>
+        `The LED is on: each electron crossing the junction gives up its energy as a ${nm} nm photon of about ${ev} eV, which is why it needs about ${vd}.`,
+      insightOn: (vd: string) =>
+        `Conducting: the diode settles at ${vd}, and the resistor takes the rest of the source voltage. The resistor, not the diode, sets the current.`,
+      statId: 'Current I',
+      statVd: 'Diode voltage VD',
+      statVr: 'Resistor voltage VR',
+      statPd: 'Diode power',
+      compareTitle: 'The same circuit solved with each model',
+      sliderVs: 'Source voltage VS',
+      sliderR: 'Resistance R',
+      circuitAria: (vs: string, r: string, i: string) =>
+        `Circuit: ${vs} V source, ${r} resistor and diode in series; current ${i}.`,
+      loadLine: 'load line',
+      ivTitle: 'I-V curve (orange) and load line (blue): the operating point Q is where they cross',
+      ivAria: (vd: string, id: string) =>
+        `Diode I-V curve with the circuit's load line; they cross at ${vd} V and ${id}.`,
+    },
+    bjt: {
+      intro:
+        'A small base current, set by VBB and RB, controls a collector current β times larger. The operating point moves along the collector circuit’s load line through three regions.',
+      regions: { cutoff: 'Cutoff', active: 'Active', saturation: 'Saturation' },
+      insight: {
+        cutoff:
+          'Almost no base current, so almost no collector current. The transistor is an open switch: VCE ≈ VCC.',
+        active:
+          'The collector current is β times the base current and set by the base, not the load. This is where amplifiers work.',
+        saturation:
+          'The base asks for more current than RC lets through. IC is capped near (VCC − 0.2 V)/RC, VCE ≈ 0.2 V, and IC/IB falls below β. The transistor is a closed switch.',
+      },
+      statIb: 'Base current IB',
+      statIc: 'Collector current IC',
+      statRatio: 'IC / IB',
+      statRegion: 'Region',
+      statVbe: 'VBE',
+      statVce: 'VCE',
+      statIcSat: 'IC at saturation',
+      statPc: 'Power in transistor',
+      sliderVbb: 'Base supply VBB',
+      sliderRb: 'Base resistor RB',
+      sliderVcc: 'Collector supply VCC',
+      sliderRc: 'Collector resistor RC',
+      sliderBeta: 'Current gain β',
+      circuitAria: (ib: string, ic: string, vce: string, region: string) =>
+        `NPN transistor circuit: base current ${ib}, collector current ${ic}, VCE ${vce} V, ${region} region.`,
+      curvesTitle:
+        'Output characteristics IC vs VCE, one curve per base current, with the load line',
+      curvesAria: (vce: string, ic: string) =>
+        `Transistor output curves with the load line; operating point at ${vce} V and ${ic}.`,
+      loadLine: 'load line',
+      saturationRegion: 'saturation',
+      cutoffRegion: 'cutoff (IB = 0)',
+    },
+    amp: {
+      intro:
+        'A voltage divider biases the transistor mid-way along its load line; a small input then swings the collector current, and RC turns that into a large, inverted output voltage.',
+      bypassLabel: 'Emitter bypass capacitor CE',
+      bypassOn: 'Fitted (high gain)',
+      bypassOff: 'Removed (stable gain)',
+      statusSaturated:
+        'The bias point is in saturation: the divider drives the base too hard. Raise R1 or lower R2 to bring Q back into the active region.',
+      statusBoth:
+        'The input is so large that the output clips at both cutoff (top) and saturation (bottom).',
+      statusCutoff:
+        'Clipping at cutoff: the collector current reaches zero on the negative input peaks, flattening the top of the output.',
+      statusSat:
+        'Clipping at saturation: VCE reaches about 0.2 V on the positive input peaks, flattening the bottom of the output.',
+      statusClean: 'Clean amplification: the output is an inverted, magnified copy of the input.',
+      statusDistort:
+        'Not clipping yet, but distorted: the collector current is exponential in VBE, so the negative half grows more than the positive one. Smaller inputs, or removing the bypass capacitor, make it linear again.',
+      statGain: 'Small-signal gain Av',
+      statMeasured: 'Measured gain (p-p)',
+      statIc: 'Bias current IC',
+      statVce: 'Bias VCE',
+      statRe: 're = VT / IE',
+      statRin: 'Input resistance Rin',
+      statSwing: 'Max output swing',
+      statVb: 'VB / VE / VC',
+      sliderVin: 'Input amplitude',
+      sliderVcc: 'Supply VCC',
+      sliders: {
+        r1: 'R1 (bias, top)',
+        r2: 'R2 (bias, bottom)',
+        rca: 'Collector resistor RC',
+        rl: 'Load RL',
+        re: 'Emitter resistor RE',
+      },
+      sliderBeta: 'Current gain β',
+      schematicAria: (vb: string, vc: string, ve: string) =>
+        `Common-emitter amplifier with voltage-divider bias: VB ${vb} V, VC ${vc} V, VE ${ve} V.`,
+      waveIn: 'vin (mV)',
+      waveOut: 'vout (V), dashed: ideal linear output',
+      waveTitle: 'Two cycles of input and output',
+      waveAria: (vin: string, gain: string) =>
+        `Input sine of ${vin} millivolts and the amplified output; small-signal gain ${gain}.`,
+      dcLine: 'DC load line',
+      acLine: 'AC load line',
+      loadTitle: 'Q-point on the output curves: DC and AC load lines; thick line = signal swing',
+      loadAria: (vce: string, ic: string) =>
+        `Output characteristics with DC and AC load lines; Q-point at ${vce} V and ${ic}.`,
+    },
   },
 
   circuits: {

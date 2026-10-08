@@ -15,6 +15,10 @@ const SECTION_PAGES: readonly { module: string; mode: string; slug: string }[] =
   { module: 'circuits', mode: 'divider', slug: 'voltage-divider' },
   { module: 'circuits', mode: 'thevenin', slug: 'thevenin-norton' },
   { module: 'circuits', mode: 'mesh', slug: 'mesh-nodal-analysis' },
+  { module: 'electronics', mode: 'pn', slug: 'pn-junction' },
+  { module: 'electronics', mode: 'diode', slug: 'diode' },
+  { module: 'electronics', mode: 'bjt', slug: 'bjt' },
+  { module: 'electronics', mode: 'amp', slug: 'amplifier' },
 ];
 
 const nextConfig: NextConfig = {
