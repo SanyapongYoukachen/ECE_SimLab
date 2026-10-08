@@ -37,12 +37,12 @@ test.describe('default: non-blocking check-your-understanding (all modules)', ()
   });
 
   test('?predict=off hides the check-your-understanding prompt', async ({ page }) => {
-    await page.goto('/ac?predict=off');
+    await page.goto('/ac/generator?predict=off');
     await expect(page.getByRole('tab', { name: /Check your understanding/ })).toHaveCount(0);
   });
 
   test('an answered check persists across reload', async ({ page }) => {
-    await page.goto('/ac');
+    await page.goto('/ac/generator');
     await page.getByRole('tab', { name: /Check your understanding/ }).click();
     const checkGroup = page.getByRole('radiogroup', {
       name: /Thai household mains/,
@@ -56,7 +56,7 @@ test.describe('default: non-blocking check-your-understanding (all modules)', ()
   });
 
   test('circuits also defaults to the non-blocking check, not a gate', async ({ page }) => {
-    await page.goto('/circuits');
+    await page.goto('/circuits/ohms-law');
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await expect(page.getByRole('slider').first()).toBeVisible();
     await expect(page.getByRole('tab', { name: /Check your understanding/ })).toBeVisible();
@@ -65,14 +65,14 @@ test.describe('default: non-blocking check-your-understanding (all modules)', ()
 
 test.describe('practice mode ("Predict first"), opt-in via the module header toggle', () => {
   test('off by default', async ({ page }) => {
-    await page.goto('/circuits');
+    await page.goto('/circuits/ohms-law');
     await expect(page.getByRole('button', { name: 'Predict first: off' })).toBeVisible();
   });
 
   test('turning it on gates the module behind one random question; turning it off restores the check list', async ({
     page,
   }) => {
-    await page.goto('/circuits');
+    await page.goto('/circuits/ohms-law');
 
     await page.getByRole('button', { name: 'Predict first: off' }).click();
     await expect(page.getByRole('button', { name: 'Predict first: on' })).toBeVisible();
@@ -94,7 +94,7 @@ test.describe('practice mode ("Predict first"), opt-in via the module header tog
   });
 
   test('re-gates on every visit instead of unlocking permanently', async ({ page }) => {
-    await page.goto('/circuits');
+    await page.goto('/circuits/ohms-law');
     await page.getByRole('button', { name: 'Predict first: off' }).click();
 
     const dialog = page.getByRole('dialog', { name: 'Predict before you explore' });
@@ -107,7 +107,7 @@ test.describe('practice mode ("Predict first"), opt-in via the module header tog
   });
 
   test('the preference persists across reload and applies to other modules', async ({ page }) => {
-    await page.goto('/circuits');
+    await page.goto('/circuits/ohms-law');
     await page.getByRole('button', { name: 'Predict first: off' }).click();
 
     await page.goto('/convolution');
@@ -116,10 +116,10 @@ test.describe('practice mode ("Predict first"), opt-in via the module header tog
   });
 
   test('?predict=off still bypasses the gate even with practice mode on', async ({ page }) => {
-    await page.goto('/circuits');
+    await page.goto('/circuits/ohms-law');
     await page.getByRole('button', { name: 'Predict first: off' }).click();
 
-    await page.goto('/circuits?predict=off');
+    await page.goto('/circuits/ohms-law?predict=off');
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await expect(page.getByRole('slider').first()).toBeVisible();
   });

@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { topicPath, type Topic } from '@/lib/topics';
+import { MESSAGES } from '@/lib/i18n/messages';
 
 /**
  * Search metadata for every page, in one place. Titles and descriptions
@@ -284,6 +286,90 @@ export function siteJsonLd(): Record<string, unknown>[] {
       '@type': 'ItemList',
       name: `${SITE_NAME} modules`,
       itemListElement: modules,
+    },
+  ];
+}
+
+// ---------------------------------------------------------------------------
+// Topic pages (/ac/three-phase, /circuits/thevenin-norton, …)
+// ---------------------------------------------------------------------------
+
+/** Metadata for a topic page: its own title, description and canonical URL. */
+export function topicMetadata(topic: Topic): Metadata {
+  const path = topicPath(topic);
+  return {
+    title: topic.seo.title,
+    description: topic.seo.description,
+    keywords: [...topic.seo.keywords],
+    alternates: { canonical: path },
+    openGraph: {
+      type: 'article',
+      siteName: SITE_NAME,
+      url: path,
+      title: topic.seo.title,
+      description: topic.seo.description,
+      locale: 'en_US',
+      alternateLocale: ['th_TH'],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: topic.seo.title,
+      description: topic.seo.description,
+    },
+  };
+}
+
+/**
+ * Structured data for a topic page: the learning resource itself, its
+ * breadcrumb trail (Home › module › topic) and its FAQ, all describing
+ * text that is visible on the page.
+ */
+export function topicJsonLd(topic: Topic): Record<string, unknown>[] {
+  const url = `${SITE_URL}${topicPath(topic)}`;
+  const hub = SEO[topic.module];
+  const en = topic.text.en;
+  return [
+    {
+      '@context': 'https://schema.org',
+      '@type': ['LearningResource', 'WebApplication'],
+      name: en.h1,
+      headline: en.h1,
+      description: topic.seo.description,
+      url,
+      inLanguage: ['en', 'th'],
+      isAccessibleForFree: true,
+      learningResourceType: ['Interactive simulation', 'Worked example'],
+      educationalLevel: 'Undergraduate',
+      audience: { '@type': 'EducationalAudience', educationalRole: 'student' },
+      teaches: [...topic.seo.teaches],
+      keywords: topic.seo.keywords.join(', '),
+      applicationCategory: 'EducationalApplication',
+      operatingSystem: 'Any (runs in a web browser)',
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+      isPartOf: { '@type': 'WebSite', name: SITE_NAME, url: SITE_URL },
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: SITE_NAME, item: SITE_URL },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: MESSAGES.en.landing.modules[topic.module].title,
+          item: `${SITE_URL}${hub.path}`,
+        },
+        { '@type': 'ListItem', position: 3, name: en.nav, item: url },
+      ],
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: en.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
     },
   ];
 }

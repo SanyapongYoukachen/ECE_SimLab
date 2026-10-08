@@ -22,6 +22,7 @@ import {
   Field,
   LiveRegion,
   ModuleTabs,
+  TopicNav,
   PredictionGate,
   SegmentedControl,
   Slider,
@@ -44,42 +45,37 @@ import {
   formatWatts,
 } from './format';
 import { QUESTIONS } from './questions';
+import { AC_TOPICS, topicPath } from '@/lib/topics';
 import { GeneratorSection } from './GeneratorSection';
 import { ThreePhaseSection } from './ThreePhaseSection';
 
 const DEFAULT_STATE = AcStateSchema.parse({});
 const MODULE_ID = 'ac';
 
-export function AcModule(): React.JSX.Element {
+export function AcModule({ topic }: { readonly topic: AcState['mode'] }): React.JSX.Element {
   const predictEnabled = useUrlFlag(decodePredictFlag, true);
   const practiceMode = usePracticeMode();
   const t = useMessages().ac;
   const questions = useLocalizedQuestions(QUESTIONS);
   const practiceQuestion = usePracticeQuestion(questions);
-  const [state, setState] = useUrlSyncedState(decodeAcState, encodeAcState, DEFAULT_STATE);
+  const [urlState, setState] = useUrlSyncedState(decodeAcState, encodeAcState, DEFAULT_STATE);
+  // The section comes from the page's URL (/ac/<topic>), not the query string.
+  const state: AcState = { ...urlState, mode: topic };
 
   function set<K extends keyof AcState>(key: K, value: AcState[K]): void {
     setState((prev) => ({ ...prev, [key]: value }));
   }
 
-  function setMode(mode: AcState['mode']): void {
-    logEvent(MODULE_ID, 'mode_changed', { mode });
-    set('mode', mode);
-  }
-
   const content = (
     <div className="flex flex-col gap-4">
-      <Field label={t.modeLabel}>
-        <SegmentedControl
-          label={t.modeLabel}
-          value={state.mode}
-          onChange={setMode}
-          options={(['generator', 'sine', 'load', 'threephase'] as const).map((m) => ({
-            value: m,
-            label: t.modes[m],
-          }))}
-        />
-      </Field>
+      <TopicNav
+        label={t.modeLabel}
+        items={AC_TOPICS.map((tp) => ({
+          href: topicPath(tp),
+          label: t.modes[tp.mode],
+          current: tp.mode === topic,
+        }))}
+      />
       {state.mode === 'generator' ? (
         <GeneratorSection state={state} setState={setState} />
       ) : state.mode === 'sine' ? (

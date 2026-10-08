@@ -37,12 +37,14 @@ test.describe('language toggle (English ↔ Thai)', () => {
   });
 
   test('switches a module live, without a reload, and back again', async ({ page }) => {
-    await page.goto('/circuits?predict=off');
+    await page.goto('/circuits/ohms-law?predict=off');
     await expect(page.getByRole('slider', { name: 'Source voltage V' })).toBeVisible();
 
     await page.getByRole('button', { name: 'Switch language to Thai' }).click();
     await expect(page.getByRole('slider', { name: 'แรงดันแหล่งจ่าย V' })).toBeVisible();
-    await expect(page.getByRole('radio', { name: 'กฎของโอห์ม' })).toBeVisible();
+    await expect(
+      page.getByRole('navigation', { name: 'วงจร' }).getByRole('link', { name: 'กฎของโอห์ม' })
+    ).toBeVisible();
 
     await page.getByRole('button', { name: 'เปลี่ยนเป็นภาษาอังกฤษ' }).click();
     await expect(page.getByRole('slider', { name: 'Source voltage V' })).toBeVisible();

@@ -108,7 +108,7 @@ export function decodeAcState(params: URLSearchParams): AcState {
 
 export function encodeAcState(state: AcState): URLSearchParams {
   const params = new URLSearchParams();
-  params.set('mode', state.mode);
+  // No `mode`: the section is the page's path (/ac/<topic>, /circuits/<topic>).
   params.set('shape', state.shape);
   params.set('peak', String(state.peak));
   params.set('phase', String(state.phase));
@@ -179,7 +179,7 @@ export function decodeCircuitState(params: URLSearchParams): CircuitState {
 
 export function encodeCircuitState(state: CircuitState): URLSearchParams {
   const params = new URLSearchParams();
-  params.set('mode', state.mode);
+  // No `mode`: the section is the page's path (/ac/<topic>, /circuits/<topic>).
   params.set('voltage', state.voltage.toFixed(2));
   params.set('r1', state.r1.toFixed(1));
   params.set('r2', state.r2.toFixed(1));

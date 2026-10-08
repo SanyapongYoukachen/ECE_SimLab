@@ -22,3 +22,4 @@ export * from './ModuleTabs';
 export * from './Field';
 export * from './JsonLd';
 export * from './ModuleAbout';
+export * from './TopicNav';

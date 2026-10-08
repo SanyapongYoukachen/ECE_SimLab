@@ -24,7 +24,14 @@ test.describe('search engine surface', () => {
     const robots = await (await request.get('/robots.txt')).text();
     expect(robots).toContain('Sitemap: ');
     const sitemap = await (await request.get('/sitemap.xml')).text();
-    for (const path of ['/convolution', '/fourier', '/ac', '/circuits', '/sensors', '/simulator']) {
+    for (const path of [
+      '/convolution',
+      '/fourier',
+      '/ac/generator',
+      '/circuits/ohms-law',
+      '/sensors',
+      '/simulator',
+    ]) {
       expect(sitemap).toContain(`${path}</loc>`);
     }
   });
