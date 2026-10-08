@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent } from 'react';
-import { useMessages } from '@/lib/i18n';
+import { useLanguage, useMessages } from '@/lib/i18n';
+import { encodeAttempt, newNonce } from '@/lib/state/attemptCode';
 import { logEvent } from '@/lib/state/telemetry';
 import type { PredictionOption, PredictionQuestion } from './PredictionGate';
 
@@ -28,6 +29,33 @@ function notifyStorageChange(): void {
 
 function answerKey(moduleId: string, questionId: string): string {
   return `signals-lab:predicted:${moduleId}:${questionId}`;
+}
+
+/** When the current attempt started and finished, and its code's nonce. */
+interface AttemptRecord {
+  readonly startedAt: number;
+  readonly finishedAt?: number;
+  readonly nonce?: number;
+}
+
+function attemptKey(moduleId: string): string {
+  return `signals-lab:check-attempt:${moduleId}`;
+}
+
+/** Shared by every module's check: the name or student ID sealed into attempt codes. */
+const NAME_KEY = 'signals-lab:student-name';
+
+function readAttempt(moduleId: string): AttemptRecord | null {
+  try {
+    const raw = window.localStorage.getItem(attemptKey(moduleId));
+    return raw ? (JSON.parse(raw) as AttemptRecord) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeAttempt(moduleId: string, record: AttemptRecord): void {
+  window.localStorage.setItem(attemptKey(moduleId), JSON.stringify(record));
 }
 
 export interface CheckProgress {
@@ -70,6 +98,7 @@ export function resetCheckAnswers(
   questions: readonly PredictionQuestion[]
 ): void {
   for (const q of questions) window.localStorage.removeItem(answerKey(moduleId, q.id));
+  window.localStorage.removeItem(attemptKey(moduleId));
   notifyStorageChange();
   logEvent(moduleId, 'prediction_check_reset', {});
 }
@@ -143,6 +172,11 @@ export function PredictionCheck({
   function choose(qIndex: number, opt: PredictionOption): void {
     if (advancing) return;
     const q = questions[qIndex];
+    const now = Date.now();
+    // The clock starts at the first answer, not when the tab opens.
+    if (answers.every((a) => a === null) || !readAttempt(moduleId)) {
+      writeAttempt(moduleId, { startedAt: now });
+    }
     window.localStorage.setItem(answerKey(moduleId, q.id), opt.id);
     notifyStorageChange();
     logEvent(moduleId, 'prediction_answered', {
@@ -157,6 +191,8 @@ export function PredictionCheck({
         (qq, i) => qq.options.find((o) => o.id === after[i])?.correct
       ).length;
       logEvent(moduleId, 'prediction_check_completed', { correct, total: questions.length });
+      const started = readAttempt(moduleId)?.startedAt ?? now;
+      writeAttempt(moduleId, { startedAt: started, finishedAt: now, nonce: newNonce() });
     }
     // Hold this question on screen, showing the choice, until the delay ends:
     // otherwise following "first unanswered" would jump ahead instantly.
@@ -186,6 +222,7 @@ export function PredictionCheck({
       )}
       {finished ? (
         <CheckResults
+          moduleId={moduleId}
           questions={questions}
           answers={answers}
           headingRef={headingRef}
@@ -320,11 +357,13 @@ function CheckQuestion({
 }
 
 function CheckResults({
+  moduleId,
   questions,
   answers,
   headingRef,
   onRetake,
 }: {
+  readonly moduleId: string;
   readonly questions: readonly PredictionQuestion[];
   readonly answers: readonly (string | null)[];
   readonly headingRef: React.RefObject<HTMLParagraphElement | null>;
@@ -362,6 +401,7 @@ function CheckResults({
           {t.retake}
         </button>
       </div>
+      <AttemptPanel moduleId={moduleId} correct={correct} total={total} />
       <ol className="flex flex-col gap-3">
         {results.map(({ q, chosen, right, ok }, i) => (
           <li
@@ -386,6 +426,138 @@ function CheckResults({
           </li>
         ))}
       </ol>
+    </div>
+  );
+}
+
+function formatDuration(
+  totalS: number,
+  t: ReturnType<typeof useMessages>['common']['prediction']
+): string {
+  const s = Math.max(0, Math.round(totalS));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  return t.duration(h, m, s % 60);
+}
+
+/**
+ * The result's paper trail: when the attempt started and finished, how
+ * long it took, and an attempt code sealing the score, finish time and the
+ * student's name — so a screenshot of this card can be checked on /verify.
+ */
+function AttemptPanel({
+  moduleId,
+  correct,
+  total,
+}: {
+  readonly moduleId: string;
+  readonly correct: number;
+  readonly total: number;
+}): React.JSX.Element {
+  const t = useMessages().common.prediction;
+  const lang = useLanguage();
+  const raw = useSyncExternalStore(
+    subscribeStorage,
+    () => window.localStorage.getItem(attemptKey(moduleId)) ?? '',
+    () => ''
+  );
+  const name = useSyncExternalStore(
+    subscribeStorage,
+    () => window.localStorage.getItem(NAME_KEY) ?? '',
+    () => ''
+  );
+  const [copied, setCopied] = useState(false);
+  let record: AttemptRecord | null = null;
+  try {
+    record = raw ? (JSON.parse(raw) as AttemptRecord) : null;
+  } catch {
+    record = null;
+  }
+
+  if (!record?.finishedAt || record.nonce === undefined) {
+    return (
+      <p className="rounded-md border border-[var(--border)] p-3 text-sm text-[var(--foreground)]/70">
+        {t.noLog}
+      </p>
+    );
+  }
+
+  const fmt = new Intl.DateTimeFormat(lang === 'th' ? 'th-TH' : 'en-GB', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    timeZoneName: 'short',
+  });
+  const durationS = (record.finishedAt - record.startedAt) / 1000;
+  const code = encodeAttempt(
+    { moduleId, score: correct, total, finishedAt: record.finishedAt, durationS },
+    name,
+    record.nonce
+  );
+
+  return (
+    <div className="flex flex-col gap-3 rounded-md border border-[var(--border)] p-4">
+      <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-3">
+        <div>
+          <dt className="text-xs text-[var(--foreground)]/60">{t.started}</dt>
+          <dd className="font-mono tabular-nums">{fmt.format(record.startedAt)}</dd>
+        </div>
+        <div>
+          <dt className="text-xs text-[var(--foreground)]/60">{t.finished}</dt>
+          <dd className="font-mono tabular-nums">{fmt.format(record.finishedAt)}</dd>
+        </div>
+        <div>
+          <dt className="text-xs text-[var(--foreground)]/60">{t.timeTaken}</dt>
+          <dd className="font-mono tabular-nums">{formatDuration(durationS, t)}</dd>
+        </div>
+      </dl>
+      <label className="flex flex-col gap-1 text-sm">
+        <span className="text-xs text-[var(--foreground)]/60">{t.nameLabel}</span>
+        <input
+          type="text"
+          value={name}
+          maxLength={80}
+          placeholder={t.namePlaceholder}
+          onChange={(e) => {
+            window.localStorage.setItem(NAME_KEY, e.target.value);
+            notifyStorageChange();
+          }}
+          className="rounded-md border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-[var(--foreground)]"
+        />
+      </label>
+      <div className="flex flex-wrap items-center gap-3">
+        <div>
+          <div className="text-xs text-[var(--foreground)]/60">{t.attemptCode}</div>
+          <div
+            className="font-mono text-lg font-semibold tracking-wider text-[var(--foreground)]"
+            data-testid="attempt-code"
+          >
+            {code}
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            void navigator.clipboard?.writeText(code).then(() => {
+              setCopied(true);
+              setTimeout(() => setCopied(false), 1500);
+            });
+          }}
+          className="rounded-md border border-[var(--border)] px-3 py-1.5 text-sm hover:bg-[var(--surface-2)]"
+        >
+          {copied ? t.copied : t.copy}
+        </button>
+        <a
+          href={`/verify?code=${encodeURIComponent(code)}`}
+          className="text-sm text-[var(--accent)] underline-offset-2 hover:underline"
+        >
+          {t.verifyLink}
+        </a>
+      </div>
+      <p className="text-xs text-[var(--foreground)]/60">{t.codeNote}</p>
     </div>
   );
 }
