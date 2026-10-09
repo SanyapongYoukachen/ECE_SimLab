@@ -51,6 +51,21 @@ export const en = {
         correct === total
           ? `All ${total} answered, all correct. Nicely done.`
           : `${correct} of ${total} correct. Review the ones you missed below, revisit them in the Explore tab, then retake the check.`,
+      started: 'Started',
+      finished: 'Finished',
+      timeTaken: 'Time taken',
+      duration: (h: number, m: number, s: number) =>
+        h > 0 ? `${h} h ${m} min ${s} s` : m > 0 ? `${m} min ${s} s` : `${s} s`,
+      nameLabel: 'Your name or student ID (sealed into the code)',
+      namePlaceholder: 'e.g. Somchai 6510001',
+      attemptCode: 'Attempt code',
+      copy: 'Copy code',
+      copied: 'Copied',
+      verifyLink: 'Verify a code →',
+      codeNote:
+        'The code carries this score, finish time and name. Your teacher can paste it into the Verify page: if anything on a screenshot was changed, it will not match.',
+      noLog:
+        'This result was finished before attempt codes existed, so there is no time log. Retake the check to get one.',
       questionOf: (n: number, total: number) => `Question ${n} of ${total}`,
       stepperHint: 'Choosing an answer moves on. Your score appears after the last question.',
       previous: '← Previous',
@@ -78,6 +93,27 @@ export const en = {
     more: (module: string) => `More in ${module}`,
     hubIntro:
       'Pick a topic. Each one opens the simulator on that idea, with the theory, a worked example and common mistakes underneath.',
+  },
+
+  verify: {
+    title: 'Verify an attempt code',
+    intro:
+      'Paste the attempt code from a student’s result and type their name or student ID exactly as they entered it. The code carries the real score and finish time.',
+    codeLabel: 'Attempt code',
+    nameLabel: 'Student’s name or ID (as entered on the result)',
+    notACode: 'That isn’t an attempt code. Codes look like 7K3F9Q-X2H4M2-ABCD12.',
+    valid: '✓ Genuine: this code was issued for this name and this result',
+    invalid: '✗ Does not match',
+    invalidHelp:
+      'Either the name differs from the one entered on the result (check spelling), or the code was copied or changed. A result whose score or time was edited in a screenshot will not match its code.',
+    module: 'Module',
+    score: 'Score',
+    scoreValue: (score: number, total: number) => `${score} / ${total} correct`,
+    finished: 'Finished',
+    timeTaken: 'Time taken',
+    duration: (m: number, s: number) => `${m} min ${s} s`,
+    limits:
+      'Codes are checked in your browser; no results are stored on a server. They catch edited screenshots and borrowed results, but they are not a secure exam system.',
   },
 
   landing: {
