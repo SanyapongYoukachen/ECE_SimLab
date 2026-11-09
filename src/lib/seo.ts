@@ -18,7 +18,15 @@ export const SITE_URL = (
 export const SITE_NAME = 'ECE Labsim';
 
 export type SeoPage =
-  'home' | 'convolution' | 'fourier' | 'ac' | 'circuits' | 'sensors' | 'simulator' | 'electronics';
+  | 'home'
+  | 'convolution'
+  | 'fourier'
+  | 'ac'
+  | 'circuits'
+  | 'sensors'
+  | 'simulator'
+  | 'electronics'
+  | 'actuators';
 
 interface PageSeo {
   readonly path: string;
@@ -38,7 +46,7 @@ export const SEO: Readonly<Record<SeoPage, PageSeo>> = {
     path: '/',
     title: 'ECE Labsim — Interactive Circuit Simulator & Signal Graphs',
     description:
-      'Free interactive circuit simulator and signal graphs for engineering students: convolution, Fourier transform, AC and DC circuits, sensors, a Wheatstone bridge lab and electronics.',
+      'Free interactive circuit simulator and signal graphs for engineering students: convolution, Fourier transform, AC and DC circuits, sensors, a Wheatstone bridge lab, electronics and actuators.',
     keywords: [
       'circuit simulator',
       'online circuit simulator',
@@ -61,6 +69,7 @@ export const SEO: Readonly<Record<SeoPage, PageSeo>> = {
       'Sensors',
       'Wheatstone bridge',
       'Semiconductor electronics',
+      'Actuators',
     ],
     priority: 1,
   },
@@ -229,6 +238,32 @@ export const SEO: Readonly<Record<SeoPage, PageSeo>> = {
     teaches: ['P-N junction', 'Diodes', 'Bipolar junction transistor', 'Common-emitter amplifier'],
     priority: 0.9,
   },
+  actuators: {
+    path: '/actuators',
+    title: 'Actuator Simulator — DC Motor, Stepper Motor & Relay',
+    description:
+      'Interactive actuators: a DC motor spinning at its steady-state speed, a stepper motor advancing full and half steps, and a relay switching its load once coil current clears pull-in.',
+    keywords: [
+      'DC motor simulator',
+      'stepper motor simulator',
+      'relay simulator',
+      'actuator simulator',
+      'motor torque speed curve',
+      'full step half step',
+      'relay pull-in current',
+      'มอเตอร์ไฟตรง',
+      'มอเตอร์สเตป',
+      'รีเลย์',
+    ],
+    teaches: [
+      'DC motor steady state',
+      'Armature circuit',
+      'Torque-speed balance',
+      'Stepper motor sequencing',
+      'Relay pull-in current',
+    ],
+    priority: 0.9,
+  },
 };
 
 /** Page metadata: title, description, canonical URL and social previews. */
@@ -285,7 +320,16 @@ export function moduleJsonLd(page: Exclude<SeoPage, 'home'>): Record<string, unk
 /** The landing page: the site itself plus the list of modules. */
 export function siteJsonLd(): Record<string, unknown>[] {
   const modules = (
-    ['convolution', 'fourier', 'ac', 'circuits', 'sensors', 'simulator', 'electronics'] as const
+    [
+      'convolution',
+      'fourier',
+      'ac',
+      'circuits',
+      'sensors',
+      'simulator',
+      'electronics',
+      'actuators',
+    ] as const
   ).map((page, i) => ({
     '@type': 'ListItem',
     position: i + 1,
