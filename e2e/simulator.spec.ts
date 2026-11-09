@@ -25,9 +25,29 @@ test.describe('circuit simulator', () => {
     await page.getByRole('button', { name: 'Balance the bridge (solve R4)' }).click();
 
     await expect(
-      page.getByText('Galvanometer current').locator('..').getByText('0.00 mA')
+      page.getByText('Galvanometer current').locator('..').getByText('0.00 µA')
     ).toBeVisible();
     await expect(page.getByText('Balanced?').locator('..').getByText('Yes')).toBeVisible();
+  });
+
+  test('balancing a non-round ratio survives a reload', async ({ page }) => {
+    await page.goto('/simulator?predict=off&r1=300&r2=100&r3=100&r4=150');
+
+    await page.getByRole('button', { name: 'Balance the bridge (solve R4)' }).click();
+    await expect(page.getByText('Balanced?').locator('..').getByText('Yes')).toBeVisible();
+
+    await page.reload();
+    await expect(page.getByText('Balanced?').locator('..').getByText('Yes')).toBeVisible();
+  });
+
+  test('the balance button is disabled, with a reason, when the balance point is off the R4 scale', async ({
+    page,
+  }) => {
+    await page.goto('/simulator?predict=off&r1=10&r2=2000&r3=2000');
+
+    const button = page.getByRole('button', { name: 'Balance the bridge (solve R4)' });
+    await expect(button).toBeDisabled();
+    await expect(page.getByText(/Balance needs R4 = 400\.00 kΩ/)).toBeVisible();
   });
 
   test('moving a resistor slider updates the live balance expression', async ({ page }) => {
@@ -49,10 +69,10 @@ test.describe('circuit simulator', () => {
     page,
   }) => {
     await page.goto('/simulator');
-    await expect(page.getByText('Check your understanding')).toBeVisible();
+    await expect(page.getByRole('tab', { name: /Check your understanding/ })).toBeVisible();
 
     await page.goto('/simulator?predict=off');
-    await expect(page.getByText('Check your understanding')).toHaveCount(0);
+    await expect(page.getByRole('tab', { name: /Check your understanding/ })).toHaveCount(0);
   });
 
   test('practice mode gates the simulator behind one question, like the other modules', async ({
@@ -64,5 +84,22 @@ test.describe('circuit simulator', () => {
     const dialog = page.getByRole('dialog', { name: 'Predict before you explore' });
     await expect(dialog).toBeVisible();
     await expect(page.getByRole('slider')).toHaveCount(0);
+  });
+});
+
+test.describe('Wheatstone bridge: output voltage at the galvanometer', () => {
+  test('the schematic announces Vo = VB − VC, and it follows a resistor change', async ({
+    page,
+  }) => {
+    await page.goto('/simulator?predict=off&r1=100&r2=100&r3=100&r4=150');
+    const schematic = page.getByRole('img', { name: /Wheatstone bridge schematic/ });
+    // VB = 4.5 V, VC = 9·150/250 = 5.4 V (Rg loading pulls it slightly) → Vo negative.
+    await expect(schematic).toHaveAttribute('aria-label', /Output voltage Vo = VB − VC = -/);
+
+    await page.getByRole('button', { name: 'Balance the bridge (solve R4)' }).click();
+    await expect(schematic).toHaveAttribute(
+      'aria-label',
+      /Output voltage Vo = VB − VC = 0\.000 mV/
+    );
   });
 });

@@ -10,7 +10,7 @@ test.describe('fourier module', () => {
     await freqSlider.focus();
     for (let i = 0; i < 5; i++) await freqSlider.press('ArrowRight');
 
-    await expect(page.getByText(/spectral leakage/)).toBeVisible();
+    await expect(page.getByText(/Component 3 sits between bins .* spectral leakage/)).toBeVisible();
   });
 
   test('snap-to-bin button returns component 3 to a clean bin', async ({ page }) => {

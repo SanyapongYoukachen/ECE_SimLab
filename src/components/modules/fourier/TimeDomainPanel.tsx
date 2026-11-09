@@ -6,6 +6,7 @@ import { PlotCanvas } from '@/components/ui';
 import { timeScales } from './scales';
 import type { WindowType } from '@/lib/dsp';
 import { makeWindow } from '@/lib/dsp';
+import { useMessages } from '@/lib/i18n';
 
 const HEIGHT = 200;
 
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export function TimeDomainPanel({ signal, window }: Props): React.JSX.Element {
+  const t = useMessages().fourier;
   const handleDraw = useCallback(
     (ctx: CanvasRenderingContext2D, size: { width: number; height: number }, theme: PlotTheme) => {
       ctx.clearRect(0, 0, size.width, size.height);
@@ -67,7 +69,7 @@ export function TimeDomainPanel({ signal, window }: Props): React.JSX.Element {
             className="inline-block h-2 w-2 rounded-full bg-[var(--plot-input)]"
             aria-hidden="true"
           />
-          <span className="text-[var(--foreground)]/70">observed signal (sum of 3 components)</span>
+          <span className="text-[var(--foreground)]/70">{t.observed}</span>
         </span>
         {window !== 'rect' && (
           <span className="inline-flex items-center gap-1.5">
@@ -75,15 +77,13 @@ export function TimeDomainPanel({ signal, window }: Props): React.JSX.Element {
               className="inline-block h-2 w-2 rounded-full bg-[var(--plot-active)]"
               aria-hidden="true"
             />
-            <span className="text-[var(--foreground)]/70">
-              after windowing — tapered at the edges
-            </span>
+            <span className="text-[var(--foreground)]/70">{t.windowed}</span>
           </span>
         )}
       </div>
       <PlotCanvas
         height={HEIGHT}
-        ariaLabel={`Time-domain signal, ${signal.length} samples, built from three sinusoidal components.`}
+        ariaLabel={t.timeAria(signal.length)}
         onDraw={handleDraw}
         deps={[signal, window]}
       />

@@ -7,9 +7,13 @@ import {
   PredictFlagSchema,
   RelayStateSchema,
   SimulatorStateSchema,
+  AcStateSchema,
+  SensorsStateSchema,
+  ElectronicsStateSchema,
   StepperStateSchema,
-  TheoremStateSchema,
   WheatstoneStateSchema,
+  ModuleViewStateSchema,
+  type ModuleViewState,
   type ActuatorsState,
   type CircuitState,
   type ConvolutionState,
@@ -17,8 +21,10 @@ import {
   type FourierState,
   type RelayState,
   type SimulatorState,
+  type AcState,
+  type SensorsState,
+  type ElectronicsState,
   type StepperState,
-  type TheoremState,
   type WheatstoneState,
 } from './schemas';
 
@@ -81,19 +87,129 @@ export function encodeFourierState(state: FourierState): URLSearchParams {
   return params;
 }
 
-export function decodeTheoremState(params: URLSearchParams): TheoremState {
+export function decodeAcState(params: URLSearchParams): AcState {
   const raw = {
-    length: num(params, 'length'),
-    preset: params.get('preset') ?? undefined,
+    mode: params.get('mode') ?? undefined,
+    shape: params.get('shape') ?? undefined,
+    peak: num(params, 'peak'),
+    phase: num(params, 'phase'),
+    freq: num(params, 'freq'),
+    load: params.get('load') ?? undefined,
+    vrms: num(params, 'vrms'),
+    r: num(params, 'r'),
+    l: num(params, 'l'),
+    c: num(params, 'c'),
+    turns: num(params, 'turns'),
+    flux: num(params, 'flux'),
+    area: num(params, 'area'),
+    rpm: num(params, 'rpm'),
+    poles: num(params, 'poles'),
+    rload: num(params, 'rload'),
+    ra: num(params, 'ra'),
+    vph: num(params, 'vph'),
+    conn: params.get('conn') ?? undefined,
+    rph: num(params, 'rph'),
+    xph: num(params, 'xph'),
+    unb: num(params, 'unb'),
   };
-  const result = TheoremStateSchema.safeParse(raw);
-  return result.success ? result.data : TheoremStateSchema.parse({});
+  const result = AcStateSchema.safeParse(raw);
+  return result.success ? result.data : AcStateSchema.parse({});
 }
 
-export function encodeTheoremState(state: TheoremState): URLSearchParams {
+export function encodeAcState(state: AcState): URLSearchParams {
   const params = new URLSearchParams();
-  params.set('length', String(state.length));
-  params.set('preset', state.preset);
+  // No `mode`: the section is the page's path (/ac/<topic>, /circuits/<topic>).
+  params.set('shape', state.shape);
+  params.set('peak', String(state.peak));
+  params.set('phase', String(state.phase));
+  params.set('freq', String(state.freq));
+  params.set('load', state.load);
+  params.set('vrms', String(state.vrms));
+  params.set('r', String(state.r));
+  params.set('l', String(state.l));
+  params.set('c', String(state.c));
+  for (const key of [
+    'turns',
+    'flux',
+    'area',
+    'rpm',
+    'poles',
+    'rload',
+    'ra',
+    'vph',
+    'rph',
+    'xph',
+    'unb',
+  ] as const) {
+    params.set(key, String(state[key]));
+  }
+  params.set('conn', state.conn);
+  return params;
+}
+
+export function decodeSensorsState(params: URLSearchParams): SensorsState {
+  const raw = {
+    sensor: params.get('sensor') ?? undefined,
+    lux: num(params, 'lux'),
+    color: params.get('color') ?? undefined,
+    temp: num(params, 'temp'),
+    flow: params.get('flow') ?? undefined,
+  };
+  const result = SensorsStateSchema.safeParse(raw);
+  return result.success ? result.data : SensorsStateSchema.parse({});
+}
+
+export function encodeSensorsState(state: SensorsState): URLSearchParams {
+  const params = new URLSearchParams();
+  params.set('sensor', state.sensor);
+  // Lux moves on a log slider, so keep enough digits to survive a reload unchanged.
+  params.set('lux', String(Number(state.lux.toPrecision(6))));
+  params.set('color', state.color);
+  params.set('temp', String(state.temp));
+  params.set('flow', state.flow);
+  return params;
+}
+
+const ELECTRONICS_NUMBERS = [
+  'na',
+  'nd',
+  'va',
+  'vs',
+  'rd',
+  'vbb',
+  'rb',
+  'vcc',
+  'rc',
+  'beta',
+  'r1',
+  'r2',
+  'rca',
+  're',
+  'rl',
+  'vin',
+] as const;
+
+export function decodeElectronicsState(params: URLSearchParams): ElectronicsState {
+  const raw: Record<string, unknown> = {
+    kind: params.get('kind') ?? undefined,
+    approx: params.get('approx') ?? undefined,
+    byp: params.get('byp') ?? undefined,
+  };
+  for (const key of ELECTRONICS_NUMBERS) raw[key] = num(params, key);
+  const result = ElectronicsStateSchema.safeParse(raw);
+  return result.success ? result.data : ElectronicsStateSchema.parse({});
+}
+
+export function encodeElectronicsState(state: ElectronicsState): URLSearchParams {
+  // No `mode`: the section is the page's path (/electronics/<topic>).
+  const params = new URLSearchParams();
+  for (const key of ELECTRONICS_NUMBERS) {
+    // Log sliders (doping, resistances) need enough digits to survive a reload.
+    params.set(key, String(Number(state[key].toPrecision(6))));
+  }
+  params.set('kind', state.kind);
+  params.set('approx', state.approx);
+  params.set('byp', state.byp);
   return params;
 }
 
@@ -104,6 +220,11 @@ export function decodeCircuitState(params: URLSearchParams): CircuitState {
     r1: num(params, 'r1'),
     r2: num(params, 'r2'),
     topology: params.get('topology') ?? undefined,
+    r3: num(params, 'r3'),
+    rl: num(params, 'rl'),
+    v2: num(params, 'v2'),
+    equiv: params.get('equiv') ?? undefined,
+    method: params.get('method') ?? undefined,
   };
   const result = CircuitStateSchema.safeParse(raw);
   return result.success ? result.data : CircuitStateSchema.parse({});
@@ -111,11 +232,16 @@ export function decodeCircuitState(params: URLSearchParams): CircuitState {
 
 export function encodeCircuitState(state: CircuitState): URLSearchParams {
   const params = new URLSearchParams();
-  params.set('mode', state.mode);
+  // No `mode`: the section is the page's path (/ac/<topic>, /circuits/<topic>).
   params.set('voltage', state.voltage.toFixed(2));
   params.set('r1', state.r1.toFixed(1));
   params.set('r2', state.r2.toFixed(1));
   params.set('topology', state.topology);
+  params.set('r3', state.r3.toFixed(1));
+  params.set('rl', state.rl.toFixed(1));
+  params.set('v2', state.v2.toFixed(2));
+  params.set('equiv', state.equiv);
+  params.set('method', state.method);
   return params;
 }
 
@@ -139,19 +265,46 @@ export function decodeWheatstoneState(params: URLSearchParams): WheatstoneState 
     r3: num(params, 'r3'),
     r4: num(params, 'r4'),
     rg: num(params, 'rg'),
+    mode: params.get('mode') ?? undefined,
+    sensor: params.get('sensor') ?? undefined,
+    arm: params.get('arm') ?? undefined,
+    lux: num(params, 'lux'),
+    ntc: num(params, 'ntc'),
+    rtd: num(params, 'rtd'),
+    strain: num(params, 'strain'),
+    pot: num(params, 'pot'),
+    config: params.get('config') ?? undefined,
   };
   const result = WheatstoneStateSchema.safeParse(raw);
   return result.success ? result.data : WheatstoneStateSchema.parse({});
 }
 
+/**
+ * Up to 6 decimals, trailing zeros trimmed. A fixed 1-decimal encoding would
+ * round a solved balance point (e.g. R4 = 100·100/300 = 33.33 Ω) far enough
+ * off R1·R4 = R2·R3 that the bridge reads unbalanced after one URL round trip.
+ */
+function precise(n: number): string {
+  return String(Number(n.toFixed(6)));
+}
+
 export function encodeWheatstoneState(state: WheatstoneState): URLSearchParams {
   const params = new URLSearchParams();
-  params.set('voltage', state.voltage.toFixed(2));
-  params.set('r1', state.r1.toFixed(1));
-  params.set('r2', state.r2.toFixed(1));
-  params.set('r3', state.r3.toFixed(1));
-  params.set('r4', state.r4.toFixed(1));
-  params.set('rg', state.rg.toFixed(1));
+  params.set('voltage', precise(state.voltage));
+  params.set('r1', precise(state.r1));
+  params.set('r2', precise(state.r2));
+  params.set('r3', precise(state.r3));
+  params.set('r4', precise(state.r4));
+  params.set('rg', precise(state.rg));
+  params.set('mode', state.mode);
+  params.set('sensor', state.sensor);
+  params.set('arm', state.arm);
+  params.set('lux', precise(state.lux));
+  params.set('ntc', precise(state.ntc));
+  params.set('rtd', precise(state.rtd));
+  params.set('strain', precise(state.strain));
+  params.set('pot', precise(state.pot));
+  params.set('config', state.config);
   return params;
 }
 
@@ -159,6 +312,15 @@ export function decodePredictFlag(params: URLSearchParams): boolean {
   const raw = params.get('predict') ?? undefined;
   const result = PredictFlagSchema.safeParse(raw);
   return result.success ? result.data : true;
+}
+
+export function decodeModuleViewState(params: URLSearchParams): ModuleViewState {
+  const result = ModuleViewStateSchema.safeParse({ view: params.get('view') ?? undefined });
+  return result.success ? result.data : ModuleViewStateSchema.parse({});
+}
+
+export function encodeModuleViewState(state: ModuleViewState): URLSearchParams {
+  return new URLSearchParams({ view: state.view });
 }
 
 export function decodeActuatorsState(params: URLSearchParams): ActuatorsState {

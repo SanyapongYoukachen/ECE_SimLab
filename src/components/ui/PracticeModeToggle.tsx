@@ -1,5 +1,6 @@
 'use client';
 
+import { useMessages } from '@/lib/i18n';
 import { usePracticeMode, setPracticeMode } from './usePracticeMode';
 
 /**
@@ -10,21 +11,22 @@ import { usePracticeMode, setPracticeMode } from './usePracticeMode';
  */
 export function PracticeModeToggle(): React.JSX.Element {
   const practiceMode = usePracticeMode();
+  const t = useMessages().common.practice;
 
   return (
     <button
       type="button"
       onClick={() => setPracticeMode(!practiceMode)}
       aria-pressed={practiceMode}
-      title="Gate each module behind a random prediction question before unlocking it — for extra practice"
+      title={t.title}
       className={
         'rounded-md border px-3 py-1.5 text-sm transition-colors ' +
         (practiceMode
-          ? 'border-[var(--plot-active)] bg-[var(--plot-active)]/10 text-[var(--foreground)]'
+          ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--foreground)]'
           : 'border-[var(--border)] text-[var(--foreground)] hover:bg-[var(--surface-2)]')
       }
     >
-      Predict first: {practiceMode ? 'on' : 'off'}
+      {practiceMode ? t.on : t.off}
     </button>
   );
 }

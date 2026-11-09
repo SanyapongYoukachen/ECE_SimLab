@@ -13,6 +13,7 @@ import {
 import { PlotCanvas } from '@/components/ui';
 import type { CircuitMode, Topology } from '@/lib/state/schemas';
 import { formatResistance, formatVoltage } from './format';
+import { useMessages } from '@/lib/i18n';
 
 const HEIGHT = 220;
 const MARGIN_LEFT = 58;
@@ -39,6 +40,7 @@ interface Props {
  * output = the current/tap the module is asking them to reason about).
  */
 export function SchematicPanel({ mode, topology, voltage, r1, r2 }: Props): React.JSX.Element {
+  const t = useMessages().circuits;
   const handleDraw = useCallback(
     (ctx: CanvasRenderingContext2D, size: { width: number; height: number }, theme: PlotTheme) => {
       ctx.clearRect(0, 0, size.width, size.height);
@@ -168,10 +170,19 @@ export function SchematicPanel({ mode, topology, voltage, r1, r2 }: Props): Reac
 
   const ariaLabel =
     mode === 'ohm'
-      ? `Schematic: a ${formatVoltage(voltage)} source driving a ${formatResistance(r1)} resistor.`
+      ? t.schematicOhmAria(formatVoltage(voltage), formatResistance(r1))
       : mode === 'network'
-        ? `Schematic: two resistors, ${formatResistance(r1)} and ${formatResistance(r2)}, in ${topology} across a ${formatVoltage(voltage)} source.`
-        : `Schematic: a voltage divider — ${formatResistance(r1)} and ${formatResistance(r2)} in series across ${formatVoltage(voltage)}, tapped between them.`;
+        ? t.schematicNetworkAria(
+            formatResistance(r1),
+            formatResistance(r2),
+            topology,
+            formatVoltage(voltage)
+          )
+        : t.schematicDividerAria(
+            formatResistance(r1),
+            formatResistance(r2),
+            formatVoltage(voltage)
+          );
 
   return (
     <PlotCanvas

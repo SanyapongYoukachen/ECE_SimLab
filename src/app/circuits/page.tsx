@@ -1,19 +1,17 @@
 import type { Metadata } from 'next';
-import { ModuleShell } from '@/components/ui';
-import CircuitsModule from '@/components/modules/circuits/CircuitsModuleClient';
+import { JsonLd, ModuleShell } from '@/components/ui';
+import { TopicHub } from '@/components/topics/TopicHub';
+import { moduleJsonLd, pageMetadata } from '@/lib/seo';
+import { CIRCUIT_TOPICS } from '@/lib/topics';
 
-export const metadata: Metadata = {
-  title: 'DC Circuits — Signals Lab',
-  description: "Ohm's law, series and parallel resistors, and the voltage divider, made visible.",
-};
+export const metadata: Metadata = pageMetadata('circuits');
 
-export default function CircuitsPage(): React.JSX.Element {
+/** The module's hub: one card per topic page; each topic opens the simulator. */
+export default function Page(): React.JSX.Element {
   return (
-    <ModuleShell
-      title="DC circuits: Ohm's law and the voltage divider"
-      tagline="Drag the sliders to change the source voltage and the resistors. The schematic and the linked readout update together."
-    >
-      <CircuitsModule />
+    <ModuleShell page="circuits">
+      <JsonLd data={moduleJsonLd('circuits')} />
+      <TopicHub topics={CIRCUIT_TOPICS} />
     </ModuleShell>
   );
 }

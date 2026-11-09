@@ -36,18 +36,19 @@ test.describe('URL state', () => {
   });
 
   test('a configured circuits link reproduces voltage and resistance', async ({ page }) => {
-    await page.goto('/circuits?predict=off&mode=ohm&voltage=12&r1=100');
+    await page.goto('/circuits/ohms-law?predict=off&voltage=12&r1=100');
     await expect(page.getByText(/^I = V \/ R = 12\.00 V \/ 100 Ω/).first()).toBeVisible();
   });
 
   test('malformed circuits URL state falls back to defaults instead of breaking', async ({
     page,
   }) => {
-    await page.goto('/circuits?predict=off&mode=not-a-real-mode&voltage=-999');
-    await expect(page.getByRole('radio', { name: "Ohm's law" })).toHaveAttribute(
-      'aria-checked',
-      'true'
-    );
+    await page.goto('/circuits/ohms-law?predict=off&mode=not-a-real-mode&voltage=-999');
+    await expect(
+      page
+        .getByRole('navigation', { name: 'Circuit', exact: true })
+        .getByRole('link', { name: "Ohm's law" })
+    ).toHaveAttribute('aria-current', 'page');
     await expect(page.getByText(/^I = V \/ R = 9\.00 V/).first()).toBeVisible();
   });
 

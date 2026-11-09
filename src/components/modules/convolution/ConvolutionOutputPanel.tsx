@@ -3,6 +3,7 @@
 import { useCallback } from 'react';
 import { drawAxes, drawStems, type PlotTheme } from '@/lib/plot';
 import { PlotCanvas } from '@/components/ui';
+import { useMessages } from '@/lib/i18n';
 import { bottomScales } from './scales';
 
 const HEIGHT = 200;
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export function ConvolutionOutputPanel({ y, n }: Props): React.JSX.Element {
+  const t = useMessages().convolution;
   const handleDraw = useCallback(
     (ctx: CanvasRenderingContext2D, size: { width: number; height: number }, theme: PlotTheme) => {
       ctx.clearRect(0, 0, size.width, size.height);
@@ -79,17 +81,15 @@ export function ConvolutionOutputPanel({ y, n }: Props): React.JSX.Element {
             className="inline-block h-2 w-2 rounded-full bg-[var(--plot-output)]"
             aria-hidden="true"
           />
-          <span className="text-[var(--foreground)]/70">
-            y[n] — solid = computed, faint = not yet reached
-          </span>
+          <span className="text-[var(--foreground)]/70">{t.legendY}</span>
         </span>
         <span className="rounded bg-[var(--surface-2)] px-2 py-0.5 font-mono tabular-nums text-[var(--foreground)]/80">
-          length = N + M − 1 = {y.length}
+          {t.outputLength(y.length)}
         </span>
       </div>
       <PlotCanvas
         height={HEIGHT}
-        ariaLabel={`Output signal y[n], ${y.length} samples total. Currently showing shift n=${n}, y[${n}] = ${(y[n] ?? 0).toFixed(2)}.`}
+        ariaLabel={t.outputAria(y.length, n, (y[n] ?? 0).toFixed(2))}
         onDraw={handleDraw}
         deps={[y, n]}
       />

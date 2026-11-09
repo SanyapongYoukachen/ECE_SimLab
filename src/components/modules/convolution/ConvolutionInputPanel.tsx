@@ -5,6 +5,7 @@ import type { ConvStep } from '@/lib/dsp';
 import { drawAxes, drawStems, drawProductShade, type PlotTheme } from '@/lib/plot';
 import { PlotCanvas, type PlotPoint } from '@/components/ui';
 import { clamp, nearestSampleIndex } from '@/lib/plot/hitTest';
+import { useMessages } from '@/lib/i18n';
 import { topScales } from './scales';
 
 const HEIGHT = 220;
@@ -30,6 +31,7 @@ export function ConvolutionInputPanel({
   selectedIndex,
   onSelectIndex,
 }: Props): React.JSX.Element {
+  const t = useMessages().convolution;
   const draggingRef = useRef<number | null>(null);
 
   const handleDraw = useCallback(
@@ -104,22 +106,20 @@ export function ConvolutionInputPanel({
             className="inline-block h-2 w-2 rounded-full bg-[var(--plot-input)]"
             aria-hidden="true"
           />
-          <span className="text-[var(--foreground)]/70">x[k] — drag a stem to edit it</span>
+          <span className="text-[var(--foreground)]/70">{t.legendX}</span>
         </span>
         <span className="inline-flex items-center gap-1.5">
           <span
             className="inline-block h-2 w-2 rounded-full bg-[var(--plot-active)]"
             aria-hidden="true"
           />
-          <span className="text-[var(--foreground)]/70">
-            h[n−k] — the kernel, flipped and shifted
-          </span>
+          <span className="text-[var(--foreground)]/70">{t.legendH}</span>
         </span>
       </div>
       <PlotCanvas
         height={HEIGHT}
         interactive
-        ariaLabel={`Input signal and flipped kernel at shift n=${n}. Use arrow keys to select and edit a sample.`}
+        ariaLabel={t.inputAria(n)}
         onDraw={handleDraw}
         deps={[x, kernelValues, n, step, selectedIndex]}
         onPointerDown={(pos, e) => {

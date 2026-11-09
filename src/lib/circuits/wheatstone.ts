@@ -66,3 +66,18 @@ export function solveWheatstoneBridge(
 
   return { voltage, r1, r2, r3, r4, rg, vb, vc, i1, i2, i3, i4, ig, balanced };
 }
+
+/** The R4 that balances the bridge for the given ratio arms: R2·R3/R1. */
+export function balancingR4(r1: number, r2: number, r3: number): number {
+  return r1 > 0 ? (r2 * r3) / r1 : Infinity;
+}
+
+/**
+ * Galvanometer needle position in [-1, 1] (positive = right, i.e. current
+ * B -> C). tanh rather than linear so the needle stays on-scale far from
+ * balance yet still moves visibly for a tiny imbalance near it — how a bench
+ * null detector behaves once its sensitivity is turned up.
+ */
+export function galvanometerDeflection(ig: number, sensitivityAmps = 2e-3): number {
+  return Math.tanh(ig / sensitivityAmps);
+}

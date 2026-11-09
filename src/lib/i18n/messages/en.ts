@@ -1,0 +1,1225 @@
+/**
+ * English UI strings — the reference dictionary. `th.ts` is typed against
+ * this shape, so a key added here fails the typecheck until it's translated.
+ * Interpolated strings are functions; math notation (x[k], R1·R4, O(N log N))
+ * and units stay inline in both languages.
+ */
+export const en = {
+  common: {
+    home: '← ECE Labsim',
+    loading: 'Loading module…',
+    exportLog: 'Export log',
+    exportLogTitle: "Download this browser's interaction log as JSON",
+    theme: {
+      system: 'Theme: system',
+      light: 'Theme: light',
+      dark: 'Theme: dark',
+      cycleHint: 'Activate to cycle theme.',
+    },
+    practice: {
+      on: 'Predict first: on',
+      off: 'Predict first: off',
+      title:
+        'Gate each module behind a random prediction question before unlocking it — for extra practice',
+    },
+    language: {
+      /** The button names the language it switches TO, written in that language. */
+      switchLabel: 'ไทย',
+      ariaLabel: 'Switch language to Thai',
+    },
+    play: 'Play',
+    pause: 'Pause',
+    step: 'Step →',
+    yes: 'Yes',
+    no: 'No',
+    prediction: {
+      checkHeading: 'Check your understanding',
+      correct: '— correct',
+      notQuite: '— not quite',
+      gateDialog: 'Predict before you explore',
+      gateKicker: 'Predict first',
+      gateRight: 'Watch it play out below to confirm.',
+      gateWrong: 'Watch what actually happens below.',
+      continue: 'Continue',
+      tabsLabel: 'Module sections',
+      tabExplore: 'Explore',
+      progress: (answered: number, total: number) => `${answered}/${total}`,
+      progressAria: (answered: number, total: number) => `${answered} of ${total} answered`,
+      summary: (answered: number, total: number, correct: number) =>
+        `Answered ${answered} of ${total} · ${correct} correct`,
+      allDone: (correct: number, total: number) =>
+        correct === total
+          ? `All ${total} answered, all correct. Nicely done.`
+          : `${correct} of ${total} correct. Review the ones you missed below, revisit them in the Explore tab, then retake the check.`,
+      started: 'Started',
+      finished: 'Finished',
+      timeTaken: 'Time taken',
+      duration: (h: number, m: number, s: number) =>
+        h > 0 ? `${h} h ${m} min ${s} s` : m > 0 ? `${m} min ${s} s` : `${s} s`,
+      nameLabel: 'Your name or student ID (sealed into the code)',
+      namePlaceholder: 'e.g. Somchai 6510001',
+      attemptCode: 'Attempt code',
+      copy: 'Copy code',
+      copied: 'Copied',
+      verifyLink: 'Verify a code →',
+      codeNote:
+        'The code carries this score, finish time and name. Your teacher can paste it into the Verify page: if anything on a screenshot was changed, it will not match.',
+      noLog:
+        'This result was finished before attempt codes existed, so there is no time log. Retake the check to get one.',
+      questionOf: (n: number, total: number) => `Question ${n} of ${total}`,
+      stepperHint: 'Choosing an answer moves on. Your score appears after the last question.',
+      previous: '← Previous',
+      next: 'Next →',
+      resultsTitle: 'Your result',
+      score: (correct: number, total: number) => `${correct} / ${total} correct`,
+      yourAnswer: 'Your answer',
+      correctAnswer: 'Correct answer',
+      retake: 'Retake the check',
+      ctaTitle: 'Done exploring?',
+      ctaBody: (total: number) =>
+        `Check your understanding with ${total} short questions on what you just saw.`,
+      ctaButton: 'Start the check →',
+      ctaResume: (answered: number, total: number) =>
+        `You're part-way through the check: ${answered} of ${total} answered.`,
+      ctaContinue: 'Continue the check →',
+      ctaReview: 'See your result →',
+      back: '← Back to explore',
+    },
+  },
+
+  topic: {
+    mistakes: 'Common mistakes',
+    faq: 'Common questions',
+    more: (module: string) => `More in ${module}`,
+    hubIntro:
+      'Pick a topic. Each one opens the simulator on that idea, with the theory, a worked example and common mistakes underneath.',
+  },
+
+  verify: {
+    title: 'Verify an attempt code',
+    intro:
+      'Paste the attempt code from a student’s result and type their name or student ID exactly as they entered it. The code carries the real score and finish time.',
+    codeLabel: 'Attempt code',
+    nameLabel: 'Student’s name or ID (as entered on the result)',
+    notACode: 'That isn’t an attempt code. Codes look like 7K3F9Q-X2H4M2-ABCD12.',
+    valid: '✓ Genuine: this code was issued for this name and this result',
+    invalid: '✗ Does not match',
+    invalidHelp:
+      'Either the name differs from the one entered on the result (check spelling), or the code was copied or changed. A result whose score or time was edited in a screenshot will not match its code.',
+    module: 'Module',
+    score: 'Score',
+    scoreValue: (score: number, total: number) => `${score} / ${total} correct`,
+    finished: 'Finished',
+    timeTaken: 'Time taken',
+    duration: (m: number, s: number) => `${m} min ${s} s`,
+    limits:
+      'Codes are checked in your browser; no results are stored on a server. They catch edited screenshots and borrowed results, but they are not a secure exam system.',
+  },
+
+  landing: {
+    kicker: 'ECE Labsim',
+    title: 'Circuit simulators and signal graphs, made visible',
+    intro:
+      "You can already do the algebra. These seven linked instruments are for the part algebra doesn't teach: what the operation actually does. Manipulate either representation and watch the other respond in real time.",
+    modules: {
+      convolution: {
+        kicker: 'Module 1',
+        title: 'Convolution',
+        description:
+          'Watch a kernel flip and slide across a signal, sample by sample, with the arithmetic shown live.',
+      },
+      fourier: {
+        kicker: 'Module 2',
+        title: 'Fourier transform explorer',
+        description:
+          'Move a frequency off a bin centre and watch — and hear — its peak smear across the spectrum.',
+      },
+      ac: {
+        kicker: 'Module 3',
+        title: 'AC circuits',
+        description:
+          'Start where electricity is made: a coil turning in a magnetic field. Then sine waves, RMS and phasors, R, L and C loads with lead, lag and power factor, and three-phase supply.',
+      },
+      circuits: {
+        kicker: 'Module 4',
+        title: 'DC circuits',
+        description:
+          "Ohm's law, series and parallel resistors and the voltage divider, then Thévenin and Norton equivalents and mesh and nodal analysis — drag V and R and watch every number respond.",
+      },
+      electronics: {
+        kicker: 'Module 7',
+        title: 'Electronics',
+        description:
+          'From the P/N junction to a working amplifier: watch the depletion region form, find a diode’s operating point, drive a transistor through its regions and make a signal bigger.',
+      },
+      sensors: {
+        kicker: 'Module 5',
+        title: 'Sensors: from physics to signal',
+        description:
+          'Watch photons and heat free electrons inside an LDR and a thermistor, then follow the signal through a voltage divider and an ADC to a measured number.',
+      },
+      simulator: {
+        kicker: 'Module 6',
+        title: 'Circuit simulator',
+        description:
+          'Animated current flow through a real circuit — starting with the Wheatstone bridge. More circuits land here in tabs as they’re added.',
+      },
+    },
+    footerUrl:
+      'Every configuration — signal values, kernel, shift, window, amplitudes, frequencies, voltage, resistance — lives in the URL. Set it up, copy the link, and it reproduces exactly.',
+    footerPractice1:
+      'Every module opens unlocked, with a check-your-understanding prompt at the end — turn on',
+    footerPracticeStrong: 'Predict first',
+    footerPractice2:
+      "in a module's header to switch to a stricter guess-before-you-see gate for extra practice. Running a live lecture? Append",
+    footerPractice3: 'to any module URL to hide that prompt entirely.',
+  },
+
+  pages: {
+    convolution: {
+      title: 'Convolution: flip, slide, multiply, sum',
+      tagline:
+        'Drag the grey stems to edit the input. Scrub the shift to see the kernel flip and slide underneath it.',
+    },
+    fourier: {
+      title: 'The Fourier transform: from waveform to spectrum',
+      tagline:
+        "Move the third component off a bin centre and watch its peak smear — that's leakage, not a bug.",
+    },
+    ac: {
+      title: 'AC circuits: from the generator to three phase',
+      tagline:
+        'See how a generator makes a sine wave, what "220 V" really means, how R, L and C loads make current lead or lag, and why power grids use three phases.',
+    },
+    circuits: {
+      title: "DC circuits: from Ohm's law to Thévenin and mesh analysis",
+      tagline:
+        'Five topics, from a single resistor to whole networks. Each opens the simulator on that idea, with the theory and a worked example underneath.',
+    },
+    electronics: {
+      title: 'Electronics: from P/N junction to amplifier',
+      tagline:
+        'Four topics on semiconductor devices, each a live simulator with the theory and a worked example underneath.',
+    },
+    sensors: {
+      title: 'Sensors: from physics to signal',
+      tagline:
+        'A sensor is a physical measurement. Follow one from start to finish: light or heat frees electrons, the resistance falls, a divider turns that into a voltage, and an ADC turns the voltage into a number.',
+    },
+    simulator: {
+      title: 'Circuit simulator',
+      tagline:
+        'Watch current actually flow through the circuit. Pick a circuit from the tabs; more are coming.',
+    },
+  },
+
+  /**
+   * Server-rendered "About" text under each module: what a search engine
+   * reads (the module itself renders client-side), written for students.
+   * th.ts must keep the same number of points and FAQ entries.
+   */
+  about: {
+    heading: 'About this simulator',
+    whatHeading: 'What you can do here',
+    conceptsHeading: 'Concepts covered',
+    faqHeading: 'Common questions',
+    convolution: {
+      intro:
+        'This convolution visualizer shows discrete-time convolution the way it is taught by hand: flip the kernel h, slide it across the input x, multiply the overlapping samples and add them up. Every step of y[n] = Σ x[k]·h[n−k] is drawn on the signal graph and written out as arithmetic.',
+      points: [
+        'Scrub or play the shift n and watch the flipped kernel slide under the input signal.',
+        'Drag any input sample to edit the signal and see the output update instantly.',
+        'Compare kernels: moving average, triangular, exponential decay and the difference [1, −1].',
+        'Check the output length N + M − 1 and see which samples overlap at every shift.',
+      ],
+      concepts: [
+        'Discrete convolution',
+        'Impulse response',
+        'Moving-average filter',
+        'Commutativity',
+        'Output length N + M − 1',
+      ],
+      faq: [
+        {
+          q: 'How do you compute a convolution graphically?',
+          a: 'Flip h[k] to get h[−k], shift it by n to get h[n−k], multiply it sample by sample with x[k], and sum the products. Repeat for every n. The simulator animates exactly these four steps.',
+        },
+        {
+          q: 'Why is the output longer than the input?',
+          a: 'The kernel starts overlapping the input before the first sample and stops after the last, so an N-sample input convolved with an M-sample kernel gives N + M − 1 output samples.',
+        },
+      ],
+    },
+    fourier: {
+      intro:
+        'This Fourier transform explorer plots a signal in the time domain and its FFT magnitude spectrum side by side. Move a frequency off an FFT bin and watch its peak smear into spectral leakage; switch window functions to see how tapering the signal trades main-lobe width for lower sidelobes. You can listen to the tones as well.',
+      points: [
+        'Build a signal from three sinusoids and see each one appear as a spectral peak.',
+        'Slide one frequency between FFT bins to see spectral leakage appear and disappear.',
+        'Compare rectangular, Hann, Hamming and Blackman windows on a decibel scale.',
+        'Play the combined tones through your speakers with Web Audio.',
+      ],
+      concepts: [
+        'Discrete Fourier transform (DFT) and FFT',
+        'FFT bins and bin spacing',
+        'Spectral leakage',
+        'Window functions',
+        'Nyquist frequency',
+      ],
+      faq: [
+        {
+          q: 'What is spectral leakage?',
+          a: 'When a sinusoid does not complete a whole number of cycles in the FFT window, the hard cut at the window edges spreads its energy into neighbouring bins. Its single peak becomes a smeared hump.',
+        },
+        {
+          q: 'Why use a window function before the FFT?',
+          a: 'Tapering the signal to zero at both ends (Hann, Hamming, Blackman) greatly reduces the far sidelobes that leakage creates, at the cost of a slightly wider main peak.',
+        },
+      ],
+    },
+    ac: {
+      intro:
+        'This AC circuit simulator starts where electricity is made: a coil turning in a magnetic field, with the generated sine wave drawn as it turns. It then takes a single sine wave apart (peak, RMS and the rotating phasor), connects R, L and C loads so you can watch current lead or lag and read the power factor, and ends with three-phase supply: star and delta, line and phase voltage, and the neutral.',
+      points: [
+        'See why Vrms = Vp/√2 for a sine wave, and why that rule fails for square and triangle waves.',
+        'Watch a rotating phasor trace out the sine wave in real time.',
+        'Connect R, L, C, RL, RC or RLC loads and read the phase angle, impedance and power factor.',
+        'Follow v(t), i(t) and p(t) together, and find series resonance where X_L = X_C.',
+        'Turn an AC generator by hand and see Faraday’s law make the sine wave: E = N·B·A·ω, f = P·n/120.',
+        'Explore three-phase power: line voltage √3 × phase voltage, star and delta, neutral current and constant power.',
+      ],
+      concepts: [
+        'AC generator (alternator)',
+        'Faraday’s law of induction',
+        'Three-phase power',
+        'Star (Y) and delta (Δ) connection',
+        'RMS and peak voltage',
+        'Phasors and phase angle',
+        'Impedance Z = R + jX',
+        'Power factor (leading and lagging)',
+        'Real, reactive and apparent power',
+        'Series RLC resonance',
+      ],
+      faq: [
+        {
+          q: 'How do you calculate RMS voltage?',
+          a: 'Square the waveform, average it over one period, and take the square root. For a sine wave this gives Vrms = Vp/√2, so 220 V mains has a peak of about 311 V.',
+        },
+        {
+          q: 'What does a lagging power factor mean?',
+          a: 'In an inductive load such as a motor, the current peaks after the voltage. Only the in-phase part of the current delivers real power; the rest is reactive. Adding capacitance brings the power factor back toward 1.',
+        },
+        {
+          q: 'How does an AC generator produce a sine wave?',
+          a: 'A coil turning in a magnetic field sees its flux linkage change as N·B·A·cos θ. By Faraday’s law the induced EMF is the rate of change of that flux, e = N·B·A·ω·sin θ, so a steadily turning coil produces a sine wave. Its frequency is f = P·n/120 for P poles at n rpm: 50 Hz from 2 poles at 3000 rpm.',
+        },
+        {
+          q: 'Why is line voltage √3 times phase voltage in three phase?',
+          a: 'The phase voltages are 120° apart, so the difference between two of them, the line voltage, is √3 times longer and leads by 30°. That is why the same supply is quoted as 230/400 V.',
+        },
+      ],
+    },
+    circuits: {
+      intro:
+        "This DC circuit simulator links a live schematic to the numbers behind it. Drag the source voltage and resistances and watch Ohm's law, series and parallel resistors and the voltage divider respond together. Then go further: reduce a network to its Thévenin or Norton equivalent, and solve a two-source circuit by mesh analysis and by nodal analysis, with every equation filled in.",
+      points: [
+        "Explore Ohm's law with a live I-V graph and operating point.",
+        'Switch between series and parallel resistors and compare the power each one dissipates.',
+        'Build a voltage divider and see Vout move as the resistor ratio changes.',
+        'Find a Thévenin and Norton equivalent step by step, and see the load current stay the same in all three circuits.',
+        'Find the load that draws maximum power, RL = Rth, on a live power curve.',
+        'Solve the same circuit by mesh (KVL) and nodal (KCL) analysis and compare the equations.',
+      ],
+      concepts: [
+        "Ohm's law V = IR",
+        'Series and parallel resistance',
+        'Voltage divider',
+        'Thévenin equivalent',
+        'Norton equivalent',
+        'Maximum power transfer',
+        'Mesh analysis',
+        'Nodal analysis',
+      ],
+      faq: [
+        {
+          q: 'What stays the same in series and parallel circuits?',
+          a: 'Resistors in series carry the same current; resistors in parallel have the same voltage across them.',
+        },
+        {
+          q: 'How does a voltage divider work?',
+          a: 'Two resistors in series split the source voltage in proportion to their resistance: Vout = V × R2 / (R1 + R2).',
+        },
+        {
+          q: 'How do you find a Thévenin equivalent circuit?',
+          a: 'Vth is the open-circuit voltage at the terminals. Rth is the resistance seen into the terminals with every independent source switched off: voltage sources become wires, current sources open circuits. The Norton equivalent is a current source IN = Vth/Rth in parallel with the same Rth.',
+        },
+        {
+          q: 'Should I use mesh analysis or nodal analysis?',
+          a: 'Both give the same answer. Mesh analysis needs one KVL equation per window of the circuit; nodal analysis needs one KCL equation per node apart from ground. Pick the method with fewer unknowns.',
+        },
+      ],
+    },
+    electronics: {
+      intro:
+        'This electronics simulator builds up semiconductor devices one step at a time: the P/N junction and its depletion region, the diode and its I-V curve, the bipolar transistor and its three regions, and finally a common-emitter amplifier that turns a few millivolts into volts.',
+      points: [
+        'Watch holes, electrons and fixed ions form a depletion region, and see bias change the barrier and band diagram.',
+        'Find a diode’s operating point with a load line, and compare the ideal, 0.7 V and exponential models.',
+        'Drive an NPN transistor from cutoff through the active region into saturation on its output curves.',
+        'Bias a common-emitter amplifier, read its gain, and push it into distortion and clipping.',
+      ],
+      concepts: [
+        'P-N junction',
+        'Depletion region',
+        'Diode I-V curve',
+        'LED forward voltage',
+        'BJT regions',
+        'Common-emitter amplifier',
+      ],
+      faq: [
+        {
+          q: 'What is the difference between a diode and a transistor?',
+          a: 'A diode is one P/N junction: it lets current flow one way. A bipolar transistor is two junctions sharing a thin base: a small base current controls a much larger collector current, so it can switch and amplify.',
+        },
+        {
+          q: 'Why does an amplifier need biasing?',
+          a: 'The transistor only amplifies in its active region. Biasing sets a quiet operating point in the middle of that region so the signal can swing both up and down without reaching cutoff or saturation.',
+        },
+      ],
+    },
+    sensors: {
+      intro:
+        'This sensor simulator shows how a light-dependent resistor (LDR) and an NTC thermistor turn a physical quantity into an electrical signal. Inside the material, photons or heat free electrons; outside, a voltage divider turns the changing resistance into a voltage, and a 10-bit ADC turns that voltage into the number a microcontroller reads.',
+      points: [
+        'Watch photons free electrons in an LDR, and see why infrared below the band gap frees none.',
+        'Heat a thermistor and watch the lattice shake and electrons break free, with kT and the activation energy to scale.',
+        'Follow the electron flow around a voltage divider and read Vout on a 10-bit ADC.',
+        'Play a day–night or heat–cool cycle and watch the physical and electrical signals move together.',
+      ],
+      concepts: [
+        'Photoconductivity',
+        'Band gap and photon energy',
+        'NTC thermistor',
+        'Voltage divider',
+        'Analog-to-digital conversion',
+        'Sensor resolution',
+      ],
+      faq: [
+        {
+          q: 'How does an LDR (photoresistor) work?',
+          a: 'An LDR is a film of cadmium sulfide. Each photon it absorbs frees one electron, so brighter light means more free electrons and a lower resistance, from about a megohm in darkness to a few hundred ohms in sunlight. Photons below the band gap energy, such as infrared, free none.',
+        },
+        {
+          q: 'Why does a thermistor’s resistance decrease with temperature?',
+          a: 'In an NTC thermistor’s metal-oxide semiconductor, electrons need about 0.34 eV to break free. Thermal energy kT is only about 26 meV at room temperature, so only a small, exponentially temperature-dependent fraction escape. Warm it up and many more escape, so the resistance falls by about 4 % per °C.',
+        },
+        {
+          q: 'How do you connect a sensor to a microcontroller?',
+          a: 'Put the resistive sensor in a voltage divider with a fixed resistor of similar value. The divider turns the resistance into a voltage, and the microcontroller’s ADC turns the voltage into a number. Firmware then runs the calibration curve backwards to get lux or °C.',
+        },
+      ],
+    },
+    simulator: {
+      intro:
+        'This Wheatstone bridge circuit simulator animates current flowing through all four arms and the galvanometer, and shows the output voltage Vo = VB − VC as you change the resistors. Sensing mode turns it into a real measurement bridge: quarter, half and full bridges built from light-dependent resistors, thermistors, Pt100 RTDs and strain gauges.',
+      points: [
+        'Balance the bridge and watch the galvanometer current fall to zero at R1·R4 = R2·R3.',
+        'See the output voltage Vo at the galvanometer change live as each resistor moves.',
+        'Measure light, temperature and strain with LDR, NTC thermistor, RTD and strain gauge sensors.',
+        'Compare quarter, half and full bridge sensitivity (×1, ×2, ×4) and linearity.',
+      ],
+      concepts: [
+        'Wheatstone bridge balance',
+        'Bridge output voltage',
+        'Resistive sensors',
+        'Strain gauge bridges',
+        'Quarter, half and full bridges',
+      ],
+      faq: [
+        {
+          q: 'When is a Wheatstone bridge balanced?',
+          a: 'When R1·R4 = R2·R3. The two dividers then give the same voltage, so no current flows through the galvanometer, whatever its own resistance.',
+        },
+        {
+          q: 'What is the difference between a quarter, half and full bridge?',
+          a: 'They use one, two or four active sensor arms. With the partners changing in opposite directions, the output is about V/4, V/2 and V times ΔR/R, and the half and full bridges are linear.',
+        },
+      ],
+    },
+  },
+
+  convolution: {
+    legendX: 'x[k] — drag a stem to edit it',
+    legendH: 'h[n−k] — the kernel, flipped and shifted',
+    inputAria: (n: number) =>
+      `Input signal and flipped kernel at shift n=${n}. Use arrow keys to select and edit a sample.`,
+    legendY: 'y[n] — solid = computed, faint = not yet reached',
+    outputLength: (len: number) => `length = N + M − 1 = ${len}`,
+    outputAria: (len: number, n: number, yn: string) =>
+      `Output signal y[n], ${len} samples total. Currently showing shift n=${n}, y[${n}] = ${yn}.`,
+    noOverlap: '(no overlap yet)',
+    liveText: (n: number, last: number, expression: string) =>
+      `Shift n=${n} of ${last}. ${expression}`,
+    currentShift: 'Current shift',
+    shiftSlider: 'Shift n',
+    kernel: 'Kernel',
+    flipped: 'flipped',
+    kernels: {
+      rect: {
+        label: 'Rectangular',
+        note: 'An unweighted moving average — every sample in the window counts equally.',
+      },
+      tri: {
+        label: 'Triangular',
+        note: 'A weighted average that favours the centre sample — smoother than the rectangular kernel.',
+      },
+      expo: {
+        label: 'Exponential decay',
+        note: 'Weights recent samples most heavily — the impulse response of a simple RC-style filter.',
+      },
+      diff: {
+        label: 'Difference [1, −1]',
+        note: 'Not a smoother: it responds to change, not level. Constant regions of x collapse to zero.',
+      },
+    },
+  },
+
+  fourier: {
+    windows: {
+      rect: 'Rectangular',
+      hann: 'Hann',
+      hamming: 'Hamming',
+      blackman: 'Blackman',
+    },
+    liveText: (freq: string, onBin: boolean, window: string) =>
+      `Component 3 at ${freq} Hz, ${onBin ? 'on a bin centre' : 'between bins — leakage visible'}. Window: ${window}.`,
+    onBin: (bin: string) => `Component 3 sits exactly on a bin (${bin} Hz) — a single clean peak.`,
+    offBin: (bin: string) =>
+      `Component 3 sits between bins (nearest: ${bin} Hz) — this is spectral leakage, a consequence of the finite observation window, not a bug.`,
+    binSpacing: 'Bin spacing',
+    nyquist: 'Nyquist limit',
+    component3: 'Component 3',
+    onBinQ: 'On a bin?',
+    amp1: 'Amplitude 1 (250 Hz, fixed)',
+    amp2: 'Amplitude 2 (625 Hz, fixed)',
+    amp3: 'Amplitude 3',
+    freq3: 'Frequency 3',
+    snap: 'Snap to nearest bin',
+    hear: 'Hear the three tones combined',
+    windowFunction: 'Window function',
+    rectNote:
+      'Rectangular is really no window at all — a hard cutoff at the edges of the observation, which is what causes leakage in the first place.',
+    taperNote:
+      'Tapering the signal toward zero at both edges before transforming reduces (but never fully removes) leakage.',
+    spectrumAxis: 'vertical axis: dB, full scale = 0',
+    aboveThreshold: 'bins above threshold',
+    rectReference: 'rectangular-window reference',
+    trueFreq: "component 3's true frequency",
+    spectrumAria:
+      'Magnitude spectrum of the observed signal, in decibels relative to full scale, versus frequency in Hertz.',
+    observed: 'observed signal (sum of 3 components)',
+    windowed: 'after windowing — tapered at the edges',
+    timeAria: (n: number) =>
+      `Time-domain signal, ${n} samples, built from three sinusoidal components.`,
+  },
+
+  ac: {
+    modeLabel: 'Section',
+    modes: {
+      generator: 'Generator',
+      sine: 'Sine wave & RMS',
+      load: 'RLC load & power factor',
+      threephase: 'Three phase',
+    },
+    gen: {
+      intro:
+        'Electricity is made by turning a coil in a magnetic field. As the coil turns, the flux through it rises and falls as N·B·A·cos θ, and Faraday’s law turns that changing flux into a voltage: e = N·B·A·ω·sin θ. A steadily turning coil therefore gives a sine wave. Drag the rotor to turn it by hand.',
+      machineTitle: (poles: number) => `${poles}-pole AC generator`,
+      machineSub: (b: string) => `end view along the shaft · B = ${b} T`,
+      drag: 'drag the rotor to step through the cycle',
+      circuitLabel: 'slip rings → armature Ra → load R',
+      machineAria: (poles: number, peak: string) =>
+        `End view of a ${poles}-pole generator: the coil turns between the poles; dot and cross marks show the current direction in each coil side. Peak EMF ${peak}.`,
+      circuitAria: (ra: number, rl: number) =>
+        `External circuit: slip rings carry the coil's current through armature resistance ${ra} ohms to a ${rl} ohm load.`,
+      slowMotion: (ratio: string) => `shown in slow motion, 1 : ${ratio}`,
+      stopped: 'speed is 0 rpm: no motion, no voltage',
+      waveTitle: 'Output waveform',
+      legendE: 'e(t) generated',
+      legendV: 'v(t) terminal',
+      legendI: 'i(t) load',
+      waveAxis: 'ωt: 2 cycles, marker = now',
+      waveAria: (peak: string, v: string, i: string, f: string) =>
+        `Two cycles of generated EMF (peak ${peak}), terminal voltage (${v} rms) and load current (${i} rms) at ${f}; a marker shows the rotor's present angle.`,
+      stepBack: '◀ −15°',
+      stepForward: '+15° ▶',
+      polesLabel: 'Poles',
+      polesOption: (p: number) => `${p} poles (${p / 2} pair${p > 2 ? 's' : ''})`,
+      presetLabel: 'Preset',
+      presets: {
+        custom: 'Custom…',
+        grid50: 'Power station, 50 Hz (2 poles, 3000 rpm)',
+        grid60: 'Power station, 60 Hz (2 poles, 3600 rpm)',
+        four: '4 poles at 1500 rpm (still 50 Hz)',
+        hydro: 'Hydro, 12 poles at 500 rpm',
+        crank: 'Hand crank, 120 rpm (2 Hz)',
+      },
+      showCalc: 'Show calculations',
+      hideCalc: 'Hide calculations',
+      statPeak: 'Peak EMF',
+      statRmsEmf: 'RMS EMF',
+      statTerminal: 'Terminal V (rms)',
+      statFreq: 'Frequency',
+      statCurrent: 'RMS current',
+      statPower: 'Load power',
+      statPeriod: 'Period',
+      statTorque: 'Shaft torque',
+      turns: 'Turns N',
+      flux: 'Flux density B',
+      area: 'Coil area A',
+      speed: 'Speed n',
+      load: 'Load R',
+      armature: 'Armature Ra',
+      explain:
+        'Why a sine? The EMF depends on how fast the flux changes, not on how much flux there is. When the coil faces the poles (θ = 0°) the flux is largest but momentarily not changing, so e = 0. A quarter turn later the coil lies along the field: no flux through it, but it is changing fastest, so e is at its peak. More turns, a stronger field, a bigger coil or a faster spin all raise the voltage; only the speed and the number of poles set the frequency.',
+      live: (e: string, f: string, p: string) => `Generator: ${e} rms at ${f}, delivering ${p}.`,
+    },
+    three: {
+      intro:
+        'Power stations use three coils 120° apart instead of one, so the generator produces three sine voltages 120° apart. Three wires (plus a neutral) then carry the same power as six wires would in single phase, and a balanced load draws perfectly steady power.',
+      connLabel: 'Load connection',
+      conn: { wye: 'Star (Y)', delta: 'Delta (Δ)' },
+      machineTitle: 'Generator: a spinning magnet, three fixed coils',
+      machineAria:
+        'A magnet spins inside three stator coils a, b and c spaced 120 degrees apart; dot and cross marks show each coil’s current direction.',
+      phasorTitle: 'Phasors: three voltages 120° apart',
+      phasorAria: (vph: string, vl: string, phi: string) =>
+        `Phasor diagram: Va, Vb and Vc of ${vph} each, 120 degrees apart; line voltage Vab ${vl}; currents lag by ${phi}.`,
+      connTitle: 'How the loads connect',
+      connAria: (name: string) => `${name} connection of three loads to lines A, B and C.`,
+      starPoint: 'star point',
+      noNeutral: 'Δ: no neutral',
+      loadCaption: 'three loads, R + jX each',
+      panelV: 'phase voltages va, vb, vc',
+      panelI: 'line currents ia, ib, ic (grey: neutral)',
+      panelP: 'total power p(t) = Σ v·i',
+      lagging: 'lagging',
+      live: (vl: string, il: string, p: string) =>
+        `Three phase: line voltage ${vl}, line current ${il}, total power ${p}.`,
+      waveAria: (vph: string, p: string) =>
+        `Three phase voltages of ${vph} rms, 120 degrees apart; line currents; total power, averaging ${p}.`,
+      insightBalanced:
+        'Balanced: at every instant the three currents add up to zero, so the neutral carries nothing, and the total power p(t) is a flat line. That is why three-phase motors run smoothly, while single-phase power pulses at twice the supply frequency.',
+      insightUnbalanced: (iN: string) =>
+        `Unbalanced: phase A's load differs, so the currents no longer cancel. The difference, ${iN}, returns through the neutral, and the total power now ripples.`,
+      insightDelta: (iph: string, il: string) =>
+        `Delta: each load sits across a line voltage (√3 × the phase voltage), and each line current is the difference of two load currents: ${iph} in each load gives ${il} in each line, √3 times more when balanced. There is no neutral.`,
+      statVph: 'Phase voltage (line–neutral)',
+      statVl: 'Line voltage (line–line)',
+      statIl: 'Line current (A)',
+      statIph: 'Load current (phase A)',
+      statIn: 'Neutral current',
+      statP: 'Total real power P',
+      statQ: 'Total reactive power Q',
+      statPf: 'Power factor',
+      statS: 'Apparent power S',
+      statFreq: 'Frequency',
+      sliderV: 'Phase voltage (rms)',
+      sliderF: 'Frequency f',
+      sliderR: 'Load R per phase',
+      sliderX: 'Load reactance X per phase (inductive)',
+      sliderUnb: 'Phase A load vs B and C (1 = balanced)',
+      balance: 'Balance the load',
+    },
+    // Sine-wave section
+    shapeLabel: 'Waveform',
+    shapes: { sine: 'Sine', square: 'Square', triangle: 'Triangle' },
+    peak: 'Peak voltage Vp',
+    frequency: 'Frequency f',
+    phase: 'Phase φ',
+    statPeak: 'Peak Vp',
+    statPeakToPeak: 'Peak-to-peak Vpp',
+    statRms: 'RMS Vrms',
+    statRectified: 'Average of |v|',
+    statCrest: 'Crest factor Vp/Vrms',
+    statPeriod: 'Period T = 1/f',
+    statOmega: 'Angular frequency ω = 2πf',
+    statRule: 'Vp/√2',
+    ruleHolds: 'equals Vrms: true for a sine',
+    ruleFails: 'not Vrms: the √2 rule is sine-only',
+    panelV: 'v(t)',
+    panelV2: 'v²(t): its average is Vrms²',
+    rmsLine: '±Vrms',
+    meanSquare: 'mean of v²',
+    rmsExplain:
+      'RMS means root of the mean of the square: square the waveform (every part becomes positive), average it over one period, take the square root. For a sine the average of v² is exactly half of Vp², so Vrms = Vp/√2. A resistor fed Vrms of DC heats up exactly as much as it does on this AC.',
+    phasorTitle: 'Phasor: a rotating arrow whose height is v(t)',
+    phasorNote:
+      'Animation slowed to about one turn every 2 s; the real wave turns f times per second.',
+    notSine:
+      'Phasors only describe pure sine waves. A square or triangle wave is a sum of many sines (see the Fourier module), so it has no single rotating arrow.',
+    sineAria: (shape: string, peak: string, rms: string, f: string) =>
+      `${shape} wave, peak ${peak}, RMS ${rms}, frequency ${f}. Upper plot v(t) with ±RMS lines; lower plot v squared with its mean.`,
+    phasorAria: (angle: string) =>
+      `Phasor diagram: an arrow rotating anticlockwise, its vertical projection tracing the sine wave. Phase ${angle}.`,
+    // Load section
+    loadLabel: 'Load (series)',
+    loads: { r: 'R', l: 'L', c: 'C', rl: 'RL', rc: 'RC', rlc: 'RLC' },
+    sourceRms: 'Source voltage Vrms',
+    resistance: 'Resistance R',
+    inductance: 'Inductance L',
+    capacitance: 'Capacitance C',
+    tuneResonance: (f0: string) => `Tune to resonance (${f0})`,
+    statZ: 'Impedance Z = R + jX',
+    statZMag: '|Z|',
+    statTheta: 'Phase angle θ',
+    statI: 'Current Irms',
+    statPf: 'Power factor cos θ',
+    statP: 'Real power P',
+    statQ: 'Reactive power Q',
+    statS: 'Apparent power S',
+    statXl: 'X_L = ωL',
+    statXc: 'X_C = 1/(ωC)',
+    statVr: 'V_R',
+    statVl: 'V_L',
+    statVc: 'V_C',
+    statF0: 'Resonance f₀',
+    lagging: 'lagging',
+    leading: 'leading',
+    unity: 'unity',
+    panelI: 'i(t)',
+    panelP: 'p(t) = v·i',
+    averageP: 'P (average)',
+    returned: 'negative: energy flowing back to the source',
+    lagText: (deg: string) => `current lags voltage by ${deg}`,
+    leadText: (deg: string) => `current leads voltage by ${deg}`,
+    inPhaseText: 'current in phase with voltage',
+    phasorLoadTitle: 'Phasors: V and I',
+    phasorScale: 'V and I drawn to separate scales; the angle between them is what matters.',
+    triangleTitle: 'Power triangle',
+    loadHow: {
+      r: 'A resistor turns every joule into heat. Current rises and falls with the voltage, in phase (θ = 0), so p(t) never goes negative and the power factor is 1.',
+      l: 'An inductor opposes changes in current, so the current peaks a quarter cycle after the voltage: it lags by 90°. Energy is stored in the magnetic field and handed back every half cycle, so the average power is zero; it is all reactive (Q > 0).',
+      c: 'A capacitor has to charge before its voltage can rise, so the current peaks a quarter cycle before the voltage: it leads by 90°. Energy is stored in the electric field and returned, so the average power is zero; Q < 0.',
+      rl: 'Motors, transformers and fluorescent ballasts look like R plus L: the current lags by θ between 0° and 90°. Only the in-phase part of the current does work (P); the rest sloshes back and forth (Q). That is a lagging power factor.',
+      rc: 'An RC load draws a leading current: θ between 0° and −90°. Capacitors are added across inductive loads on purpose to cancel their lagging Q; that is power-factor correction.',
+      rlc: 'In series RLC, X_L and X_C pull in opposite directions. Below resonance the capacitor wins (leading); above it, the inductor wins (lagging). At f₀ they cancel exactly: Z = R, the current is largest, the power factor is 1, and V_L and V_C can each be far larger than the source voltage.',
+    },
+    loadAria: (load: string, theta: string, pf: string) =>
+      `${load} load. Voltage, current and instantaneous power over two cycles. Phase angle ${theta}, power factor ${pf}.`,
+    phasorLoadAria: (relation: string) => `Phasor diagram of V and I: ${relation}.`,
+    triangleAria: (p: string, q: string, s: string) =>
+      `Power triangle: real power ${p} along the bottom, reactive power ${q} upright, apparent power ${s} along the hypotenuse.`,
+    liveSine: (rms: string, peak: string) => `RMS ${rms}, peak ${peak}.`,
+    liveLoad: (i: string, relation: string, pf: string) =>
+      `Current ${i}, ${relation}, power factor ${pf}.`,
+  },
+
+  electronics: {
+    navLabel: 'Topic',
+    modes: { pn: 'P/N junction', diode: 'Diode', bjt: 'Transistor (BJT)', amp: 'CE amplifier' },
+    pn: {
+      intro:
+        'Left: P-type silicon, full of holes (red rings). Right: N-type, full of free electrons (blue dots). Between them, the depletion region holds only fixed ions, and their field stops more carriers crossing. Slide the bias to push the barrier down or up.',
+      insight: {
+        forward:
+          'Forward bias: the applied voltage works against the built-in field, so the barrier drops, the depletion region narrows, and carriers diffuse across in large numbers. The current grows exponentially with voltage.',
+        reverse:
+          'Reverse bias: the applied voltage adds to the barrier, so the depletion region widens and the field grows. Only a tiny trickle of minority carriers, generated by heat, is swept across.',
+        zero: 'No bias: diffusion of carriers across the junction is exactly balanced by the built-in field pushing them back. No net current flows.',
+      },
+      statVbi: 'Built-in potential Vbi',
+      statBarrier: 'Barrier q(Vbi − Va)',
+      statW: 'Depletion width W',
+      statEmax: 'Peak field Emax',
+      statXp: 'Into P side, xp',
+      statXn: 'Into N side, xn',
+      statMinority: 'Electrons in P (minority)',
+      statCurrent: 'Current I / Is',
+      sliderVa: 'Applied bias Va (P relative to N)',
+      sliderNa: 'P-side doping Na',
+      sliderNd: 'N-side doping Nd',
+      pLabel: (d: string) => `P-type · Na = ${d}`,
+      nLabel: (d: string) => `N-type · Nd = ${d}`,
+      widthLabel: (w: string) => `depletion width W = ${w}`,
+      legend: '○ hole   ● electron   ⊖ acceptor ion   ⊕ donor ion',
+      canvasAria: (w: string, va: string) =>
+        `P/N junction at ${va} V bias: holes on the P side, electrons on the N side, and a depletion region ${w} wide holding fixed ions.`,
+      barrier: (v: string) => `barrier ${v} eV`,
+      bandTitle: 'Energy bands across the junction (electron energy, eV)',
+      fieldTitle: (e: string) => `Electric field |E(x)|, peak ${e} kV/cm`,
+      bandAria: (v: string, e: string) =>
+        `Band diagram: conduction and valence bands bend by ${v} eV across the junction; the electric field peaks at ${e} kV/cm.`,
+    },
+    diode: {
+      intro:
+        'A source drives current through a resistor and a diode. Where the diode’s I-V curve meets the circuit’s load line is the operating point. Try each model, and swap in an LED.',
+      kindLabel: 'Diode',
+      kinds: {
+        si: 'Silicon',
+        ge: 'Germanium',
+        red: 'Red LED',
+        green: 'Green LED',
+        blue: 'Blue LED',
+      },
+      modelLabel: 'Model',
+      models: { ideal: 'Ideal', drop: 'Constant drop', exp: 'Exponential' },
+      insightReverse:
+        'Reverse biased: the diode blocks. The whole source voltage appears across it and only the tiny saturation current flows.',
+      insightBelow: (vf: string) =>
+        `Forward biased, but the source is below the diode’s turn-on voltage (about ${vf}), so almost no current flows yet.`,
+      insightLed: (nm: number, ev: string, vd: string) =>
+        `The LED is on: each electron crossing the junction gives up its energy as a ${nm} nm photon of about ${ev} eV, which is why it needs about ${vd}.`,
+      insightOn: (vd: string) =>
+        `Conducting: the diode settles at ${vd}, and the resistor takes the rest of the source voltage. The resistor, not the diode, sets the current.`,
+      statId: 'Current I',
+      statVd: 'Diode voltage VD',
+      statVr: 'Resistor voltage VR',
+      statPd: 'Diode power',
+      compareTitle: 'The same circuit solved with each model',
+      sliderVs: 'Source voltage VS',
+      sliderR: 'Resistance R',
+      circuitAria: (vs: string, r: string, i: string) =>
+        `Circuit: ${vs} V source, ${r} resistor and diode in series; current ${i}.`,
+      loadLine: 'load line',
+      ivTitle: 'I-V curve (orange) and load line (blue): the operating point Q is where they cross',
+      ivAria: (vd: string, id: string) =>
+        `Diode I-V curve with the circuit's load line; they cross at ${vd} V and ${id}.`,
+    },
+    bjt: {
+      intro:
+        'A small base current, set by VBB and RB, controls a collector current β times larger. The operating point moves along the collector circuit’s load line through three regions.',
+      regions: { cutoff: 'Cutoff', active: 'Active', saturation: 'Saturation' },
+      insight: {
+        cutoff:
+          'Almost no base current, so almost no collector current. The transistor is an open switch: VCE ≈ VCC.',
+        active:
+          'The collector current is β times the base current and set by the base, not the load. This is where amplifiers work.',
+        saturation:
+          'The base asks for more current than RC lets through. IC is capped near (VCC − 0.2 V)/RC, VCE ≈ 0.2 V, and IC/IB falls below β. The transistor is a closed switch.',
+      },
+      statIb: 'Base current IB',
+      statIc: 'Collector current IC',
+      statRatio: 'IC / IB',
+      statRegion: 'Region',
+      statVbe: 'VBE',
+      statVce: 'VCE',
+      statIcSat: 'IC at saturation',
+      statPc: 'Power in transistor',
+      sliderVbb: 'Base supply VBB',
+      sliderRb: 'Base resistor RB',
+      sliderVcc: 'Collector supply VCC',
+      sliderRc: 'Collector resistor RC',
+      sliderBeta: 'Current gain β',
+      circuitAria: (ib: string, ic: string, vce: string, region: string) =>
+        `NPN transistor circuit: base current ${ib}, collector current ${ic}, VCE ${vce} V, ${region} region.`,
+      curvesTitle:
+        'Output characteristics IC vs VCE, one curve per base current, with the load line',
+      curvesAria: (vce: string, ic: string) =>
+        `Transistor output curves with the load line; operating point at ${vce} V and ${ic}.`,
+      loadLine: 'load line',
+      saturationRegion: 'saturation',
+      cutoffRegion: 'cutoff (IB = 0)',
+    },
+    amp: {
+      intro:
+        'A voltage divider biases the transistor mid-way along its load line; a small input then swings the collector current, and RC turns that into a large, inverted output voltage.',
+      bypassLabel: 'Emitter bypass capacitor CE',
+      bypassOn: 'Fitted (high gain)',
+      bypassOff: 'Removed (stable gain)',
+      statusSaturated:
+        'The bias point is in saturation: the divider drives the base too hard. Raise R1 or lower R2 to bring Q back into the active region.',
+      statusBoth:
+        'The input is so large that the output clips at both cutoff (top) and saturation (bottom).',
+      statusCutoff:
+        'Clipping at cutoff: the collector current reaches zero on the negative input peaks, flattening the top of the output.',
+      statusSat:
+        'Clipping at saturation: VCE reaches about 0.2 V on the positive input peaks, flattening the bottom of the output.',
+      statusClean: 'Clean amplification: the output is an inverted, magnified copy of the input.',
+      statusDistort:
+        'Not clipping yet, but distorted: the collector current is exponential in VBE, so the negative half grows more than the positive one. Smaller inputs, or removing the bypass capacitor, make it linear again.',
+      statGain: 'Small-signal gain Av',
+      statMeasured: 'Measured gain (p-p)',
+      statIc: 'Bias current IC',
+      statVce: 'Bias VCE',
+      statRe: 're = VT / IE',
+      statRin: 'Input resistance Rin',
+      statSwing: 'Max output swing',
+      statVb: 'VB / VE / VC',
+      sliderVin: 'Input amplitude',
+      sliderVcc: 'Supply VCC',
+      sliders: {
+        r1: 'R1 (bias, top)',
+        r2: 'R2 (bias, bottom)',
+        rca: 'Collector resistor RC',
+        rl: 'Load RL',
+        re: 'Emitter resistor RE',
+      },
+      sliderBeta: 'Current gain β',
+      schematicAria: (vb: string, vc: string, ve: string) =>
+        `Common-emitter amplifier with voltage-divider bias: VB ${vb} V, VC ${vc} V, VE ${ve} V.`,
+      waveIn: 'vin (mV)',
+      waveOut: 'vout (V), dashed: ideal linear output',
+      waveTitle: 'Two cycles of input and output',
+      waveAria: (vin: string, gain: string) =>
+        `Input sine of ${vin} millivolts and the amplified output; small-signal gain ${gain}.`,
+      dcLine: 'DC load line',
+      acLine: 'AC load line',
+      loadTitle: 'Q-point on the output curves: DC and AC load lines; thick line = signal swing',
+      loadAria: (vce: string, ic: string) =>
+        `Output characteristics with DC and AC load lines; Q-point at ${vce} V and ${ic}.`,
+    },
+  },
+
+  circuits: {
+    modes: {
+      ohm: "Ohm's law",
+      network: 'Series & parallel',
+      divider: 'Voltage divider',
+      thevenin: 'Thévenin & Norton',
+      mesh: 'Mesh & node analysis',
+    },
+    topologies: {
+      series: 'Series',
+      parallel: 'Parallel',
+    },
+    sourceVoltage: 'Source voltage V',
+    resistanceR: 'Resistance R',
+    resistanceR1: 'Resistance R1',
+    resistanceR2: 'Resistance R2',
+    governingEquation: 'Governing equation',
+    circuit: 'Circuit',
+    topology: 'Topology',
+    currentI: 'Current I',
+    powerP: 'Power P = VI',
+    voltageV: 'Voltage V',
+    equivalent: 'Equivalent resistance',
+    totalCurrent: 'Total current',
+    vAcrossR1: 'Voltage across R1',
+    vAcrossR2: 'Voltage across R2',
+    iThroughR1: 'Current through R1',
+    iThroughR2: 'Current through R2',
+    vout: 'Vout (across R2)',
+    current: 'Current',
+    dividerRatio: 'Divider ratio R2/(R1+R2)',
+    readoutOhmAria: (v: string, mA: string) =>
+      `I-V load line for the resistor, with the operating point at ${v}, ${mA} milliamps.`,
+    readoutNetworkAria: (p1: string, p2: string) =>
+      `Power dissipated: R1 draws ${p1}, R2 draws ${p2}.`,
+    readoutDividerAria: (vR1: string, vOut: string) =>
+      `Voltage ladder: ${vR1} dropped across R1, ${vOut} across R2 as Vout.`,
+    schematicOhmAria: (v: string, r: string) => `Schematic: a ${v} source driving a ${r} resistor.`,
+    schematicNetworkAria: (r1: string, r2: string, topology: 'series' | 'parallel', v: string) =>
+      `Schematic: two resistors, ${r1} and ${r2}, in ${topology} across a ${v} source.`,
+    schematicDividerAria: (r1: string, r2: string, v: string) =>
+      `Schematic: a voltage divider — ${r1} and ${r2} in series across ${v}, tapped between them.`,
+    thevenin: {
+      intro:
+        'Seen from its load, any network of sources and resistors behaves like one voltage source Vth in series with one resistor Rth (Thévenin), or one current source IN in parallel with Rth (Norton). Switch views: the load RL gets exactly the same current in all three.',
+      viewLabel: 'Show the source network as',
+      views: {
+        original: 'Original circuit',
+        thevenin: 'Thévenin equivalent',
+        norton: 'Norton equivalent',
+      },
+      boxTitle: {
+        original: 'source network (as built)',
+        thevenin: 'Thévenin: Vth in series with Rth',
+        norton: 'Norton: IN in parallel with Rth',
+      },
+      step1: 'Open a–b (remove RL): no current flows in R3, so Vth is the R1–R2 divider',
+      step2: 'Switch the source off (replace V with a wire) and look into a–b',
+      step3: 'Short a–b: the Norton current',
+      step4: 'Reconnect the load',
+      sameLoad: (il: string) =>
+        `The load cannot tell the difference: IL = ${il} in the original circuit, the Thévenin equivalent and the Norton equivalent. That's why the equivalent is useful: analyse a complicated network once, then try any load with one line of arithmetic.`,
+      statVth: 'Thévenin voltage Vth',
+      statRth: 'Thévenin resistance Rth',
+      statIn: 'Norton current IN',
+      statIl: 'Load current IL',
+      statVl: 'Load voltage VL',
+      statPl: 'Load power PL',
+      statPmax: 'Max possible Pmax = Vth²/4Rth',
+      statEff: 'Efficiency RL/(Rth+RL)',
+      sliderV: 'Source voltage V',
+      sliders: {
+        r1: 'Resistance R1',
+        r2: 'Resistance R2',
+        r3: 'Resistance R3',
+        rl: 'Load resistance RL',
+      },
+      matchLoad: (rth: string) => `Set RL = Rth (${rth}) for maximum power`,
+      ivTitle: 'Terminal line V = Vth − I·Rth [V vs mA], with the load line',
+      loadLine: 'load line V = I·RL',
+      powerTitle: 'Power in the load [mW] vs RL [Ω]',
+      matched: 'RL = Rth',
+      schematicAria: (view: string, vth: string, rth: string, il: string) =>
+        `Schematic, ${view}: the source network across terminals a and b feeds load RL. Vth ${vth}, Rth ${rth}, load current ${il}.`,
+      ivAria: (vth: string, iN: string, il: string) =>
+        `Terminal I-V line from ${vth} at open circuit to ${iN} at short circuit; the load line crosses it at ${il}.`,
+      powerAria: (rth: string, pmax: string, pl: string) =>
+        `Load power against load resistance, peaking at ${pmax} when RL equals Rth, ${rth}. Now ${pl}.`,
+    },
+    mesh: {
+      intro:
+        'Two sources, three resistors: too many for series and parallel rules. Mesh analysis writes Kirchhoff’s voltage law around each window, with a loop current I1 and I2 as the unknowns. Nodal analysis writes Kirchhoff’s current law at node A, with its voltage VA as the only unknown. Switch methods: the branch currents come out the same.',
+      methodLabel: 'Method',
+      methods: { mesh: 'Mesh (KVL, loop currents)', node: 'Node (KCL, node voltages)' },
+      meshHow: 'KVL around each window, clockwise, then solve the 2 × 2 system:',
+      nodeHow: 'KCL at node A (sum of currents leaving = 0), with ground as 0 V:',
+      loop1: 'Loop 1',
+      loop2: 'Loop 2',
+      kcl: 'KCL at A',
+      branchR2: 'R2 carries both loop currents',
+      meshSign:
+        'Both loop currents are assumed clockwise. A negative answer just means that loop current actually flows anticlockwise, and the arrow on the schematic flips to show it.',
+      nodeSign:
+        'Each branch current is written as leaving node A. A negative value means it actually flows into A; the arrows on the schematic show the real directions.',
+      compare: (va: string, ir2: string) =>
+        `Same circuit, same answers: VA = ${va} and I_R2 = ${ir2} either way. Mesh needed two equations; nodal needed one. For each new circuit, count windows and non-ground nodes, and pick the method with fewer unknowns.`,
+      statVa: 'Node voltage VA',
+      statI1: 'Mesh current I1 (clockwise)',
+      statI2: 'Mesh current I2 (clockwise)',
+      delivers: 'delivers',
+      absorbs: 'absorbs (charging)',
+      sliderV1: 'Source voltage V1',
+      sliderV2: 'Source voltage V2',
+      sliders: { r1: 'Resistance R1', r2: 'Resistance R2', r3: 'Resistance R3' },
+      clockwise: 'loop currents drawn clockwise when positive',
+      reference: '0 V (reference)',
+      schematicAria: (va: string, i1: string, i2: string) =>
+        `Schematic: V1 through R1 to node A, R2 from A to ground, R3 from A to V2. Node voltage ${va}; mesh currents I1 ${i1}, I2 ${i2}.`,
+    },
+  },
+
+  sensors: {
+    sensorLabel: 'Sensor',
+    sensors: { ldr: 'LDR (light)', ntc: 'NTC thermistor (temperature)' },
+    sensorShort: { ldr: 'LDR', ntc: 'NTC' },
+    intro: {
+      ldr: 'A light-dependent resistor is a thin film of cadmium sulfide. In the dark, almost every electron is bound to an atom, so it barely conducts. Each photon it absorbs frees one electron, so the more light, the lower the resistance.',
+      ntc: 'An NTC thermistor is a bead of metal-oxide semiconductor. Heat shakes its lattice, and a few electrons gain enough energy to break free. Warm it up and many more break free, so the resistance falls steeply.',
+    },
+    lightLevel: 'Light level (photons per second)',
+    temperature: 'Temperature',
+    colorLabel: 'Light colour (energy per photon)',
+    colors: {
+      blue: 'Blue 450 nm',
+      green: 'Green 555 nm',
+      red: 'Red 650 nm',
+      ir: 'Infrared 940 nm',
+    },
+    scenario: {
+      ldr: 'Night → noon → night',
+      ntc: 'Heat up, then cool down',
+    },
+    flowLabel: 'Show moving charge as',
+    flows: { electron: 'Electron flow', conventional: 'Conventional current' },
+    chainTitle: 'The measurement chain',
+    chain: {
+      physical: 'Physical quantity',
+      material: 'Free electrons',
+      resistance: 'Resistance',
+      circuit: 'Voltage',
+      digital: 'ADC code',
+      measured: 'Measured',
+      photons: (rate: string) => `${rate} photons/s`,
+      thermal: (kt: string) => `thermal energy kT = ${kt}`,
+      carriers: 'vs. the reference point',
+      nothingFreed: 'photons pass through',
+      resistanceSub: 'more electrons → lower R',
+      lsb: (step: string) => `1 step = ${step}`,
+      resolution: (step: string) => `1 step ≈ ${step} here`,
+    },
+    materialTitle: 'Inside the sensor: where the physics happens',
+    materialAria: {
+      ldr: (q: string, ratio: string) =>
+        `Magnified LDR film at ${q}: photons fall onto the film, free electrons drift toward the positive contact. Free electrons ${ratio} relative to 100 lux.`,
+      ntc: (q: string, ratio: string) =>
+        `Magnified thermistor at ${q}: lattice atoms vibrate, and electrons break free and drift toward the positive contact. Free electrons ${ratio} relative to 25 °C.`,
+    },
+    canvas: {
+      carriers: (ratio: string) => `free electrons ${ratio}`,
+      drift: 'e⁻ drift toward +',
+      conventional: 'conventional current I',
+      photon: (nm: number, ev: string, absorbed: boolean) =>
+        `${nm} nm photon: ${ev} eV ${absorbed ? '≥' : '<'} Eg`,
+      electronFlow: 'electrons: − → R fixed → sensor → +',
+      conventionalFlow: 'conventional I: + → sensor → R fixed → −',
+      current: (i: string, rate: string) => `I = ${i} = ${rate} e⁻/s`,
+    },
+    energyTitle: 'Energy picture',
+    energy: {
+      cb: 'Conduction band: free',
+      vb: 'Valence band: bound',
+      hole: 'hole',
+      bound: 'Bound electrons',
+      absorbed: 'hν ≥ Eg: the photon frees an electron',
+      notAbsorbed: 'hν < Eg: not enough energy, nothing freed',
+      ratio: (r: string) => `Ea is ${r}× the typical thermal kick kT,`,
+      tail: 'so only a tiny tail of electrons escape.',
+      ldrAria: (ev: string, absorbed: boolean) =>
+        `Band diagram: a ${ev} eV photon ${absorbed ? 'lifts an electron across' : 'falls short of'} the 1.8 eV band gap.`,
+      ntcAria: (kt: string, ea: string) =>
+        `Energy diagram: bound electrons sit ${ea} eV below the conduction band; thermal energy kT is ${kt} meV.`,
+    },
+    colorInsight: {
+      blue: 'A blue photon carries 2.76 eV, more than the 1.8 eV needed, but it still frees only one electron; the extra energy becomes heat. Brightness (photons per second) sets the resistance, not colour.',
+      green:
+        'A green photon carries 2.23 eV, enough to lift an electron across the 1.8 eV gap. Every absorbed photon frees one electron, so the resistance follows the number of photons per second.',
+      red: 'A red photon carries 1.91 eV, just above the 1.8 eV gap, so it still frees an electron. Redder than about 690 nm, and the LDR stops responding.',
+      ir: 'An infrared photon carries only 1.32 eV, less than the 1.8 eV gap, so it passes straight through. However bright the infrared, the LDR stays dark: a sensor measures only what its physics responds to.',
+    },
+    ntcInsight: (kt: string, ea: string, alpha: string) =>
+      `Thermal energy kT is ${kt} meV here, far below the ${ea} eV an electron needs. Only electrons in the far tail of the thermal distribution escape, and that tail grows exponentially: the resistance falls about ${alpha} % per °C at this temperature.`,
+    materialNote:
+      'Blue dots are free electrons; each red + marks an atom that has just lost one. Counts are compressed and time is slowed so you can watch it. A real sensor has about 10¹⁵ electrons passing through it each second.',
+    circuitTitle: 'Into the circuit: resistance becomes a voltage, then a number',
+    circuitNote:
+      'On its own, a sensor only changes resistance. To read it, drive a current through it: in a voltage divider with a fixed 10 kΩ resistor, the sensor’s share of the 5 V changes with its resistance. The ADC then turns Vout into one of 1024 codes.',
+    fixedName: 'R fixed',
+    adcTitle: 'ADC 10-bit',
+    circuitAria: (name: string, r: string, v: string, code: number) =>
+      `Voltage divider: 5 V source, ${name} at ${r} on top, 10 kΩ below. Vout ${v}, ADC code ${code}. Dots show charge moving around the loop.`,
+    trace: {
+      physical: { ldr: 'Physical signal: light [lx]', ntc: 'Physical signal: temperature [°C]' },
+      electrical: 'Electrical signal: Vout [V]',
+      time: 'last 12 s →',
+      aria: (q: string, v: string) =>
+        `Signal traces over the last 12 seconds. Now: physical ${q}, electrical Vout ${v}.`,
+    },
+    traceNote:
+      'Drag the slider or press Play. The top trace is what the sensor feels; the bottom trace is the voltage it produces. The shapes differ: the sensor is not linear.',
+    calibrationTitle: 'Calibration curves: reading the number back',
+    curves: {
+      resistance: {
+        ldr: 'Sensor: resistance vs. light (both log scales)',
+        ntc: 'Sensor: resistance vs. temperature (log scale)',
+      },
+      vout: { ldr: 'Circuit: Vout vs. light', ntc: 'Circuit: Vout vs. temperature' },
+      resistanceAria: (q: string, r: string) =>
+        `Resistance against the physical quantity; now ${q} gives ${r}.`,
+      voutAria: (q: string, v: string) =>
+        `Vout against the physical quantity; now ${q} gives ${v}.`,
+    },
+    calibrationNote:
+      'The microcontroller runs these curves backwards: ADC code → voltage → resistance → lux or °C. That is the "Measured" value in the chain. Where Vout changes steeply, one ADC step is a small change in the quantity (fine resolution); where the curve flattens, resolution is coarse.',
+    live: (q: string, r: string, v: string, code: number) =>
+      `${q}: resistance ${r}, Vout ${v}, ADC code ${code}.`,
+  },
+
+  simulator: {
+    circuit: 'Circuit',
+    tabs: {
+      wheatstone: 'Wheatstone bridge',
+    },
+    wheatstone: {
+      balanceCondition: 'Balance condition: R1·R4 = R2·R3',
+      balanceRatio: 'Balance condition, as ratios: R1/R2 = R3/R4',
+      ig: 'Galvanometer current',
+      vb: 'Node B voltage',
+      vc: 'Node C voltage',
+      vbc: 'Bridge voltage VB − VC',
+      r4Balance: 'R4 for balance (R2·R3/R1)',
+      balancedQ: 'Balanced?',
+      sourceVoltage: 'Source voltage V',
+      r4: 'R4 (the unknown, in a real bridge)',
+      rg: 'Galvanometer resistance Rg',
+      balanceButton: 'Balance the bridge (solve R4)',
+      balanceHint: (r4: string, min: string, max: string) =>
+        `Balance needs R4 = ${r4}, outside the R4 slider's ${min}–${max} range. Change the ratio arms R1–R3 first.`,
+      liveText: (balanced: boolean, ig: string) =>
+        `Bridge is ${balanced ? 'balanced' : 'unbalanced'}. Galvanometer current ${ig}.`,
+      needleRest: 'rests at centre zero',
+      needleDeflects: (right: boolean) => `deflects ${right ? 'right' : 'left'}`,
+      needlePinned: (right: boolean) => `is pinned hard ${right ? 'right' : 'left'}`,
+      schematicAria: (vo: string, ig: string, balanced: boolean, needle: string) =>
+        `Wheatstone bridge schematic. Output voltage Vo = VB − VC = ${vo}. Galvanometer current ${ig}, bridge is ${
+          balanced ? 'balanced' : 'unbalanced'
+        }. Current flow is animated through every branch, direction and speed reflecting each branch's current. The galvanometer needle ${needle}.`,
+
+      modeLabel: 'Bridge mode',
+      modes: {
+        free: 'Free (every arm adjustable)',
+        sensing: 'Sensing (one sensor arm)',
+      },
+      sensorLabel: 'Sensor',
+      armLabel: 'Sensor position',
+      sensors: {
+        ldr: {
+          name: 'Light (LDR)',
+          quantity: 'Light level',
+          how: 'A light-dependent resistor is a track of cadmium sulphide, a semiconductor. Each photon with enough energy frees an electron to conduct, so more light means more charge carriers and lower resistance: roughly R ∝ E^−0.7, about 5× lower for every tenfold increase in light.',
+        },
+        ntc: {
+          name: 'Temperature (NTC thermistor)',
+          quantity: 'Temperature',
+          how: 'An NTC thermistor is a bead of semiconducting metal oxide. Heat frees more charge carriers, so its resistance falls steeply and non-linearly as it warms: about −4 % per °C near room temperature (beta model, B = 3950 K).',
+        },
+        rtd: {
+          name: 'Temperature (Pt100 RTD)',
+          quantity: 'Temperature',
+          how: 'A Pt100 is a fine platinum wire, 100 Ω at 0 °C. Heat makes the metal lattice vibrate harder, scattering the electrons flowing through it, so resistance rises almost linearly: about +0.39 Ω per °C. A small change, but very stable and repeatable.',
+        },
+        strain: {
+          name: 'Strain gauge',
+          quantity: 'Strain',
+          how: 'A strain gauge is a zig-zag metal foil bonded to a part. Stretching the part makes the foil longer and thinner, so its resistance rises by GF·ε (gauge factor ≈ 2); compressing it does the opposite. At 1000 µε the change is only 0.2 %, which is exactly why strain gauges are read with a bridge.',
+        },
+        pot: {
+          name: 'Variable resistor',
+          quantity: 'Resistance',
+          how: "A plain variable resistor, with no physics in between: set the sensor arm's resistance directly and watch how the bridge responds.",
+        },
+      },
+      sensorR: 'Sensor resistance',
+      bridgeOut: 'Bridge output VB − VC',
+      meterRange: 'Meter full scale (auto)',
+      referenceNote: (reference: string, r: string) =>
+        `Every arm, fixed or sensing, equals the sensor's resistance at ${reference} (${r}), so the bridge reads zero there. Any change in the physical quantity unbalances it.`,
+      armNote: 'A sensor in R1 or R4 swings the output one way; in R2 or R3, the other.',
+      configLabel: 'Bridge configuration',
+      configs: {
+        quarter: 'Quarter (1 active arm)',
+        half: 'Half (2 active arms)',
+        full: 'Full (4 active arms)',
+      },
+      configShort: {
+        quarter: 'quarter',
+        half: 'half',
+        full: 'full',
+      },
+      configHow: {
+        quarter:
+          'Quarter bridge: one active sensor, three fixed completion resistors. Output ≈ V/4 · ΔR/R, and not quite linear, because only one divider moves and its own resistance change shifts its current.',
+        half: 'Half bridge: two sensors in the same divider, changing in opposite directions (+Δ and −Δ), like a gauge on top of a bending beam in tension and one underneath in compression. Output ≈ V/2 · ΔR/R: twice the quarter bridge, and linear for a linear sensor. A change both sensors share (a temperature drift, say) cancels out.',
+        full: 'Full bridge: all four arms are sensors. Opposite arms change together (+Δ), adjacent arms oppositely (−Δ). Output ≈ V · ΔR/R: four times the quarter bridge, linear for a linear sensor, and compensated for anything common to all four. This is how load cells and pressure sensors are built.',
+      },
+      activeArms: 'Active arms',
+      armReading: (arm: string, sign: string, reading: string, r: string) =>
+        `${arm} (${sign}): ${reading} → ${r}`,
+      sensitivity: 'Sensitivity vs quarter bridge',
+      openCircuit: 'Open-circuit output (no meter)',
+      estimate: (k: string) => `Textbook estimate ${k}·V·ΔR/R`,
+      loadNote:
+        'The galvanometer (Rg) draws current and loads the bridge, so the real VB − VC is smaller than the open-circuit output the textbook formulas describe. Raise Rg and watch the two converge. The gap between the open-circuit output and the textbook estimate is the non-linearity.',
+      compareLegend: 'all three configurations, the selected one bold',
+      meterNote:
+        "The meter's range is set by the full bridge, so the needle swings further as you add active arms.",
+      resetReference: (reference: string) => `Back to reference (${reference})`,
+      responseR: 'Sensor resistance',
+      responseV: 'Bridge output VB − VC',
+      logScale: 'log scale',
+      referenceLegend: 'reference',
+      responseAria: (sensor: string, reading: string, r: string, vout: string) =>
+        `Response curves for the ${sensor}: sensor resistance and bridge output across the whole range. Current reading ${reading}: ${r}, bridge output ${vout}.`,
+      illustrationAria: (sensor: string, reading: string, r: string) =>
+        `Illustration of the ${sensor} at ${reading}, resistance ${r}.`,
+      exaggerated: 'deformation exaggerated for visibility',
+      tension: 'tension',
+      compression: 'compression',
+    },
+  },
+};
+
+export type Messages = typeof en;

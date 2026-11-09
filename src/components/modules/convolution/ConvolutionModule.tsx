@@ -10,13 +10,15 @@ import {
 } from '@/lib/state/urlState';
 import { useUrlSyncedState, useUrlFlag } from '@/lib/state/useUrlState';
 import { logEvent } from '@/lib/state/telemetry';
+import { useLocalizedQuestions, useMessages } from '@/lib/i18n';
 import {
-  PredictionCheck,
+  ModuleTabs,
   PredictionGate,
   Slider,
   SegmentedControl,
   PlayPauseButton,
   ExpressionReadout,
+  Field,
   LiveRegion,
   usePrefersReducedMotion,
   usePracticeMode,
@@ -35,7 +37,9 @@ const STEP_MS = 700;
 export function ConvolutionModule(): React.JSX.Element {
   const predictEnabled = useUrlFlag(decodePredictFlag, true);
   const practiceMode = usePracticeMode();
-  const practiceQuestion = usePracticeQuestion(QUESTIONS);
+  const t = useMessages();
+  const questions = useLocalizedQuestions(QUESTIONS);
+  const practiceQuestion = usePracticeQuestion(questions);
   const [state, setState] = useUrlSyncedState(
     decodeConvolutionState,
     encodeConvolutionState,
@@ -103,13 +107,37 @@ export function ConvolutionModule(): React.JSX.Element {
     setN(Math.min(n + 1, outLen - 1));
   }
 
-  const kernel = KERNEL_PRESETS[state.kernel];
-  const liveText = useThrottledValue(
-    `Shift n=${n} of ${outLen - 1}. ${formatConvExpression(currentStep)}`
-  );
+  const expression = formatConvExpression(currentStep, t.convolution.noOverlap);
+  const liveText = useThrottledValue(t.convolution.liveText(n, outLen - 1, expression));
 
   const content = (
     <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-2">
+        <Field label={t.convolution.kernel}>
+          <SegmentedControl
+            label={t.convolution.kernel}
+            value={state.kernel}
+            onChange={setKernel}
+            options={KERNEL_ORDER.map((id) => ({
+              value: id,
+              label: t.convolution.kernels[id].label,
+            }))}
+          />
+        </Field>
+        <p className="text-sm text-[var(--foreground)]/70">
+          {t.convolution.kernels[state.kernel].note}
+        </p>
+        <p className="font-mono tabular-nums text-xs text-[var(--foreground)]/60">
+          h[k] = [{kernelValues.map((v) => v.toFixed(2)).join(', ')}] → {t.convolution.flipped}:
+          h[−k] = [
+          {[...kernelValues]
+            .reverse()
+            .map((v) => v.toFixed(2))
+            .join(', ')}
+          ]
+        </p>
+      </div>
+
       <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
         <ConvolutionInputPanel
           x={state.x}
@@ -123,9 +151,7 @@ export function ConvolutionModule(): React.JSX.Element {
         <ConvolutionOutputPanel y={y} n={n} />
       </div>
 
-      <ExpressionReadout label="Current shift">
-        {formatConvExpression(currentStep) || '—'}
-      </ExpressionReadout>
+      <ExpressionReadout label={t.convolution.currentShift}>{expression || '—'}</ExpressionReadout>
 
       <div className="flex flex-wrap items-center gap-4 rounded-md border border-[var(--border)] bg-[var(--surface)] p-3">
         {reducedMotion ? (
@@ -135,14 +161,14 @@ export function ConvolutionModule(): React.JSX.Element {
             disabled={n >= outLen - 1}
             className="rounded-md bg-[var(--foreground)] px-4 py-2 text-sm font-medium text-[var(--background)] disabled:opacity-40"
           >
-            Step →
+            {t.common.step}
           </button>
         ) : (
           <PlayPauseButton playing={playing} onToggle={togglePlay} />
         )}
         <div className="min-w-[220px] flex-1">
           <Slider
-            label="Shift n"
+            label={t.convolution.shiftSlider}
             value={n}
             min={0}
             max={Math.max(0, outLen - 1)}
@@ -152,33 +178,17 @@ export function ConvolutionModule(): React.JSX.Element {
         </div>
       </div>
 
-      <SegmentedControl
-        label="Kernel"
-        value={state.kernel}
-        onChange={setKernel}
-        options={KERNEL_ORDER.map((id) => ({ value: id, label: KERNEL_PRESETS[id].label }))}
-      />
-
-      <p className="text-sm text-[var(--foreground)]/70">{kernel.note}</p>
-
-      <p className="font-mono tabular-nums text-xs text-[var(--foreground)]/60">
-        h[k] = [{kernelValues.map((v) => v.toFixed(2)).join(', ')}] → flipped: h[−k] = [
-        {[...kernelValues]
-          .reverse()
-          .map((v) => v.toFixed(2))
-          .join(', ')}
-        ]
-      </p>
-
-      {!practiceMode && (
-        <PredictionCheck moduleId="convolution" disabled={!predictEnabled} questions={QUESTIONS} />
-      )}
-
       <LiveRegion text={liveText} />
     </div>
   );
 
-  if (!practiceMode) return content;
+  if (!practiceMode) {
+    return (
+      <ModuleTabs moduleId="convolution" questions={questions} disabled={!predictEnabled}>
+        {content}
+      </ModuleTabs>
+    );
+  }
 
   return (
     <PredictionGate

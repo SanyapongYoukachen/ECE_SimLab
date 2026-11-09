@@ -1,20 +1,24 @@
-# Signals Lab
+# ECE Labsim
 
 An interactive teaching instrument for signals and circuits, built for
-undergraduate ECE courses. Six linked modules show the same object in two
+undergraduate ECE courses. Eight linked modules show the same object in two
 representations at once — manipulate either one, watch the other respond.
 
 Live modules: **Convolution** (flip-and-slide, drag-to-edit) · **Fourier
 transform explorer** (time domain ↔ spectrum, spectral leakage, Web Audio
-playback) · **The convolution theorem** (direct vs. FFT-based convolution,
-live operation counts) · **DC circuits** (Ohm's law, series/parallel
-resistors, the voltage divider — a schematic linked to a live I-V plot, power
-bars, or a voltage ladder) · **Circuit simulator** (tabbed, one simulated
-circuit per tab — the Wheatstone bridge first — with animated current flow
-through every branch) · **Actuators** (tabbed — DC motor, stepping motor,
-relay — electrical signals becoming motion and switching, with a genuinely
-spinning rotor, a genuinely discrete-stepping rotor, and a relay whose load
-circuit visibly switches on).
+playback) · **AC circuits** (sine waves, RMS and phasors; R/L/C loads with
+leading and lagging current, the power triangle, power factor and resonance)
+· **DC circuits** (Ohm's law, series/parallel resistors, the voltage
+divider, Thévenin/Norton equivalents, mesh and nodal analysis) · **Sensors**
+(an LDR and an NTC thermistor, from the physical effect through a voltage
+divider and ADC to a measured number) · **Circuit simulator** (tabbed, one
+simulated circuit per tab — the Wheatstone bridge first, with free and
+sensing modes — with animated current flow through every branch) ·
+**Electronics** (P/N junction, diode, BJT and a common-emitter amplifier) ·
+**Actuators** (tabbed — DC motor, stepping motor, relay — electrical signals
+becoming motion and switching, with a genuinely spinning rotor, a genuinely
+discrete-stepping rotor, and a relay whose load circuit visibly switches
+on).
 
 No backend, no database. Everything — including student answers to the
 prediction gate/check and the interaction log — lives in the browser (URL
@@ -29,7 +33,7 @@ npm run dev       # http://localhost:3000
 
 ```bash
 npm run test        # vitest — lib/dsp and lib/circuits unit tests
-npm run test:e2e     # playwright — smoke suite across all six modules
+npm run test:e2e     # playwright — smoke suite across all eight modules
 npm run typecheck    # tsc --noEmit
 npm run lint         # eslint
 npm run build        # production build (static per-route prerender)
@@ -51,16 +55,16 @@ src/
   components/
     ui/          shared controls: PlotCanvas, AnimatedCanvas, Slider, SegmentedControl,
                  PredictionGate, PredictionCheck, ThemeToggle, LiveRegion, ModuleShell, ...
-    modules/     one directory per module (convolution / fourier / theorem / circuits /
-                 simulator / actuators), each with its own panels, scales, and
-                 orchestrating <XModule> component — simulator/ and actuators/
-                 additionally nest one directory per circuit/actuator (wheatstone/;
-                 dc-motor/, stepper/, relay/)
+    modules/     one directory per module (convolution / fourier / ac / circuits /
+                 sensors / simulator / electronics / actuators), each with its own
+                 panels, scales, and orchestrating <XModule> component — simulator/
+                 and actuators/ additionally nest one directory per circuit/actuator
+                 (wheatstone/; dc-motor/, stepper/, relay/)
   app/
     page.tsx                 landing page
     convolution/page.tsx
     fourier/page.tsx
-    theorem/page.tsx
+    ac/page.tsx               (/theorem redirects here — see next.config.ts)
     circuits/page.tsx
     simulator/page.tsx
     actuators/page.tsx
@@ -86,8 +90,7 @@ The three architectural rules that keep adding another module cheap:
    server content — and server-rendering them risks a subtle hydration
    mismatch, since transcendental math (`Math.exp`, `Math.sin`, ...) is not
    guaranteed bit-identical between Node's V8 and the browser's when a
-   module displays that output at full floating-point precision (Module 3's
-   `max|error|` readout is exactly this case).
+   module displays that output at full floating-point precision.
 
 ### The `lib/dsp` API
 
@@ -157,10 +160,15 @@ Every module ships a bank of 3-5 questions
 `PredictionQuestion[]`) and two ways to ask them, chosen by a single
 cross-module preference:
 
-- **Default — `components/ui/PredictionCheck.tsx`.** Renders the whole
-  question bank inline at the _end_ of the module, after the content is
-  already open and interactive. Each question persists its own answer
-  independently in `localStorage`
+- **Default — `components/ui/ModuleTabs.tsx` + `PredictionCheck.tsx`.**
+  Every module is split into two tabs: **Explore** (the interactive
+  content, ending in a "Done exploring? Start the check →" prompt) and
+  **Check your understanding** (the whole question bank, numbered, with a
+  live "Answered X of N · Y correct" summary, a final score once every
+  question is answered, and "Clear my answers" to retake). The tab label
+  shows progress (`2/5`), and the active tab lives in the URL
+  (`?view=quiz`), so an instructor can link straight to the check. Each
+  question persists its own answer independently in `localStorage`
   (`signals-lab:predicted:<moduleId>:<questionId>`) — a check on whether the
   demonstration landed, not a gate in front of it.
 - **Opt-in "Predict first" practice mode — `components/ui/PredictionGate.tsx`
@@ -210,6 +218,99 @@ slows to a near-standstill as the bridge approaches balance, which is the
 whole point of the demonstration. Respects `prefers-reduced-motion`: falls
 back to static, magnitude-sized arrows (reusing `drawCurrentArrow`) instead
 of animating.
+
+Because those dots crawl almost imperceptibly near balance, the galvanometer
+also has a centre-zero needle. Its deflection is `tanh(Ig / 2 mA)`
+(`galvanometerDeflection` in `lib/circuits/wheatstone.ts`), so it stays on
+scale far from balance but still moves visibly for a single slider step near
+it. It rides an underdamped spring, overshooting and settling the way a
+moving-coil meter does, and snaps straight to position under reduced motion.
+
+### Wheatstone sensing mode: a bridge reading a real sensor
+
+The Wheatstone tab has two modes. **Free** puts every arm on a slider.
+**Sensing** turns it into a quarter bridge. The student picks a sensor and
+which arm (R1–R4) it sits in. The other three arms are fixed at the sensor's
+resistance at its reference point, so the bridge reads zero there, and a
+physical-quantity slider drives the sensor.
+
+| Sensor                   | Quantity (range, reference) | Model (`lib/circuits/sensors.ts`)    |
+| ------------------------ | --------------------------- | ------------------------------------ |
+| Light-dependent resistor | 1–10 000 lx, 100 lx         | R = 10 kΩ · (E/100 lx)^−0.7          |
+| NTC thermistor           | −20–100 °C, 25 °C           | beta model, R25 = 10 kΩ, B = 3950 K  |
+| Pt100 RTD                | −50–200 °C, 0 °C            | Callendar–Van Dusen (IEC 60751 A, B) |
+| Strain gauge             | ±2000 µε, 0                 | R = 350 Ω · (1 + 2.0 · ε)            |
+| Variable resistor        | 10–2200 Ω, 1 kΩ             | R set directly                       |
+
+Each sensor gets its schematic symbol on its arm, an animated illustration
+of the physical effect (photons and freed carriers, a thermistor bead,
+a vibrating platinum lattice, a bending cantilever), and response curves of
+resistance and bridge output across the whole range. `bridgeSweep()`
+computes those curves and also auto-ranges the galvanometer, so a strain
+gauge's microamps swing the needle as visibly as an LDR's milliamps.
+Moving the sensor between the R1/R4 and R2/R3 positions flips the output's
+sign.
+
+**Quarter, half and full bridges.** A configuration switch sets how many
+arms are sensors (`armRoles()` / `bridgeArms()`):
+
+| Configuration | Active arms (sensor in R4)                 | Ideal output                      |
+| ------------- | ------------------------------------------ | --------------------------------- |
+| Quarter       | R4                                         | ≈ V/4 · ΔR/R, slightly non-linear |
+| Half          | R4 (+Δ), R3 (−Δ) — same divider, push-pull | ≈ V/2 · ΔR/R, linear              |
+| Full          | R1, R4 (+Δ); R2, R3 (−Δ)                   | ≈ V · ΔR/R, linear                |
+
+The "−Δ" arms see the reading mirrored about the reference (−ε,
+2·T_ref − T, or E_ref²/E for light), like the gauges on the compressed
+face of a bending beam. The output plot overlays all three configurations,
+and the meter is ranged by the full bridge, so the 1 : 2 : 4 sensitivity is
+visible on the needle as well. Readouts show the loaded output next to the
+open-circuit output and the textbook estimate k·V·ΔR/R. That separates the
+galvanometer's loading from the quarter bridge's non-linearity. Unit tests
+pin the 1 : 2 : 4 ratio, the textbook outputs, and the exact linearity of
+half and full bridges.
+
+### Language: English and Thai
+
+A language toggle in every header switches the whole app between English
+and Thai. The choice is stored in `localStorage` (`signals-lab:lang`); with
+no stored choice, a browser whose preferred language is Thai opens in Thai.
+Language is a per-viewer preference, not part of the URL, so a shared link
+opens in each reader's own language.
+
+- `lib/i18n/messages/en.ts` is the reference dictionary. `th.ts` is typed
+  against it, so adding an English key fails the typecheck until the Thai
+  translation exists. Interpolated strings are functions; math notation and
+  units stay the same in both languages.
+- Client components read strings with `useMessages()`. Question banks are
+  `LocalizedQuestion[]` with `{ en, th }` side by side, so answer ids and
+  `correct` flags exist once; `useLocalizedQuestions()` picks the language.
+- Server-rendered chrome (landing page, module titles) uses `<Localized>`,
+  which renders every language and lets CSS on `<html data-lang>` show one.
+  An inline script in the root layout sets `lang`/`data-lang` before first
+  paint, so Thai readers never see a flash of English and React never sees a
+  hydration mismatch.
+- Thai text uses Noto Sans Thai (Geist has no Thai glyphs). Page `<title>`
+  metadata is still English only.
+
+### Search (SEO)
+
+`lib/seo.ts` holds every page's title, description, keywords and canonical
+path, plus the schema.org JSON-LD (`LearningResource` + `WebApplication` per
+module; `WebSite` + `ItemList` on the landing page). Titles target the
+specific queries students type ("Wheatstone bridge simulator", "convolution
+visualizer", "power factor phasor") rather than only "circuit simulator",
+where established tools dominate. Also generated:
+
+- `app/robots.ts` and `app/sitemap.ts`
+- per-route `opengraph-image.tsx` share cards (`lib/og/card.tsx`)
+- a server-rendered **About** section under every module (`ModuleAbout`,
+  text in the i18n `about` dictionary). The modules render client-side, so
+  without it crawlers see little more than "Loading module…".
+
+Set `NEXT_PUBLIC_SITE_URL` for a custom domain (default:
+`https://ece-sim-lab.vercel.app`) and `GOOGLE_SITE_VERIFICATION` to verify
+Google Search Console by meta tag.
 
 ### Actuators: rotation and discrete stepping, not just current flow
 
@@ -293,16 +394,21 @@ persist={false}>` using `usePracticeQuestion(QUESTIONS)` — every existing
 - **Audio is live additive synthesis** (three oscillators + gain nodes,
   retuned in place via `setTargetAtTime` as sliders move), not a rendered
   buffer — parameters stay audibly live while dragging.
-- **Module 3's length slider drives both `x` and `h`** (same length `N`),
-  making direct cost exactly `O(N^2)` — the cleanest version of the
-  quadratic-vs-`N log N` story. `useDeferredValue` keeps the slider itself
-  responsive while the (still sub-20ms up to `N = 2048`) convolution recomputes.
-- **No wall-clock timing readout.** An earlier draft measured
-  `performance.now()` around the direct/FFT calls, but that's an impure call
-  made during render, isn't guaranteed stable across re-renders, and isn't
-  what the brief actually asked for — it asked for the operation _count_,
-  which is a pure, deterministic function of `N`. Dropped in favour of the
-  cost chart plus the exact `directConvOps` / `fftConvOps` numbers.
+- **Module 3 is AC circuits** (it replaced the convolution theorem module;
+  `/theorem` redirects to `/ac`). `lib/circuits/ac.ts` holds the math: RMS
+  and crest factors for sine, square and triangle waves (verified against
+  direct numerical integration), and steady-state series R/L/C analysis by
+  complex impedance: θ = arg Z, power factor cos θ labelled lagging or
+  leading, P/Q/S, component voltages, and series resonance. Defaults are Thai
+  mains: 220 V rms (311 V peak), 50 Hz.
+- **v, i and p are stacked small multiples on one time axis** (`TimeStack`),
+  never two units on one y-axis. Dotted guides through every panel mark the
+  voltage's and current's zero crossings, with a Δt = θ/ω bracket between them.
+- **One animation clock.** Each `AnimatedCanvas` runs its own loop, so the
+  AC canvases read the shared `performance.now()` (`clock.ts`) rather than
+  each loop's `phase`. That keeps the rotating phasor and the time plots'
+  cursor in step. The animation turns once every 2 s regardless of f, and
+  says so.
 
 ## What I'd reconsider about the pedagogy
 
