@@ -1,15 +1,23 @@
 import {
+  ActuatorsStateSchema,
   CircuitStateSchema,
   ConvolutionStateSchema,
+  DcMotorStateSchema,
   FourierPresetSchema,
   PredictFlagSchema,
+  RelayStateSchema,
   SimulatorStateSchema,
+  StepperStateSchema,
   TheoremStateSchema,
   WheatstoneStateSchema,
+  type ActuatorsState,
   type CircuitState,
   type ConvolutionState,
+  type DcMotorState,
   type FourierState,
+  type RelayState,
   type SimulatorState,
+  type StepperState,
   type TheoremState,
   type WheatstoneState,
 } from './schemas';
@@ -151,4 +159,80 @@ export function decodePredictFlag(params: URLSearchParams): boolean {
   const raw = params.get('predict') ?? undefined;
   const result = PredictFlagSchema.safeParse(raw);
   return result.success ? result.data : true;
+}
+
+export function decodeActuatorsState(params: URLSearchParams): ActuatorsState {
+  const raw = { tab: params.get('tab') ?? undefined };
+  const result = ActuatorsStateSchema.safeParse(raw);
+  return result.success ? result.data : ActuatorsStateSchema.parse({});
+}
+
+export function encodeActuatorsState(state: ActuatorsState): URLSearchParams {
+  const params = new URLSearchParams();
+  params.set('tab', state.tab);
+  return params;
+}
+
+export function decodeDcMotorState(params: URLSearchParams): DcMotorState {
+  const raw = {
+    voltage: num(params, 'voltage'),
+    armatureResistance: num(params, 'ra'),
+    motorConstant: num(params, 'k'),
+    loadTorque: num(params, 'tl'),
+    friction: num(params, 'b'),
+  };
+  const result = DcMotorStateSchema.safeParse(raw);
+  return result.success ? result.data : DcMotorStateSchema.parse({});
+}
+
+export function encodeDcMotorState(state: DcMotorState): URLSearchParams {
+  const params = new URLSearchParams();
+  params.set('voltage', state.voltage.toFixed(2));
+  params.set('ra', state.armatureResistance.toFixed(3));
+  params.set('k', state.motorConstant.toFixed(4));
+  params.set('tl', state.loadTorque.toFixed(4));
+  params.set('b', state.friction.toFixed(5));
+  return params;
+}
+
+export function decodeStepperState(params: URLSearchParams): StepperState {
+  const raw = {
+    stepRate: num(params, 'rate'),
+    stepsPerRev: num(params, 'spr'),
+    direction: params.get('dir') ?? undefined,
+    mode: params.get('step') ?? undefined,
+  };
+  const result = StepperStateSchema.safeParse(raw);
+  return result.success ? result.data : StepperStateSchema.parse({});
+}
+
+export function encodeStepperState(state: StepperState): URLSearchParams {
+  const params = new URLSearchParams();
+  params.set('rate', state.stepRate.toFixed(2));
+  params.set('spr', String(state.stepsPerRev));
+  params.set('dir', state.direction);
+  params.set('step', state.mode);
+  return params;
+}
+
+export function decodeRelayState(params: URLSearchParams): RelayState {
+  const raw = {
+    coilVoltage: num(params, 'cv'),
+    coilResistance: num(params, 'cr'),
+    pullInCurrent: num(params, 'pi'),
+    loadVoltage: num(params, 'lv'),
+    loadResistance: num(params, 'lr'),
+  };
+  const result = RelayStateSchema.safeParse(raw);
+  return result.success ? result.data : RelayStateSchema.parse({});
+}
+
+export function encodeRelayState(state: RelayState): URLSearchParams {
+  const params = new URLSearchParams();
+  params.set('cv', state.coilVoltage.toFixed(2));
+  params.set('cr', state.coilResistance.toFixed(1));
+  params.set('pi', state.pullInCurrent.toFixed(1));
+  params.set('lv', state.loadVoltage.toFixed(2));
+  params.set('lr', state.loadResistance.toFixed(1));
+  return params;
 }

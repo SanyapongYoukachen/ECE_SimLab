@@ -80,6 +80,59 @@ export function drawResistor(ctx: CanvasRenderingContext2D, opts: ResistorOption
   ctx.restore();
 }
 
+export interface CoilOptions {
+  readonly from: Point;
+  readonly to: Point;
+  readonly color: string;
+  readonly lineWidth?: number;
+  readonly loops?: number;
+  readonly bodyRatio?: number;
+}
+
+/** Draws an inductor/coil (solenoid) as a row of semicircular bumps between two points. */
+export function drawCoil(ctx: CanvasRenderingContext2D, opts: CoilOptions): void {
+  const { from, to, color, lineWidth = 2, loops = 4, bodyRatio = 0.65 } = opts;
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const len = Math.hypot(dx, dy) || 1;
+  const ux = dx / len;
+  const uy = dy / len;
+  const px = -uy;
+  const py = ux;
+
+  const bodyStart = lerp(from, to, (1 - bodyRatio) / 2);
+  const bodyEnd = lerp(from, to, 1 - (1 - bodyRatio) / 2);
+  const radius = (len * bodyRatio) / (2 * loops);
+
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lineWidth;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  ctx.beginPath();
+  ctx.moveTo(from.x, from.y);
+  ctx.lineTo(bodyStart.x, bodyStart.y);
+  ctx.moveTo(bodyEnd.x, bodyEnd.y);
+  ctx.lineTo(to.x, to.y);
+  ctx.stroke();
+
+  const arcSteps = 12;
+  for (let i = 0; i < loops; i++) {
+    const segMid = lerp(bodyStart, bodyEnd, (i + 0.5) / loops);
+    ctx.beginPath();
+    for (let s = 0; s <= arcSteps; s++) {
+      const theta = Math.PI - (Math.PI * s) / arcSteps;
+      const px2 = segMid.x + radius * Math.cos(theta) * ux + radius * Math.sin(theta) * px;
+      const py2 = segMid.y + radius * Math.cos(theta) * uy + radius * Math.sin(theta) * py;
+      if (s === 0) ctx.moveTo(px2, py2);
+      else ctx.lineTo(px2, py2);
+    }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 export interface BatteryOptions {
   readonly from: Point;
   readonly to: Point;

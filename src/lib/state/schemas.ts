@@ -69,6 +69,46 @@ export const WheatstoneStateSchema = z.object({
 });
 export type WheatstoneState = z.infer<typeof WheatstoneStateSchema>;
 
+export const ActuatorTabSchema = z.enum(['dcmotor', 'stepper', 'relay']);
+export type ActuatorTab = z.infer<typeof ActuatorTabSchema>;
+
+export const ActuatorsStateSchema = z.object({
+  tab: ActuatorTabSchema.default('dcmotor'),
+});
+export type ActuatorsState = z.infer<typeof ActuatorsStateSchema>;
+
+export const DcMotorStateSchema = z.object({
+  voltage: z.number().min(0).max(48).default(12),
+  armatureResistance: z.number().min(0.1).max(50).default(2),
+  motorConstant: z.number().min(0.005).max(0.5).default(0.05),
+  loadTorque: z.number().min(0).max(2).default(0.02),
+  friction: z.number().min(0).max(0.02).default(0.001),
+});
+export type DcMotorState = z.infer<typeof DcMotorStateSchema>;
+
+export const StepperDirectionSchema = z.enum(['cw', 'ccw']);
+export type StepperDirection = z.infer<typeof StepperDirectionSchema>;
+
+export const StepperModeSchema = z.enum(['full', 'half']);
+export type StepperMode = z.infer<typeof StepperModeSchema>;
+
+export const StepperStateSchema = z.object({
+  stepRate: z.number().min(0).max(20).default(4),
+  stepsPerRev: z.number().int().min(4).max(200).default(24),
+  direction: StepperDirectionSchema.default('cw'),
+  mode: StepperModeSchema.default('full'),
+});
+export type StepperState = z.infer<typeof StepperStateSchema>;
+
+export const RelayStateSchema = z.object({
+  coilVoltage: z.number().min(0).max(24).default(5),
+  coilResistance: z.number().min(10).max(5000).default(400),
+  pullInCurrent: z.number().min(1).max(500).default(20),
+  loadVoltage: z.number().min(0).max(24).default(12),
+  loadResistance: z.number().min(1).max(10000).default(100),
+});
+export type RelayState = z.infer<typeof RelayStateSchema>;
+
 /** Instructor lecture-mode flag: when true, prediction gates are skipped entirely. */
 export const PredictFlagSchema = z
   .enum(['on', 'off'])

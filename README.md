@@ -1,7 +1,7 @@
 # Signals Lab
 
 An interactive teaching instrument for signals and circuits, built for
-undergraduate ECE courses. Five linked modules show the same object in two
+undergraduate ECE courses. Six linked modules show the same object in two
 representations at once — manipulate either one, watch the other respond.
 
 Live modules: **Convolution** (flip-and-slide, drag-to-edit) · **Fourier
@@ -11,7 +11,10 @@ live operation counts) · **DC circuits** (Ohm's law, series/parallel
 resistors, the voltage divider — a schematic linked to a live I-V plot, power
 bars, or a voltage ladder) · **Circuit simulator** (tabbed, one simulated
 circuit per tab — the Wheatstone bridge first — with animated current flow
-through every branch).
+through every branch) · **Actuators** (tabbed — DC motor, stepping motor,
+relay — electrical signals becoming motion and switching, with a genuinely
+spinning rotor, a genuinely discrete-stepping rotor, and a relay whose load
+circuit visibly switches on).
 
 No backend, no database. Everything — including student answers to the
 prediction gate/check and the interaction log — lives in the browser (URL
@@ -26,7 +29,7 @@ npm run dev       # http://localhost:3000
 
 ```bash
 npm run test        # vitest — lib/dsp and lib/circuits unit tests
-npm run test:e2e     # playwright — smoke suite across all five modules
+npm run test:e2e     # playwright — smoke suite across all six modules
 npm run typecheck    # tsc --noEmit
 npm run lint         # eslint
 npm run build        # production build (static per-route prerender)
@@ -39,17 +42,20 @@ src/
   lib/dsp/       pure TypeScript DSP math, zero React/DOM imports, fully unit-tested
   lib/circuits/  pure TypeScript circuit math (Ohm's law, series/parallel, divider,
                  Wheatstone bridge nodal analysis), same style
+  lib/actuators/ pure TypeScript actuator math (DC motor steady-state, stepper
+                 sequencing, relay pull-in/switching), same style
   lib/plot/      canvas primitives: scales, axes, stems, lines, hit-testing, theme tokens,
-                 plus a hand-drawn schematic kit (resistor, battery, wires, current arrows,
-                 animated current-flow dots)
+                 plus a hand-drawn schematic kit (resistor, coil, battery, wires, current
+                 arrows, animated current-flow dots)
   lib/state/     Zod schemas + URL <-> state codecs + localStorage telemetry
   components/
     ui/          shared controls: PlotCanvas, AnimatedCanvas, Slider, SegmentedControl,
                  PredictionGate, PredictionCheck, ThemeToggle, LiveRegion, ModuleShell, ...
     modules/     one directory per module (convolution / fourier / theorem / circuits /
-                 simulator), each with its own panels, scales, and orchestrating
-                 <XModule> component — simulator/ additionally nests one directory
-                 per simulated circuit (wheatstone/ so far)
+                 simulator / actuators), each with its own panels, scales, and
+                 orchestrating <XModule> component — simulator/ and actuators/
+                 additionally nest one directory per circuit/actuator (wheatstone/;
+                 dc-motor/, stepper/, relay/)
   app/
     page.tsx                 landing page
     convolution/page.tsx
@@ -57,6 +63,7 @@ src/
     theorem/page.tsx
     circuits/page.tsx
     simulator/page.tsx
+    actuators/page.tsx
 e2e/             Playwright smoke tests
 ```
 
@@ -203,6 +210,44 @@ slows to a near-standstill as the bridge approaches balance, which is the
 whole point of the demonstration. Respects `prefers-reduced-motion`: falls
 back to static, magnitude-sized arrows (reusing `drawCurrentArrow`) instead
 of animating.
+
+### Actuators: rotation and discrete stepping, not just current flow
+
+`app/actuators/page.tsx` follows the simulator's exact tab shape — its own
+tiny `ActuatorsStateSchema` owns `?tab=`, each actuator (`dc-motor/`,
+`stepper/`, `relay/`) is a fully independent directory with its own state,
+math, and question bank. The physics:
+
+- **DC motor** (`lib/actuators/dcMotor.ts`): steady-state only (no
+  acceleration dynamics). The armature loop `V = I·Ra + Ke·ω` and the torque
+  balance `Kt·I = B·ω + Tl` reduce, with `Kt = Ke = K`, to one closed-form
+  equation for `ω` — same spirit as the Wheatstone bridge, a direct solve
+  rather than an integration.
+- **Stepper** (`lib/actuators/stepper.ts`): no solving at all — `solveStepper`
+  is a pure function of elapsed time, step rate, and direction
+  (`Math.floor(elapsedSec * stepRate)`), so scrubbing a slider never drifts
+  from what the formula says. Full-step and half-step are two fixed
+  4-/8-state coil-sequence tables (`FULL_STEP_SEQUENCE`,
+  `HALF_STEP_SEQUENCE`) walked by that step index.
+- **Relay** (`lib/actuators/relay.ts`): coil current is Ohm's law; the
+  armature closes onto NO once that current clears `pullInCurrent` (mA).
+  Load current is gated entirely by that boolean — NC is wired nowhere, just
+  a dead-end stub marking where the armature rests when de-energized — so
+  the load loop's current-flow dots visibly start and stop as the relay
+  switches, rather than merely rerouting.
+
+The DC motor and stepper needed genuine motion, not linear current flow, so
+`<AnimatedCanvas>`'s `phase` drives rotation directly instead of walking
+dots: the motor schematic sets a needle's angle to
+`phase * speedRadPerSec`, continuous; the stepper schematic re-solves
+`solveStepper(phase, ...)` every frame, and since that function floors
+elapsed time into discrete steps, the needle holds still between step
+boundaries for free — no explicit "snap" logic required. Both fall back
+cleanly under `prefers-reduced-motion`: `AnimatedCanvas` freezes `phase` at
+`0`, which for the motor means drawing the needle at a fixed angle (speed
+still shown in the stat tiles), and for the stepper already **is** a valid,
+correct static position, since the draw function was pure in elapsed time
+to begin with.
 
 ## Adding another module
 

@@ -44,6 +44,13 @@ const MODULES: readonly ModuleCard[] = [
     description:
       'Animated current flow through a real circuit — starting with the Wheatstone bridge. More circuits land here in tabs as they’re added.',
   },
+  {
+    href: '/actuators',
+    kicker: 'Module 6',
+    title: 'Actuators',
+    description:
+      'Electrical signals becoming motion and switching — a spinning DC motor, a discrete-stepping stepper motor, and a relay snapping between contacts.',
+  },
 ];
 
 export default function LandingPage(): React.JSX.Element {
@@ -58,7 +65,7 @@ export default function LandingPage(): React.JSX.Element {
             Signals and circuits, made visible
           </h1>
           <p className="mt-3 max-w-2xl text-[var(--foreground)]/70">
-            You can already do the algebra. These five linked instruments are for the part algebra
+            You can already do the algebra. These six linked instruments are for the part algebra
             doesn&apos;t teach: what the operation actually does. Manipulate either representation
             and watch the other respond in real time.
           </p>

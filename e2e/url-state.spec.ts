@@ -69,4 +69,27 @@ test.describe('URL state', () => {
     );
     await expect(page.getByRole('img', { name: /Wheatstone bridge schematic/ })).toBeVisible();
   });
+
+  test('a configured DC motor link reproduces its voltage', async ({ page }) => {
+    await page.goto('/actuators?predict=off&tab=dcmotor&voltage=24');
+    await expect(page.getByRole('slider', { name: 'Supply voltage V' })).toHaveValue('24');
+  });
+
+  test('a configured relay link reproduces its coil voltage and energized state', async ({
+    page,
+  }) => {
+    await page.goto('/actuators?predict=off&tab=relay&cv=12&cr=400&pi=20');
+    await expect(page.getByText('State').locator('..').getByText('Energized')).toBeVisible();
+  });
+
+  test('malformed actuators URL state falls back to defaults instead of breaking', async ({
+    page,
+  }) => {
+    await page.goto('/actuators?predict=off&tab=not-a-real-tab&voltage=-999');
+    await expect(page.getByRole('radio', { name: 'DC motor' })).toHaveAttribute(
+      'aria-checked',
+      'true'
+    );
+    await expect(page.getByRole('img', { name: /DC motor schematic/ })).toBeVisible();
+  });
 });
