@@ -14,6 +14,7 @@ const MODULES: readonly { readonly href: string; readonly key: ModuleKey }[] = [
   { href: '/sensors', key: 'sensors' },
   { href: '/simulator', key: 'simulator' },
   { href: '/electronics', key: 'electronics' },
+  { href: '/actuators', key: 'actuators' },
 ];
 
 export const metadata: Metadata = pageMetadata('home');

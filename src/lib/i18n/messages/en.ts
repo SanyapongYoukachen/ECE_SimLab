@@ -120,7 +120,7 @@ export const en = {
     kicker: 'ECE Labsim',
     title: 'Circuit simulators and signal graphs, made visible',
     intro:
-      "You can already do the algebra. These seven linked instruments are for the part algebra doesn't teach: what the operation actually does. Manipulate either representation and watch the other respond in real time.",
+      "You can already do the algebra. These eight linked instruments are for the part algebra doesn't teach: what the operation actually does. Manipulate either representation and watch the other respond in real time.",
     modules: {
       convolution: {
         kicker: 'Module 1',
@@ -163,6 +163,12 @@ export const en = {
         title: 'Circuit simulator',
         description:
           'Animated current flow through a real circuit — starting with the Wheatstone bridge. More circuits land here in tabs as they’re added.',
+      },
+      actuators: {
+        kicker: 'Module 8',
+        title: 'Actuators',
+        description:
+          'Electrical signals becoming motion and switching — a spinning DC motor, a discrete-stepping stepper motor, and a relay snapping between contacts.',
       },
     },
     footerUrl:
@@ -210,6 +216,11 @@ export const en = {
       title: 'Circuit simulator',
       tagline:
         'Watch current actually flow through the circuit. Pick a circuit from the tabs; more are coming.',
+    },
+    actuators: {
+      title: 'Actuators: motion and switching from an electrical signal',
+      tagline:
+        'A spinning DC motor, a stepper motor advancing in discrete steps, and a relay snapping its contacts — pick one from the tabs.',
     },
   },
 
@@ -443,6 +454,37 @@ export const en = {
         {
           q: 'What is the difference between a quarter, half and full bridge?',
           a: 'They use one, two or four active sensor arms. With the partners changing in opposite directions, the output is about V/4, V/2 and V times ΔR/R, and the half and full bridges are linear.',
+        },
+      ],
+    },
+    actuators: {
+      intro:
+        'This actuator simulator covers three ways an electrical signal becomes motion or switching: a DC motor settling to a steady speed, a stepper motor advancing one discrete step at a time, and a relay whose contacts snap over once coil current clears a threshold.',
+      points: [
+        'Raise the load torque on a DC motor and watch its steady-state speed fall as the armature current rises to match.',
+        'Switch a stepper motor between full and half step and see the steps-per-revolution figure double.',
+        'Reverse a stepper motor’s direction and watch the coil-energizing sequence run backwards.',
+        'Raise a relay’s coil voltage past its pull-in current and watch the load current switch on.',
+      ],
+      concepts: [
+        'DC motor steady state',
+        'Armature circuit and back-EMF',
+        'Torque-speed balance',
+        'Stepper motor coil sequencing',
+        'Relay pull-in current',
+      ],
+      faq: [
+        {
+          q: 'Why does a DC motor slow down under more load?',
+          a: 'More load torque needs more armature current to balance it (Kt·I = B·ω + Tl), and more current means a larger I·Ra drop, leaving less voltage for back-EMF — so the steady-state speed ω = (V − I·Ra)/Ke falls.',
+        },
+        {
+          q: 'What is the difference between full step and half step?',
+          a: 'Full step energizes one coil pair at a time, half step alternates between one and two pairs energized, doubling the number of stable positions per revolution — finer resolution from the same motor.',
+        },
+        {
+          q: 'Why does a relay need a minimum pull-in current?',
+          a: 'The coil has to generate enough magnetic force to physically pull the armature against its return spring. Below that pull-in current the spring wins and the contacts stay at rest; above it, the armature snaps over.',
         },
       ],
     },

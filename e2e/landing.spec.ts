@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('landing page', () => {
-  test('links to all seven modules', async ({ page }) => {
+  test('links to all eight modules', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Convolution', exact: true })).toBeVisible();
@@ -11,6 +11,7 @@ test.describe('landing page', () => {
     await expect(page.getByRole('link', { name: 'Sensors: from physics to signal' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Electronics', exact: true })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Circuit simulator' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Actuators' })).toBeVisible();
   });
 
   test('navigates into a module', async ({ page }) => {
