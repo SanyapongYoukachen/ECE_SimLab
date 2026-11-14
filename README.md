@@ -323,13 +323,21 @@ math, and question bank. The physics:
   acceleration dynamics). The armature loop `V = I·Ra + Ke·ω` and the torque
   balance `Kt·I = B·ω + Tl` reduce, with `Kt = Ke = K`, to one closed-form
   equation for `ω` — same spirit as the Wheatstone bridge, a direct solve
-  rather than an integration.
+  rather than an integration. **PWM** is the averaged model: the motor sees
+  `V = duty × supply`, which holds when the switching frequency is well
+  above the armature's L/R corner. If that voltage cannot produce the load
+  torque even at standstill, the motor **stalls** (ω = 0, I = V/Ra) instead
+  of running backwards. `duty` defaults to 100 %, so links from before PWM
+  existed reproduce unchanged.
 - **Stepper** (`lib/actuators/stepper.ts`): no solving at all — `solveStepper`
   is a pure function of elapsed time, step rate, and direction
   (`Math.floor(elapsedSec * stepRate)`), so scrubbing a slider never drifts
   from what the formula says. Full-step and half-step are two fixed
   4-/8-state coil-sequence tables (`FULL_STEP_SEQUENCE`,
-  `HALF_STEP_SEQUENCE`) walked by that step index.
+  `HALF_STEP_SEQUENCE`) walked by that step index. `fieldAngleDeg` sums the
+  energized poles' directions to give where the rotor magnet points within
+  one electrical cycle; the shaft turns `1/polePairs` as far
+  (`polePairs = stepsPerRev / 4`).
 - **Relay** (`lib/actuators/relay.ts`): coil current is Ohm's law; the
   armature closes onto NO once that current clears `pullInCurrent` (mA).
   Load current is gated entirely by that boolean — NC is wired nowhere, just
@@ -337,18 +345,30 @@ math, and question bank. The physics:
   the load loop's current-flow dots visibly start and stop as the relay
   switches, rather than merely rerouting.
 
-The DC motor and stepper needed genuine motion, not linear current flow, so
-`<AnimatedCanvas>`'s `phase` drives rotation directly instead of walking
-dots: the motor schematic sets a needle's angle to
-`phase * speedRadPerSec`, continuous; the stepper schematic re-solves
-`solveStepper(phase, ...)` every frame, and since that function floors
-elapsed time into discrete steps, the needle holds still between step
-boundaries for free — no explicit "snap" logic required. Both fall back
-cleanly under `prefers-reduced-motion`: `AnimatedCanvas` freezes `phase` at
-`0`, which for the motor means drawing the needle at a fixed angle (speed
-still shown in the stat tiles), and for the stepper already **is** a valid,
-correct static position, since the draw function was pure in elapsed time
-to begin with.
+What each tab draws:
+
+- **DC motor**: the armature loop with a PWM switch on its top rail, a
+  rotor needle turning at the solved speed (drawn 20× slower, since real
+  speeds alias into flicker at 60 fps), and `PwmWaveform` — the chopped
+  armature voltage over three periods with its average as a dashed line.
+- **Stepper**: the magnetic picture for one electrical cycle. Four stator
+  poles A–D, each with its coil; an energized pole turns blue and shows an
+  S face, and pulls the N half of the permanent-magnet rotor toward it. A
+  shaft dial beside it shows the mechanical angle, the rotor's angle divided
+  by the pole pairs. The rotor rides a lightly damped spring so it rings a
+  little as it lands on each step.
+- **Relay**: two views side by side. `RelaySchematic` is the circuit
+  symbol: coil rectangle K1 (A1/A2), a changeover contact (COM, NC, NO), the
+  dashed mechanical link between them, and a dashed outline around the one
+  part. `RelayStructure` is a cutaway of the same part: coil on an iron
+  core, yoke, hinged armature, return spring and the moving contact, with
+  the flux path drawn while energized and a little contact bounce as the
+  armature lands.
+
+All three respect `prefers-reduced-motion`: `AnimatedCanvas` freezes `phase`
+at `0`, and each drawing snaps straight to its solved state (the stepper's
+draw function is pure in elapsed time, so step 0 is already a valid
+position).
 
 ## Adding another module
 

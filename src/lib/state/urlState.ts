@@ -342,6 +342,7 @@ export function decodeDcMotorState(params: URLSearchParams): DcMotorState {
     motorConstant: num(params, 'k'),
     loadTorque: num(params, 'tl'),
     friction: num(params, 'b'),
+    duty: num(params, 'duty'),
   };
   const result = DcMotorStateSchema.safeParse(raw);
   return result.success ? result.data : DcMotorStateSchema.parse({});
@@ -354,6 +355,7 @@ export function encodeDcMotorState(state: DcMotorState): URLSearchParams {
   params.set('k', state.motorConstant.toFixed(4));
   params.set('tl', state.loadTorque.toFixed(4));
   params.set('b', state.friction.toFixed(5));
+  params.set('duty', state.duty.toFixed(0));
   return params;
 }
 

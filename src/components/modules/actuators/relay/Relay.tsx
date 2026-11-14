@@ -16,6 +16,7 @@ import {
   useThrottledValue,
 } from '@/components/ui';
 import { RelaySchematic } from './RelaySchematic';
+import { RelayStructure } from './RelayStructure';
 import { formatCurrentA, formatCurrentMa, formatResistance, formatVoltage } from './format';
 import { QUESTIONS } from './questions';
 
@@ -58,7 +59,27 @@ export function Relay(): React.JSX.Element {
 
   const content = (
     <div className="flex flex-col gap-4">
-      <RelaySchematic result={result} />
+      <div className="grid gap-4 md:grid-cols-2">
+        <figure className="flex flex-col gap-1.5 rounded-md border border-[var(--border)] bg-[var(--surface)] p-3">
+          <figcaption className="text-sm font-medium text-[var(--foreground)]">
+            Circuit symbol
+          </figcaption>
+          <RelaySchematic result={result} />
+        </figure>
+        <figure className="flex flex-col gap-1.5 rounded-md border border-[var(--border)] bg-[var(--surface)] p-3">
+          <figcaption className="text-sm font-medium text-[var(--foreground)]">
+            Inside the relay
+          </figcaption>
+          <RelayStructure result={result} />
+        </figure>
+      </div>
+      <p className="text-sm text-[var(--foreground)]/70">
+        Both pictures show the same part. On a circuit diagram the rectangle K1 is the coil, and the
+        dashed line joins it to the contact it moves. Inside, that line is a real mechanism: coil
+        current magnetizes the iron core, the core pulls the hinged armature down against its
+        spring, and the armature carries the moving contact (COM) from NC over to NO. Cut the coil
+        current and the spring puts it back.
+      </p>
 
       <ExpressionReadout label="Coil current vs. pull-in threshold">
         {expression} — pull-in at {formatCurrentMa(state.pullInCurrent)}

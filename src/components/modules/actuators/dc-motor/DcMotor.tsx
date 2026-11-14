@@ -16,12 +16,14 @@ import {
   useThrottledValue,
 } from '@/components/ui';
 import { DcMotorSchematic } from './DcMotorSchematic';
+import { PwmWaveform } from './PwmWaveform';
 import { formatCurrent, formatPower, formatSpeed, formatTorque, formatVoltage } from './format';
 import { QUESTIONS } from './questions';
 
 const DEFAULT_STATE = DcMotorStateSchema.parse({});
 
-type Field = 'voltage' | 'armatureResistance' | 'motorConstant' | 'loadTorque' | 'friction';
+type Field =
+  'voltage' | 'armatureResistance' | 'motorConstant' | 'loadTorque' | 'friction' | 'duty';
 
 export function DcMotor(): React.JSX.Element {
   const predictEnabled = useUrlFlag(decodePredictFlag, true);
@@ -40,28 +42,66 @@ export function DcMotor(): React.JSX.Element {
         state.armatureResistance,
         state.motorConstant,
         state.loadTorque,
-        state.friction
+        state.friction,
+        state.duty / 100
       ),
-    [state.voltage, state.armatureResistance, state.motorConstant, state.loadTorque, state.friction]
+    [
+      state.voltage,
+      state.armatureResistance,
+      state.motorConstant,
+      state.loadTorque,
+      state.friction,
+      state.duty,
+    ]
   );
 
   function setField(field: Field, value: number): void {
     setState((prev) => ({ ...prev, [field]: value }));
   }
 
-  const expression = `ω = (V − Ra·Tl/K) / (Ra·B/K + K) = ${formatSpeed(result.speedRpm)}`;
+  const expression = result.stalled
+    ? `ω = 0 — stalled: stall torque K·Vavg/Ra = ${formatTorque(result.torque)} is less than the load`
+    : `ω = (Vavg − Ra·Tl/K) / (Ra·B/K + K) = ${formatSpeed(result.speedRpm)}`;
+  const pwmExpression = `Vavg = D × Vs = ${(result.duty * 100).toFixed(0)}% × ${formatVoltage(result.supplyVoltage)} = ${formatVoltage(result.voltage)}`;
   const liveText = useThrottledValue(
-    `Speed ${formatSpeed(result.speedRpm)}, current ${formatCurrent(result.current)}, torque ${formatTorque(result.torque)}.`
+    `PWM duty ${(result.duty * 100).toFixed(0)} percent, average voltage ${formatVoltage(result.voltage)}. ${result.stalled ? 'Motor stalled' : `Speed ${formatSpeed(result.speedRpm)}`}, current ${formatCurrent(result.current)}, torque ${formatTorque(result.torque)}.`
   );
 
   const content = (
     <div className="flex flex-col gap-4">
       <DcMotorSchematic result={result} />
 
+      <div className="flex flex-col gap-2 rounded-md border border-[var(--border)] bg-[var(--surface)] p-3">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+          <h3 className="text-sm font-medium text-[var(--foreground)]">
+            PWM control: armature voltage over time
+          </h3>
+          <p className="font-mono text-xs text-[var(--foreground)]/70">{pwmExpression}</p>
+        </div>
+        <PwmWaveform supplyVoltage={result.supplyVoltage} duty={result.duty} />
+        <Slider
+          label="PWM duty cycle D"
+          value={state.duty}
+          min={0}
+          max={100}
+          step={1}
+          formatValue={(v) => `${v.toFixed(0)} %`}
+          onChange={(v) => setField('duty', v)}
+        />
+        <p className="text-sm text-[var(--foreground)]/70">
+          A PWM driver never applies a part voltage. It switches the full supply on and off, fast,
+          and changes how long each pulse lasts. The armature&apos;s inductance and the rotor&apos;s
+          inertia smooth those pulses out, so the motor runs as if it were fed the average voltage,
+          D × Vs. That is how a microcontroller sets a motor&apos;s speed with a single digital pin
+          and almost no wasted heat.
+        </p>
+      </div>
+
       <ExpressionReadout label="Steady-state speed">{expression}</ExpressionReadout>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat label="Speed" value={formatSpeed(result.speedRpm)} />
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <Stat label="Speed" value={result.stalled ? 'Stalled' : formatSpeed(result.speedRpm)} />
+        <Stat label="Average voltage" value={formatVoltage(result.voltage)} />
         <Stat label="Armature current" value={formatCurrent(result.current)} />
         <Stat label="Torque" value={formatTorque(result.torque)} />
         <Stat label="Back-EMF" value={formatVoltage(result.backEmf)} />

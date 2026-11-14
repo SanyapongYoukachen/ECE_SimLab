@@ -56,4 +56,19 @@ export const QUESTIONS: readonly PredictionQuestion[] = [
       { id: 'd', label: 'Back-EMF has no effect on current', correct: false },
     ],
   },
+  {
+    id: 'pwm-duty',
+    question:
+      'A 12 V supply drives the motor through a PWM switch at 50 % duty. With no load, roughly how fast does it spin compared with plain 12 V DC?',
+    options: [
+      { id: 'a', label: 'The same speed — the pulses are still 12 V', correct: false },
+      {
+        id: 'b',
+        label: 'About half — the motor responds to the average voltage, 6 V',
+        correct: true,
+      },
+      { id: 'c', label: 'A quarter — power goes with voltage squared', correct: false },
+      { id: 'd', label: 'It does not turn until the duty reaches 100 %', correct: false },
+    ],
+  },
 ];
