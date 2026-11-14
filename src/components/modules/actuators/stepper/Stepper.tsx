@@ -3,7 +3,7 @@
 import { StepperStateSchema, type StepperDirection, type StepperMode } from '@/lib/state/schemas';
 import { decodeStepperState, encodeStepperState, decodePredictFlag } from '@/lib/state/urlState';
 import { useUrlSyncedState, useUrlFlag } from '@/lib/state/useUrlState';
-import { effectiveStepsPerRev } from '@/lib/actuators/stepper';
+import { effectiveStepsPerRev, polePairs } from '@/lib/actuators/stepper';
 import {
   PredictionCheck,
   PredictionGate,
@@ -44,6 +44,7 @@ export function Stepper(): React.JSX.Element {
   const effSteps = effectiveStepsPerRev(state.stepsPerRev, state.mode);
   const stepAngle = 360 / effSteps;
   const rpm = (state.stepRate * 60) / effSteps;
+  const pairs = polePairs(state.stepsPerRev);
 
   const expression = `${state.mode === 'half' ? 'Half' : 'Full'} step: 360° / ${effSteps} steps = ${formatStepAngle(stepAngle)}`;
   const liveText = useThrottledValue(
@@ -59,12 +60,27 @@ export function Stepper(): React.JSX.Element {
         mode={state.mode}
       />
 
+      <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--foreground)]/70">
+        <LegendItem color="var(--plot-danger)" label="N pole" />
+        <LegendItem color="var(--plot-input)" label="S pole" />
+        <LegendItem color="var(--plot-active)" label="energized coil" />
+      </ul>
+      <p className="text-sm text-[var(--foreground)]/70">
+        The <strong>stator</strong> is the fixed outer ring: four iron poles, A to D, each wrapped
+        in a coil. An energized coil turns its pole into an electromagnet with an S face. The{' '}
+        <strong>rotor</strong> is a permanent magnet, so its N pole is pulled to whichever stator
+        poles are on. Switch the coils in order and the rotor follows, one step at a time. The
+        picture shows one N–S pair; this motor has {pairs} of them around the rotor, so the shaft
+        turns 1/{pairs} as far as the magnet drawn here.
+      </p>
+
       <ExpressionReadout label="Angular resolution">{expression}</ExpressionReadout>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         <Stat label="Step angle" value={formatStepAngle(stepAngle)} />
         <Stat label="Steps / revolution" value={String(effSteps)} />
         <Stat label="Speed" value={formatRpm(rpm)} />
+        <Stat label="Rotor pole pairs" value={String(pairs)} />
         <Stat
           label="Direction"
           value={state.direction === 'cw' ? 'Clockwise' : 'Counter-clockwise'}
@@ -144,5 +160,24 @@ function Stat({
       <div className="text-xs text-[var(--foreground)]/60">{label}</div>
       <div className="font-mono tabular-nums text-sm text-[var(--foreground)]">{value}</div>
     </div>
+  );
+}
+
+function LegendItem({
+  color,
+  label,
+}: {
+  readonly color: string;
+  readonly label: string;
+}): React.JSX.Element {
+  return (
+    <li className="flex items-center gap-1.5">
+      <span
+        aria-hidden="true"
+        className="inline-block h-2.5 w-2.5 rounded-sm"
+        style={{ background: color }}
+      />
+      {label}
+    </li>
   );
 }

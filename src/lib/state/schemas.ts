@@ -184,6 +184,8 @@ export const DcMotorStateSchema = z.object({
   motorConstant: z.number().min(0.005).max(0.5).default(0.05),
   loadTorque: z.number().min(0).max(2).default(0.02),
   friction: z.number().min(0).max(0.02).default(0.001),
+  /** PWM duty cycle in percent; 100 is plain DC, so links from before PWM existed still reproduce. */
+  duty: z.number().min(0).max(100).default(100),
 });
 export type DcMotorState = z.infer<typeof DcMotorStateSchema>;
 

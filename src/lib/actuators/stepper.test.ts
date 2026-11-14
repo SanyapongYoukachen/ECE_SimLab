@@ -5,6 +5,8 @@ import {
   sequenceFor,
   FULL_STEP_SEQUENCE,
   HALF_STEP_SEQUENCE,
+  fieldAngleDeg,
+  polePairs,
 } from './stepper';
 
 describe('effectiveStepsPerRev / sequenceFor', () => {
@@ -65,5 +67,40 @@ describe('solveStepper', () => {
   it('rpm matches stepRate * 60 / effectiveStepsPerRev', () => {
     const r = solveStepper(0, 10, 'cw', 48, 'half');
     expect(r.rpm).toBeCloseTo((10 * 60) / effectiveStepsPerRev(48, 'half'), 9);
+  });
+});
+
+describe('magnetic picture: stator field and rotor pole pairs', () => {
+  it('one energized pole pulls the rotor straight at it; two pull it halfway between', () => {
+    expect(fieldAngleDeg(['A'])).toBeCloseTo(270, 9);
+    expect(fieldAngleDeg(['B'])).toBeCloseTo(0, 9);
+    expect(fieldAngleDeg(['A', 'B'])).toBeCloseTo(315, 9);
+    expect(fieldAngleDeg(['D', 'A'])).toBeCloseTo(225, 9);
+  });
+
+  it('the field turns 90° per full step and 45° per half step, clockwise', () => {
+    const full0 = solveStepper(0, 1, 'cw', 24, 'full').electricalAngleDeg;
+    const full1 = solveStepper(1, 1, 'cw', 24, 'full').electricalAngleDeg;
+    expect((full1 - full0 + 360) % 360).toBeCloseTo(90, 9);
+    const half0 = solveStepper(0, 1, 'cw', 24, 'half').electricalAngleDeg;
+    const half1 = solveStepper(1, 1, 'cw', 24, 'half').electricalAngleDeg;
+    expect((half1 - half0 + 360) % 360).toBeCloseTo(45, 9);
+  });
+
+  it('reverses with direction', () => {
+    const a = solveStepper(0, 1, 'ccw', 24, 'full').electricalAngleDeg;
+    const b = solveStepper(1, 1, 'ccw', 24, 'full').electricalAngleDeg;
+    expect((b - a + 360) % 360).toBeCloseTo(270, 9);
+  });
+
+  it('the shaft turns 1/polePairs of the electrical angle', () => {
+    expect(polePairs(24)).toBe(6);
+    expect(polePairs(200)).toBe(50);
+    for (const mode of ['full', 'half'] as const) {
+      const a = solveStepper(0, 1, 'cw', 24, mode);
+      const b = solveStepper(1, 1, 'cw', 24, mode);
+      const electrical = (b.electricalAngleDeg - a.electricalAngleDeg + 360) % 360;
+      expect(b.angleDeg - a.angleDeg).toBeCloseTo(electrical / polePairs(24), 9);
+    }
   });
 });

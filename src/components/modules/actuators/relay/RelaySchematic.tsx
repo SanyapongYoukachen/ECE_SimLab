@@ -5,7 +5,6 @@ import {
   drawWire,
   drawResistor,
   drawBattery,
-  drawCoil,
   drawCurrentArrow,
   drawCurrentFlowDots,
   drawNodeDot,
@@ -15,10 +14,13 @@ import {
 import { AnimatedCanvas, usePrefersReducedMotion } from '@/components/ui';
 import type { RelayResult } from '@/lib/actuators/relay';
 
-const HEIGHT = 380;
-const PAD = 26;
+const HEIGHT = 360;
+const PAD = 30;
 const LEFT = 58;
 const RIGHT_INSET = 96;
+const COIL_BOX = { width: 46, height: 24 };
+const CONTACT_SPREAD = 38;
+const NC_RISE = 26;
 
 function compactR(ohms: number): string {
   return ohms >= 1000 ? `${(ohms / 1000).toFixed(1)}k` : `${Math.round(ohms)}`;
@@ -35,14 +37,15 @@ interface Props {
 }
 
 /**
- * Two electrically independent loops stacked vertically: the coil driver on
- * top, the switched load circuit on the bottom. They're only coupled
- * mechanically — coil current decides whether the armature (common pole)
- * closes onto NO, completing the load loop — so each loop's current-flow
- * animation scales against its own magnitude, not a shared one (their
- * currents can be wildly different: milliamps on the coil, amps on the
- * load). The load is wired through NO only; NC is just a dead-end stub
- * showing where the armature rests when de-energized.
+ * The relay as a circuit diagram draws it: a coil (the rectangle, terminals
+ * A1/A2) and a changeover contact (COM switching between NC and NO), joined
+ * by a dashed line that stands for the mechanical link between them. The
+ * dashed outline marks what is inside the one part.
+ *
+ * The two loops are electrically independent, so each loop's current-flow
+ * animation scales against its own magnitude (milliamps on the coil, amps
+ * on the load). The load is wired through NO only; NC is a dead end showing
+ * where the contact rests when de-energized.
  */
 export function RelaySchematic({ result }: Props): React.JSX.Element {
   const reducedMotion = usePrefersReducedMotion();
@@ -58,90 +61,66 @@ export function RelaySchematic({ result }: Props): React.JSX.Element {
 
       const left = LEFT;
       const right = size.width - RIGHT_INSET;
+      const mid = (left + right) / 2;
       const coilTop = PAD;
-      const coilBottom = size.height * 0.4;
-      const loadTop = size.height * 0.56;
+      const coilBottom = size.height * 0.38;
+      const loadTop = size.height * 0.6;
       const loadBottom = size.height - PAD;
 
-      // --- Coil driver loop ---
+      // --- Control loop: the coil sits on its bottom rail, right above the contact ---
       const cTopLeft: Point = { x: left, y: coilTop };
       const cTopRight: Point = { x: right, y: coilTop };
       const cBottomRight: Point = { x: right, y: coilBottom };
       const cBottomLeft: Point = { x: left, y: coilBottom };
+      const coilRight: Point = { x: mid + COIL_BOX.width / 2, y: coilBottom };
+      const coilLeft: Point = { x: mid - COIL_BOX.width / 2, y: coilBottom };
 
       drawBattery(ctx, { from: cBottomLeft, to: cTopLeft, color: theme.input });
-      drawWire(ctx, [cTopLeft, cTopRight], theme.structure);
-      drawCoil(ctx, { from: cTopRight, to: cBottomRight, color: theme.active });
-      drawWire(ctx, [cBottomRight, cBottomLeft], theme.structure);
+      drawWire(ctx, [cTopLeft, cTopRight, cBottomRight, coilRight], theme.structure);
+      drawWire(ctx, [coilLeft, cBottomLeft], theme.structure);
 
       const coilSegments: readonly FlowSegment[] = [
         { from: cBottomLeft, to: cTopLeft, current: result.coilCurrent },
         { from: cTopLeft, to: cTopRight, current: result.coilCurrent },
         { from: cTopRight, to: cBottomRight, current: result.coilCurrent },
-        { from: cBottomRight, to: cBottomLeft, current: result.coilCurrent },
+        { from: cBottomRight, to: coilRight, current: result.coilCurrent },
+        { from: coilLeft, to: cBottomLeft, current: result.coilCurrent },
       ];
 
-      // --- Switched load loop: a rectangle like the coil loop, with a
-      // switch spliced into the left part of the top rail. NO continues
-      // the rail; NC is a short dead-end stub poking up from the pole. ---
+      // --- Load loop: the changeover contact is spliced into its top rail ---
       const lTopLeft: Point = { x: left, y: loadTop };
       const lTopRight: Point = { x: right, y: loadTop };
       const lBottomRight: Point = { x: right, y: loadBottom };
       const lBottomLeft: Point = { x: left, y: loadBottom };
-      const pole: Point = { x: left + 90, y: loadTop };
-      const no: Point = { x: left + 170, y: loadTop };
-      const nc: Point = { x: left + 90, y: loadTop - 26 };
+      const com: Point = { x: mid - CONTACT_SPREAD, y: loadTop };
+      const no: Point = { x: mid + CONTACT_SPREAD, y: loadTop };
+      const nc: Point = { x: mid + CONTACT_SPREAD, y: loadTop - NC_RISE };
 
       drawBattery(ctx, { from: lBottomLeft, to: lTopLeft, color: theme.input });
-      drawWire(ctx, [lTopLeft, pole], theme.structure);
+      drawWire(ctx, [lTopLeft, com], theme.structure);
       drawWire(ctx, [no, lTopRight], theme.structure);
       drawResistor(ctx, { from: lTopRight, to: lBottomRight, color: theme.active });
       drawWire(ctx, [lBottomRight, lBottomLeft], theme.structure);
 
-      // The armature: solid when it closes the NO contact (completing the
-      // rail), a faint dashed gap in its place when it's open.
-      if (result.energized) {
-        drawWire(ctx, [pole, no], theme.output, 2.5);
-      } else {
-        ctx.save();
-        ctx.strokeStyle = theme.structureFaint;
-        ctx.lineWidth = 1.5;
-        ctx.setLineDash([3, 3]);
-        ctx.beginPath();
-        ctx.moveTo(pole.x, pole.y);
-        ctx.lineTo(no.x, no.y);
-        ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.restore();
-      }
-      // NC: always just a short dead-end, solid when it's where the
-      // armature currently rests.
-      drawWire(ctx, [pole, nc], result.energized ? theme.structureFaint : theme.active, 2);
-
-      for (const node of [pole, nc, no]) {
-        drawNodeDot(ctx, { at: node, color: theme.structure, radius: 2.5 });
-      }
-      drawNodeDot(ctx, {
-        at: result.energized ? no : nc,
-        color: theme.output,
-        radius: 3.5,
-      });
-
       const loadSegments: readonly FlowSegment[] = [
-        { from: lTopLeft, to: pole, current: result.loadCurrent },
-        { from: pole, to: no, current: result.loadCurrent },
+        { from: lTopLeft, to: com, current: result.loadCurrent },
+        { from: com, to: no, current: result.loadCurrent },
         { from: no, to: lTopRight, current: result.loadCurrent },
         { from: lTopRight, to: lBottomRight, current: result.loadCurrent },
         { from: lBottomRight, to: lBottomLeft, current: result.loadCurrent },
         { from: lBottomLeft, to: lTopLeft, current: result.loadCurrent },
       ];
 
+      // The moving contact: on NO when energized, back on NC otherwise.
+      const restingOn = result.energized ? no : nc;
+      drawWire(ctx, [com, restingOn], result.energized ? theme.output : theme.text, 2.5);
+
       if (reducedMotion) {
         for (const seg of [...coilSegments, ...loadSegments]) {
           if (Math.abs(seg.current) < 1e-9) continue;
-          const mid = { x: (seg.from.x + seg.to.x) / 2, y: (seg.from.y + seg.to.y) / 2 };
+          const at = { x: (seg.from.x + seg.to.x) / 2, y: (seg.from.y + seg.to.y) / 2 };
           const angle = Math.atan2(seg.to.y - seg.from.y, seg.to.x - seg.from.x);
-          drawCurrentArrow(ctx, { at: mid, angleRad: angle, color: theme.output, size: 6 });
+          drawCurrentArrow(ctx, { at, angleRad: angle, color: theme.output, size: 6 });
         }
       } else {
         for (const seg of coilSegments) {
@@ -160,6 +139,53 @@ export function RelaySchematic({ result }: Props): React.JSX.Element {
         }
       }
 
+      // --- The relay symbol itself ---
+      const coilColor = result.coilCurrent > 0 ? theme.active : theme.structure;
+      ctx.save();
+      ctx.fillStyle = theme.surface;
+      ctx.strokeStyle = coilColor;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.rect(
+        mid - COIL_BOX.width / 2,
+        coilBottom - COIL_BOX.height / 2,
+        COIL_BOX.width,
+        COIL_BOX.height
+      );
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+
+      // Mechanical link from the coil to the moving contact.
+      ctx.save();
+      ctx.strokeStyle = result.energized ? theme.output : theme.structure;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath();
+      ctx.moveTo(mid, coilBottom + COIL_BOX.height / 2);
+      ctx.lineTo(mid, (com.y + restingOn.y) / 2);
+      ctx.stroke();
+      ctx.restore();
+
+      // Outline: everything inside is the one component.
+      const box = {
+        x: mid - CONTACT_SPREAD - 28,
+        y: coilBottom - COIL_BOX.height / 2 - 12,
+        width: 2 * CONTACT_SPREAD + 60,
+        height: loadTop + 24 - (coilBottom - COIL_BOX.height / 2 - 12),
+      };
+      ctx.save();
+      ctx.strokeStyle = theme.structure;
+      ctx.lineWidth = 1;
+      ctx.setLineDash([2, 4]);
+      ctx.strokeRect(box.x, box.y, box.width, box.height);
+      ctx.restore();
+
+      for (const node of [com, nc, no]) {
+        drawNodeDot(ctx, { at: node, color: theme.surface, radius: 3.5 });
+        drawNodeDot(ctx, { at: node, color: theme.text, radius: 2.5 });
+      }
+
       ctx.font = '11px var(--font-mono, monospace)';
       ctx.textBaseline = 'middle';
       function label(text: string, at: Point, color: string, align: CanvasTextAlign): void {
@@ -170,35 +196,55 @@ export function RelaySchematic({ result }: Props): React.JSX.Element {
         ctx.restore();
       }
 
+      label('K1', { x: mid, y: coilBottom + 0.5 }, coilColor, 'center');
+      label('A2', { x: coilLeft.x - 4, y: coilBottom - 9 }, theme.text, 'right');
+      label('A1', { x: coilRight.x + 4, y: coilBottom - 9 }, theme.text, 'left');
+      label('RELAY', { x: box.x, y: box.y - 8 }, theme.structure, 'left');
+      label('COM', { x: com.x, y: com.y + 12 }, theme.text, 'center');
+      label('NO', { x: no.x, y: no.y + 12 }, theme.text, 'center');
+      label('NC', { x: nc.x + 8, y: nc.y }, theme.text, 'left');
+
+      const coilMidY = (coilTop + box.y) / 2;
       label(
-        `Vcoil=${result.coilVoltage.toFixed(1)}V`,
+        `Icoil ${result.coilCurrentMa.toFixed(result.coilCurrentMa < 10 ? 2 : 1)} mA`,
+        { x: mid, y: coilMidY - 7 },
+        theme.text,
+        'center'
+      );
+      label(
+        result.energized ? 'ENERGIZED' : 'de-energized',
+        { x: mid, y: coilMidY + 8 },
+        result.energized ? theme.output : theme.structure,
+        'center'
+      );
+      label(
+        `Iload ${result.loadCurrent.toFixed(3)} A`,
+        { x: mid, y: (box.y + box.height + loadBottom) / 2 },
+        result.loadCurrent > 0 ? theme.output : theme.structure,
+        'center'
+      );
+
+      label(
+        `${result.coilVoltage.toFixed(1)}V`,
         { x: left - 8, y: (coilTop + coilBottom) / 2 },
         theme.input,
         'right'
       );
       label(
-        `Rcoil=${compactR(result.coilResistance)}Ω`,
-        { x: right + 8, y: (coilTop + coilBottom) / 2 },
-        theme.active,
-        'left'
-      );
-      label(
-        result.energized ? 'ENERGIZED' : 'de-energized',
-        { x: (left + right) / 2, y: coilBottom + 12 },
-        result.energized ? theme.output : theme.structure,
-        'center'
-      );
-      label('NC', { x: nc.x, y: nc.y - 10 }, theme.structure, 'center');
-      label('NO', { x: no.x, y: no.y - 10 }, theme.structure, 'center');
-      label(
-        `Vload=${result.loadVoltage.toFixed(1)}V`,
+        `${result.loadVoltage.toFixed(1)}V`,
         { x: left - 8, y: (loadTop + loadBottom) / 2 },
         theme.input,
         'right'
       );
       label(
-        `Rload=${compactR(result.loadResistance)}Ω`,
-        { x: right + 8, y: (loadTop + loadBottom) / 2 },
+        `coil ${compactR(result.coilResistance)}Ω`,
+        { x: right + 14, y: (coilTop + coilBottom) / 2 },
+        theme.active,
+        'left'
+      );
+      label(
+        `load ${compactR(result.loadResistance)}Ω`,
+        { x: right + 14, y: (loadTop + loadBottom) / 2 },
         theme.active,
         'left'
       );
@@ -206,7 +252,7 @@ export function RelaySchematic({ result }: Props): React.JSX.Element {
     [result, reducedMotion]
   );
 
-  const ariaLabel = `Relay schematic. Coil is ${result.energized ? 'energized, resting on NO' : 'de-energized, resting on NC'}. Load current ${(result.loadCurrent * 1000).toFixed(1)} milliamps.`;
+  const ariaLabel = `Relay schematic: coil K1 linked to a changeover contact. Coil is ${result.energized ? 'energized, COM closed onto NO' : 'de-energized, COM resting on NC'}. Load current ${(result.loadCurrent * 1000).toFixed(1)} milliamps.`;
 
   return (
     <AnimatedCanvas height={HEIGHT} ariaLabel={ariaLabel} onDraw={handleDraw} deps={[result]} />

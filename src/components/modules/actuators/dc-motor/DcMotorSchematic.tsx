@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import {
   drawWire,
   drawResistor,
@@ -19,6 +19,10 @@ const PAD = 30;
 const LOOP_LEFT = 46;
 const LOOP_RIGHT = 190;
 const MOTOR_RADIUS = 74;
+/** Real speeds blur into flicker at 60 fps, so the rotor is drawn this many times slower. */
+const SLOW_MOTION = 20;
+const PWM_BOX_WIDTH = 36;
+const PWM_BOX_HEIGHT = 20;
 
 function compactR(ohms: number): string {
   return ohms >= 1000 ? `${(ohms / 1000).toFixed(1)}k` : `${ohms.toFixed(1)}`;
@@ -29,11 +33,11 @@ interface Props {
 }
 
 /**
- * Left: the armature's electrical loop (source, Ra, and the back-EMF
- * "source" it fights against), with current-flow dots like every other
- * schematic. Right: the motor housing with a needle that spins continuously
- * at a rate proportional to the solved speed — the one schematic in this
- * app with genuine rotational motion rather than linear current flow.
+ * Left: the armature's electrical loop (source, PWM switch, Ra, and the
+ * back-EMF "source" it fights against), with current-flow dots like every
+ * other schematic. The dots show the average current: the armature's
+ * inductance smooths the PWM pulses. Right: the motor housing with a needle
+ * that spins at a rate proportional to the solved speed, in slow motion.
  */
 export function DcMotorSchematic({ result }: Props): React.JSX.Element {
   const reducedMotion = usePrefersReducedMotion();
@@ -41,6 +45,7 @@ export function DcMotorSchematic({ result }: Props): React.JSX.Element {
   // reads, to React Compiler's static analysis, like a ref access, which
   // blocks memoizing the draw callback below.
   const armatureCurrent = result.current;
+  const rotorRef = useRef({ angle: 0, lastPhase: 0 });
 
   const handleDraw = useCallback(
     (
@@ -105,6 +110,38 @@ export function DcMotorSchematic({ result }: Props): React.JSX.Element {
         }
       }
 
+      // PWM switch on the top rail, painted over the wire and its flow dots.
+      const pwmX = (LOOP_LEFT + loopRight) / 2;
+      const boxLeft = pwmX - PWM_BOX_WIDTH / 2;
+      const boxTop = top - PWM_BOX_HEIGHT / 2;
+      ctx.save();
+      ctx.fillStyle = theme.surface;
+      ctx.strokeStyle = theme.input;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.rect(boxLeft, boxTop, PWM_BOX_WIDTH, PWM_BOX_HEIGHT);
+      ctx.fill();
+      ctx.stroke();
+      // Two periods of the switching waveform, at the actual duty.
+      const glyphLeft = boxLeft + 5;
+      const period = (PWM_BOX_WIDTH - 10) / 2;
+      const high = boxTop + 5;
+      const low = boxTop + PWM_BOX_HEIGHT - 5;
+      ctx.beginPath();
+      ctx.moveTo(glyphLeft, low);
+      for (let i = 0; i < 2; i++) {
+        const start = glyphLeft + i * period;
+        const onEnd = start + period * result.duty;
+        if (result.duty > 0) {
+          ctx.lineTo(start, high);
+          ctx.lineTo(onEnd, high);
+        }
+        ctx.lineTo(onEnd, low);
+        ctx.lineTo(start + period, low);
+      }
+      ctx.stroke();
+      ctx.restore();
+
       ctx.font = '11px var(--font-mono, monospace)';
       ctx.textBaseline = 'middle';
       function label(text: string, at: Point, color: string, align: CanvasTextAlign): void {
@@ -115,18 +152,24 @@ export function DcMotorSchematic({ result }: Props): React.JSX.Element {
         ctx.restore();
       }
       label(
-        `V=${result.voltage.toFixed(1)}V`,
+        `${result.supplyVoltage.toFixed(1)}V`,
         { x: LOOP_LEFT - 8, y: midY - 60 },
         theme.input,
         'right'
       );
       label(
+        `PWM ${(result.duty * 100).toFixed(0)}%`,
+        { x: pwmX, y: boxTop - 9 },
+        theme.input,
+        'center'
+      );
+      label(
         `Ra=${compactR(result.armatureResistance)}Ω`,
-        { x: loopRight + 8, y: (top + midY) / 2 },
+        { x: loopRight + 14, y: (top + midY) / 2 },
         theme.active,
         'left'
       );
-      label('back-EMF', { x: loopRight + 8, y: (midY + bottom) / 2 }, theme.output, 'left');
+      label('back-EMF', { x: loopRight + 14, y: (midY + bottom) / 2 }, theme.output, 'left');
 
       // Motor housing + spinning rotor.
       const motorCenter: Point = { x: motorCenterX, y: midY };
@@ -138,7 +181,11 @@ export function DcMotorSchematic({ result }: Props): React.JSX.Element {
       ctx.stroke();
       ctx.restore();
 
-      const angle = reducedMotion ? -Math.PI / 2 : phase * result.speedRadPerSec - Math.PI / 2;
+      const rotor = rotorRef.current;
+      const dt = phase >= rotor.lastPhase ? Math.min(phase - rotor.lastPhase, 0.1) : 0;
+      rotor.lastPhase = phase;
+      rotor.angle = (rotor.angle + (result.speedRadPerSec / SLOW_MOTION) * dt) % (Math.PI * 2);
+      const angle = reducedMotion ? -Math.PI / 2 : rotor.angle - Math.PI / 2;
       const tip: Point = {
         x: motorCenter.x + Math.cos(angle) * (motorRadius - 10),
         y: motorCenter.y + Math.sin(angle) * (motorRadius - 10),
@@ -155,16 +202,24 @@ export function DcMotorSchematic({ result }: Props): React.JSX.Element {
       drawNodeDot(ctx, { at: motorCenter, color: theme.structure, radius: 4 });
 
       label(
-        `${result.speedRpm.toFixed(0)} RPM`,
+        result.stalled ? 'STALLED' : `${result.speedRpm.toFixed(0)} RPM`,
         { x: motorCenter.x, y: motorCenter.y + motorRadius + 18 },
-        theme.text,
+        result.stalled ? theme.danger : theme.text,
         'center'
       );
+      if (!reducedMotion && !result.stalled) {
+        label(
+          `shown ${SLOW_MOTION}× slower`,
+          { x: motorCenter.x, y: motorCenter.y - motorRadius - 14 },
+          theme.structure,
+          'center'
+        );
+      }
     },
     [result, armatureCurrent, reducedMotion]
   );
 
-  const ariaLabel = `DC motor schematic. Armature current ${armatureCurrent.toFixed(2)} amps, spinning at ${result.speedRpm.toFixed(0)} RPM.`;
+  const ariaLabel = `DC motor schematic. PWM duty ${(result.duty * 100).toFixed(0)} percent, armature current ${armatureCurrent.toFixed(2)} amps, ${result.stalled ? 'stalled' : `spinning at ${result.speedRpm.toFixed(0)} RPM`}.`;
 
   return (
     <AnimatedCanvas height={HEIGHT} ariaLabel={ariaLabel} onDraw={handleDraw} deps={[result]} />

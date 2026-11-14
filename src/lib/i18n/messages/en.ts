@@ -462,12 +462,14 @@ export const en = {
         'This actuator simulator covers three ways an electrical signal becomes motion or switching: a DC motor settling to a steady speed, a stepper motor advancing one discrete step at a time, and a relay whose contacts snap over once coil current clears a threshold.',
       points: [
         'Raise the load torque on a DC motor and watch its steady-state speed fall as the armature current rises to match.',
+        'Set a DC motor’s speed with PWM: change the duty cycle and watch the average voltage, and the speed, follow.',
+        'See a stepper motor’s stator poles turn into electromagnets and pull the rotor’s N and S poles round, one step at a time.',
         'Switch a stepper motor between full and half step and see the steps-per-revolution figure double.',
-        'Reverse a stepper motor’s direction and watch the coil-energizing sequence run backwards.',
-        'Raise a relay’s coil voltage past its pull-in current and watch the load current switch on.',
+        'Compare a relay’s circuit symbol with its internal structure as the coil pulls the armature from NC to NO.',
       ],
       concepts: [
         'DC motor steady state',
+        'PWM speed control',
         'Armature circuit and back-EMF',
         'Torque-speed balance',
         'Stepper motor coil sequencing',

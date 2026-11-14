@@ -21,6 +21,32 @@ export const HALF_STEP_SEQUENCE: readonly (readonly string[])[] = [
   ['D', 'A'],
 ];
 
+/**
+ * Where each stator pole sits, in degrees clockwise from 3 o'clock (screen
+ * coordinates, y down): A at 12 o'clock, then B, C, D clockwise.
+ */
+export const COIL_ANGLES_DEG: Readonly<Record<string, number>> = { A: -90, B: 0, C: 90, D: 180 };
+
+/**
+ * Rotor pole pairs for a motor with four stator phases: one electrical cycle
+ * (A→B→C→D) is four full steps, and the rotor needs one N–S pair per cycle.
+ */
+export function polePairs(stepsPerRev: number): number {
+  return stepsPerRev / 4;
+}
+
+/** Direction of the net stator field: the sum of the energized poles' directions. */
+export function fieldAngleDeg(activeCoils: readonly string[]): number {
+  let x = 0;
+  let y = 0;
+  for (const coil of activeCoils) {
+    const a = (COIL_ANGLES_DEG[coil] * Math.PI) / 180;
+    x += Math.cos(a);
+    y += Math.sin(a);
+  }
+  return mod((Math.atan2(y, x) * 180) / Math.PI, 360);
+}
+
 export function sequenceFor(mode: StepperMode): readonly (readonly string[])[] {
   return mode === 'half' ? HALF_STEP_SEQUENCE : FULL_STEP_SEQUENCE;
 }
@@ -37,6 +63,11 @@ export interface StepperResult {
   readonly positionSteps: number;
   readonly angleDeg: number;
   readonly activeCoils: readonly string[];
+  /**
+   * Where the rotor magnet's N pole points within one electrical cycle
+   * (same convention as COIL_ANGLES_DEG). The shaft turns 1/polePairs as far.
+   */
+  readonly electricalAngleDeg: number;
   readonly rpm: number;
 }
 
@@ -68,6 +99,7 @@ export function solveStepper(
     positionSteps,
     angleDeg: (positionSteps / effSteps) * 360,
     activeCoils,
+    electricalAngleDeg: fieldAngleDeg(activeCoils),
     rpm: (stepRate * 60) / effSteps,
   };
 }
