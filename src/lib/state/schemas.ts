@@ -173,11 +173,6 @@ export type ModuleViewState = z.infer<typeof ModuleViewStateSchema>;
 export const ActuatorTabSchema = z.enum(['dcmotor', 'stepper', 'relay']);
 export type ActuatorTab = z.infer<typeof ActuatorTabSchema>;
 
-export const ActuatorsStateSchema = z.object({
-  tab: ActuatorTabSchema.default('dcmotor'),
-});
-export type ActuatorsState = z.infer<typeof ActuatorsStateSchema>;
-
 export const DcMotorStateSchema = z.object({
   voltage: z.number().min(0).max(48).default(12),
   armatureResistance: z.number().min(0.1).max(50).default(2),

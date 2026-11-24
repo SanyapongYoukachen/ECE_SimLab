@@ -8,7 +8,9 @@ export const metadata: Metadata = pageMetadata('sensors');
 export default function SensorsPage(): React.JSX.Element {
   return (
     <ModuleShell page="sensors">
-      <JsonLd data={moduleJsonLd('sensors')} />
+      {moduleJsonLd('sensors').map((data, i) => (
+        <JsonLd key={i} data={data} />
+      ))}
       <SensorsModule />
     </ModuleShell>
   );

@@ -9,7 +9,12 @@ describe('topic pages', () => {
       expect(topicForMode('ac', mode)).toBeDefined();
     for (const mode of ['ohm', 'network', 'divider', 'thevenin', 'mesh'])
       expect(topicForMode('circuits', mode)).toBeDefined();
+    for (const mode of ['pn', 'diode', 'bjt', 'amp'])
+      expect(topicForMode('electronics', mode)).toBeDefined();
+    for (const mode of ['dcmotor', 'stepper', 'relay'])
+      expect(topicForMode('actuators', mode)).toBeDefined();
     expect(findTopic('ac', 'three-phase')?.mode).toBe('threephase');
+    expect(findTopic('actuators', 'relay')?.mode).toBe('relay');
     expect(findTopic('ac', 'nope')).toBeUndefined();
   });
 
@@ -37,8 +42,10 @@ describe('topic pages', () => {
     }
   });
 
-  it('cover both DC and AC modules', () => {
+  it('cover every module that has sections', () => {
     expect(TOPICS.ac.length).toBe(4);
     expect(TOPICS.circuits.length).toBe(5);
+    expect(TOPICS.electronics.length).toBe(4);
+    expect(TOPICS.actuators.length).toBe(3);
   });
 });

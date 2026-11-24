@@ -8,7 +8,9 @@ export const metadata: Metadata = pageMetadata('convolution');
 export default function ConvolutionPage(): React.JSX.Element {
   return (
     <ModuleShell page="convolution">
-      <JsonLd data={moduleJsonLd('convolution')} />
+      {moduleJsonLd('convolution').map((data, i) => (
+        <JsonLd key={i} data={data} />
+      ))}
       <ConvolutionModule />
     </ModuleShell>
   );

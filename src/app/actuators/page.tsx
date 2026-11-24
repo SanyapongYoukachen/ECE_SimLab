@@ -1,15 +1,19 @@
 import type { Metadata } from 'next';
 import { JsonLd, ModuleShell } from '@/components/ui';
+import { TopicHub } from '@/components/topics/TopicHub';
 import { moduleJsonLd, pageMetadata } from '@/lib/seo';
-import ActuatorsModule from '@/components/modules/actuators/ActuatorsModuleClient';
+import { ACTUATOR_TOPICS } from '@/lib/topics';
 
 export const metadata: Metadata = pageMetadata('actuators');
 
-export default function ActuatorsPage(): React.JSX.Element {
+/** The module's hub: one card per topic page; each topic opens the simulator. */
+export default function Page(): React.JSX.Element {
   return (
     <ModuleShell page="actuators">
-      <JsonLd data={moduleJsonLd('actuators')} />
-      <ActuatorsModule />
+      {moduleJsonLd('actuators').map((data, i) => (
+        <JsonLd key={i} data={data} />
+      ))}
+      <TopicHub topics={ACTUATOR_TOPICS} />
     </ModuleShell>
   );
 }

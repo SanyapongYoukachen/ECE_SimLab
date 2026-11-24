@@ -10,7 +10,9 @@ export const metadata: Metadata = pageMetadata('electronics');
 export default function Page(): React.JSX.Element {
   return (
     <ModuleShell page="electronics">
-      <JsonLd data={moduleJsonLd('electronics')} />
+      {moduleJsonLd('electronics').map((data, i) => (
+        <JsonLd key={i} data={data} />
+      ))}
       <TopicHub topics={ELECTRONICS_TOPICS} />
     </ModuleShell>
   );

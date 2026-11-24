@@ -8,7 +8,9 @@ export const metadata: Metadata = pageMetadata('simulator');
 export default function SimulatorPage(): React.JSX.Element {
   return (
     <ModuleShell page="simulator">
-      <JsonLd data={moduleJsonLd('simulator')} />
+      {moduleJsonLd('simulator').map((data, i) => (
+        <JsonLd key={i} data={data} />
+      ))}
       <SimulatorModule />
     </ModuleShell>
   );

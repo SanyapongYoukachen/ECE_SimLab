@@ -72,25 +72,23 @@ test.describe('URL state', () => {
   });
 
   test('a configured DC motor link reproduces its voltage', async ({ page }) => {
-    await page.goto('/actuators?predict=off&tab=dcmotor&voltage=24');
+    await page.goto('/actuators/dc-motor?predict=off&voltage=24');
     await expect(page.getByRole('slider', { name: 'Supply voltage V' })).toHaveValue('24');
   });
 
   test('a configured relay link reproduces its coil voltage and energized state', async ({
     page,
   }) => {
-    await page.goto('/actuators?predict=off&tab=relay&cv=12&cr=400&pi=20');
+    await page.goto('/actuators/relay?predict=off&cv=12&cr=400&pi=20');
     await expect(page.getByText('State').locator('..').getByText('Energized')).toBeVisible();
   });
 
   test('malformed actuators URL state falls back to defaults instead of breaking', async ({
     page,
   }) => {
-    await page.goto('/actuators?predict=off&tab=not-a-real-tab&voltage=-999');
-    await expect(page.getByRole('radio', { name: 'DC motor' })).toHaveAttribute(
-      'aria-checked',
-      'true'
-    );
+    await page.goto('/actuators/dc-motor?predict=off&voltage=-999&duty=abc');
+    await expect(page.getByRole('slider', { name: 'Supply voltage V' })).toHaveValue('12');
+    await expect(page.getByRole('slider', { name: 'PWM duty cycle D' })).toHaveValue('100');
     await expect(page.getByRole('img', { name: /DC motor schematic/ })).toBeVisible();
   });
 });
