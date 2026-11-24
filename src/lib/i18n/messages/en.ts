@@ -220,7 +220,7 @@ export const en = {
     actuators: {
       title: 'Actuators: motion and switching from an electrical signal',
       tagline:
-        'A spinning DC motor, a stepper motor advancing in discrete steps, and a relay snapping its contacts — pick one from the tabs.',
+        'Three topics, from continuous rotation to discrete steps to on/off switching. Each opens a live simulator, with the theory and a worked example underneath.',
     },
   },
 

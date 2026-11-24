@@ -34,6 +34,10 @@ test.describe('search engine surface', () => {
       '/sensors',
       '/simulator',
       '/electronics/pn-junction',
+      '/actuators',
+      '/actuators/dc-motor',
+      '/actuators/stepper-motor',
+      '/actuators/relay',
     ]) {
       expect(sitemap).toContain(`${path}</loc>`);
     }

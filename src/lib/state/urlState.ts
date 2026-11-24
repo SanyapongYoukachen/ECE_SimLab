@@ -1,5 +1,4 @@
 import {
-  ActuatorsStateSchema,
   CircuitStateSchema,
   ConvolutionStateSchema,
   DcMotorStateSchema,
@@ -14,7 +13,6 @@ import {
   WheatstoneStateSchema,
   ModuleViewStateSchema,
   type ModuleViewState,
-  type ActuatorsState,
   type CircuitState,
   type ConvolutionState,
   type DcMotorState,
@@ -321,18 +319,6 @@ export function decodeModuleViewState(params: URLSearchParams): ModuleViewState 
 
 export function encodeModuleViewState(state: ModuleViewState): URLSearchParams {
   return new URLSearchParams({ view: state.view });
-}
-
-export function decodeActuatorsState(params: URLSearchParams): ActuatorsState {
-  const raw = { tab: params.get('tab') ?? undefined };
-  const result = ActuatorsStateSchema.safeParse(raw);
-  return result.success ? result.data : ActuatorsStateSchema.parse({});
-}
-
-export function encodeActuatorsState(state: ActuatorsState): URLSearchParams {
-  const params = new URLSearchParams();
-  params.set('tab', state.tab);
-  return params;
 }
 
 export function decodeDcMotorState(params: URLSearchParams): DcMotorState {

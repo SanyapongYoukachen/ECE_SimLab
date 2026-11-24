@@ -307,6 +307,17 @@ where established tools dominate. Also generated:
 - a server-rendered **About** section under every module (`ModuleAbout`,
   text in the i18n `about` dictionary). The modules render client-side, so
   without it crawlers see little more than "Loading module…".
+- **topic pages**, one URL per search intent, for every module with
+  sections: AC (`/ac/<topic>`), DC (`/circuits/<topic>`), electronics
+  (`/electronics/<topic>`) and actuators (`/actuators/dc-motor`,
+  `/stepper-motor`, `/relay`). Each has its own title, description and
+  share card, and a server-rendered article in both languages
+  (`lib/topics`). The module page becomes a hub linking to them; old
+  `?mode=` (actuators: `?tab=`) links redirect, see `next.config.ts`.
+- **structured data on every page**: `LearningResource`, `BreadcrumbList`
+  and `FAQPage` (the FAQ shown in the About section or the article).
+  `lib/seo.test.ts` keeps every title ≤ 60 characters, every description
+  120–170, and each one unique.
 
 Set `NEXT_PUBLIC_SITE_URL` for a custom domain (default:
 `https://ece-sim-lab.vercel.app`) and `GOOGLE_SITE_VERIFICATION` to verify
@@ -314,10 +325,10 @@ Google Search Console by meta tag.
 
 ### Actuators: rotation and discrete stepping, not just current flow
 
-`app/actuators/page.tsx` follows the simulator's exact tab shape — its own
-tiny `ActuatorsStateSchema` owns `?tab=`, each actuator (`dc-motor/`,
-`stepper/`, `relay/`) is a fully independent directory with its own state,
-math, and question bank. The physics:
+`/actuators` is a hub; each actuator has its own topic page
+(`app/actuators/[topic]`), and its component directory (`dc-motor/`,
+`stepper/`, `relay/`) is fully independent, with its own state, math, and
+question bank. The physics:
 
 - **DC motor** (`lib/actuators/dcMotor.ts`): steady-state only (no
   acceleration dynamics). The armature loop `V = I·Ra + Ke·ω` and the torque

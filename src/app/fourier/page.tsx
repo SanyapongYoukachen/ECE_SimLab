@@ -8,7 +8,9 @@ export const metadata: Metadata = pageMetadata('fourier');
 export default function FourierPage(): React.JSX.Element {
   return (
     <ModuleShell page="fourier">
-      <JsonLd data={moduleJsonLd('fourier')} />
+      {moduleJsonLd('fourier').map((data, i) => (
+        <JsonLd key={i} data={data} />
+      ))}
       <FourierModule />
     </ModuleShell>
   );

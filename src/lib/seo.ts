@@ -46,7 +46,7 @@ export const SEO: Readonly<Record<SeoPage, PageSeo>> = {
     path: '/',
     title: 'ECE Labsim — Interactive Circuit Simulator & Signal Graphs',
     description:
-      'Free interactive circuit simulator and signal graphs for engineering students: convolution, Fourier transform, AC and DC circuits, sensors, a Wheatstone bridge lab, electronics and actuators.',
+      'Free circuit simulator and signal graphs for engineering students: convolution, Fourier, AC and DC circuits, sensors, Wheatstone bridge, electronics and actuators.',
     keywords: [
       'circuit simulator',
       'online circuit simulator',
@@ -114,9 +114,9 @@ export const SEO: Readonly<Record<SeoPage, PageSeo>> = {
   },
   ac: {
     path: '/ac',
-    title: 'AC Circuit Simulator — Generator, RMS, Power Factor & 3-Phase',
+    title: 'AC Circuit Simulator: Generator, RMS, Power Factor, 3-Phase',
     description:
-      'Interactive AC circuits: see a generator make a sine wave, then RMS and phasors, R, L and C loads with leading and lagging current and power factor, and three-phase star and delta.',
+      'Interactive AC circuits: a generator making a sine wave, RMS and phasors, R, L and C loads with leading and lagging current, power factor, and three-phase star and delta.',
     keywords: [
       'AC circuit simulator',
       'AC generator simulation',
@@ -146,7 +146,7 @@ export const SEO: Readonly<Record<SeoPage, PageSeo>> = {
     path: '/circuits',
     title: 'DC Circuit Simulator — Thévenin, Norton, Mesh & Nodal',
     description:
-      "Interactive DC circuit analysis: Ohm's law, series-parallel and voltage dividers, Thévenin and Norton equivalents, maximum power transfer, and mesh and nodal analysis step by step.",
+      "Interactive DC circuit analysis: Ohm's law, series-parallel and dividers, Thévenin and Norton equivalents, maximum power transfer, and mesh and nodal analysis.",
     keywords: [
       'DC circuit simulator',
       "Ohm's law",
@@ -224,7 +224,7 @@ export const SEO: Readonly<Record<SeoPage, PageSeo>> = {
     path: '/electronics',
     title: 'Electronics Simulator — P-N Junction, Diode, BJT, Amplifier',
     description:
-      'Interactive basic electronics: the P-N junction and depletion region, diode I-V curves and LEDs, BJT transistor regions, and a common-emitter amplifier with gain and clipping.',
+      'Interactive electronics: the P-N junction and depletion region, diode I-V curves and LEDs, BJT regions, and a common-emitter amplifier with gain and clipping.',
     keywords: [
       'electronics simulator',
       'semiconductor simulation',
@@ -242,7 +242,7 @@ export const SEO: Readonly<Record<SeoPage, PageSeo>> = {
     path: '/actuators',
     title: 'Actuator Simulator — DC Motor, Stepper Motor & Relay',
     description:
-      'Interactive actuators: a DC motor spinning at its steady-state speed, a stepper motor advancing full and half steps, and a relay switching its load once coil current clears pull-in.',
+      'Interactive actuators: a DC motor with back-EMF and PWM speed control, a stepper motor stepping through its coil sequence, and a relay switching its NO/NC contacts.',
     keywords: [
       'DC motor simulator',
       'stepper motor simulator',
@@ -292,28 +292,61 @@ export function pageMetadata(page: SeoPage): Metadata {
 }
 
 /**
- * schema.org structured data for a module: a free, browser-based learning
- * resource for undergraduates. Rendered as JSON-LD by <JsonLd>.
+ * schema.org structured data for a module page, one object per <JsonLd>:
+ * the free, browser-based learning resource itself, its breadcrumb
+ * (Home › module) and the FAQ from its About section, which is visible
+ * on the page.
  */
-export function moduleJsonLd(page: Exclude<SeoPage, 'home'>): Record<string, unknown> {
+export function moduleJsonLd(page: Exclude<SeoPage, 'home'>): Record<string, unknown>[] {
   const seo = SEO[page];
+  const url = `${SITE_URL}${seo.path}`;
+  return [
+    {
+      '@context': 'https://schema.org',
+      '@type': ['LearningResource', 'WebApplication'],
+      name: seo.title,
+      description: seo.description,
+      url,
+      inLanguage: ['en', 'th'],
+      isAccessibleForFree: true,
+      learningResourceType: 'Interactive simulation',
+      educationalLevel: 'Undergraduate',
+      audience: { '@type': 'EducationalAudience', educationalRole: 'student' },
+      teaches: [...seo.teaches],
+      keywords: seo.keywords.join(', '),
+      applicationCategory: 'EducationalApplication',
+      operatingSystem: 'Any (runs in a web browser)',
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+      isPartOf: { '@type': 'WebSite', name: SITE_NAME, url: SITE_URL },
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: SITE_NAME, item: SITE_URL },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: MESSAGES.en.landing.modules[page].title,
+          item: url,
+        },
+      ],
+    },
+    faqJsonLd(MESSAGES.en.about[page].faq),
+  ];
+}
+
+function faqJsonLd(
+  faq: readonly { readonly q: string; readonly a: string }[]
+): Record<string, unknown> {
   return {
     '@context': 'https://schema.org',
-    '@type': ['LearningResource', 'WebApplication'],
-    name: seo.title,
-    description: seo.description,
-    url: `${SITE_URL}${seo.path}`,
-    inLanguage: ['en', 'th'],
-    isAccessibleForFree: true,
-    learningResourceType: 'Interactive simulation',
-    educationalLevel: 'Undergraduate',
-    audience: { '@type': 'EducationalAudience', educationalRole: 'student' },
-    teaches: [...seo.teaches],
-    keywords: seo.keywords.join(', '),
-    applicationCategory: 'EducationalApplication',
-    operatingSystem: 'Any (runs in a web browser)',
-    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-    isPartOf: { '@type': 'WebSite', name: SITE_NAME, url: SITE_URL },
+    '@type': 'FAQPage',
+    mainEntity: faq.map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a },
+    })),
   };
 }
 
@@ -426,14 +459,6 @@ export function topicJsonLd(topic: Topic): Record<string, unknown>[] {
         { '@type': 'ListItem', position: 3, name: en.nav, item: url },
       ],
     },
-    {
-      '@context': 'https://schema.org',
-      '@type': 'FAQPage',
-      mainEntity: en.faq.map((f) => ({
-        '@type': 'Question',
-        name: f.q,
-        acceptedAnswer: { '@type': 'Answer', text: f.a },
-      })),
-    },
+    faqJsonLd(en.faq),
   ];
 }

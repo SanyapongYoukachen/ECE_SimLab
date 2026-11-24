@@ -1,45 +1,28 @@
 'use client';
 
-import { ActuatorsStateSchema, type ActuatorTab } from '@/lib/state/schemas';
-import { decodeActuatorsState, encodeActuatorsState } from '@/lib/state/urlState';
-import { useUrlSyncedState } from '@/lib/state/useUrlState';
-import { logEvent } from '@/lib/state/telemetry';
-import { SegmentedControl } from '@/components/ui';
+import type { ActuatorTab } from '@/lib/state/schemas';
+import { TopicNav } from '@/components/ui';
+import { ACTUATOR_TOPICS, topicPath } from '@/lib/topics';
 import { DcMotor } from './dc-motor/DcMotor';
 import { Stepper } from './stepper/Stepper';
 import { Relay } from './relay/Relay';
-import { ACTUATOR_TAB_OPTIONS } from './constants';
+import { ACTUATOR_LABELS } from './constants';
 
-const DEFAULT_STATE = ActuatorsStateSchema.parse({});
-
-/**
- * Same shape as the circuit simulator's tab switcher: which tab is active
- * lives in its own tiny URL-synced store, independent of each tab's own
- * state, so switching tabs never touches another tab's sliders.
- */
-export function ActuatorsModule(): React.JSX.Element {
-  const [state, setState] = useUrlSyncedState(
-    decodeActuatorsState,
-    encodeActuatorsState,
-    DEFAULT_STATE
-  );
-
-  function setTab(tab: ActuatorTab): void {
-    logEvent('actuators', 'tab_changed', { tab });
-    setState((prev) => ({ ...prev, tab }));
-  }
-
+/** The actuator comes from the page's URL (/actuators/<topic>); each keeps its own URL state. */
+export function ActuatorsModule({ topic }: { readonly topic: ActuatorTab }): React.JSX.Element {
   return (
     <div className="flex flex-col gap-4">
-      <SegmentedControl
+      <TopicNav
         label="Actuator"
-        value={state.tab}
-        onChange={setTab}
-        options={ACTUATOR_TAB_OPTIONS}
+        items={ACTUATOR_TOPICS.map((tp) => ({
+          href: topicPath(tp),
+          label: ACTUATOR_LABELS[tp.mode],
+          current: tp.mode === topic,
+        }))}
       />
-      {state.tab === 'dcmotor' && <DcMotor />}
-      {state.tab === 'stepper' && <Stepper />}
-      {state.tab === 'relay' && <Relay />}
+      {topic === 'dcmotor' && <DcMotor />}
+      {topic === 'stepper' && <Stepper />}
+      {topic === 'relay' && <Relay />}
     </div>
   );
 }
